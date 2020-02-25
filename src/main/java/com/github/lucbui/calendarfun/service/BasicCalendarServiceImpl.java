@@ -59,4 +59,22 @@ public class BasicCalendarServiceImpl implements CalendarService {
                 .map(Birthday::new)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public Optional<Birthday> searchBirthday(String user) throws IOException {
+        DateTime beginningOfToday = new DateTime(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        Events events = calendar.events().list(calendarId)
+                .setMaxResults(1)
+                .setTimeMin(beginningOfToday)
+                .setOrderBy("startTime")
+                .setSingleEvents(true)
+                .setQ(user + "'s Birthday")
+                .execute();
+        List<Event> eventList = events.getItems();
+        if(eventList.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(new Birthday(eventList.get(0)));
+        }
+    }
 }
