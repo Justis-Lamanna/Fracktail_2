@@ -63,9 +63,11 @@ public class BasicCalendarServiceImpl implements CalendarService {
     @Override
     public Optional<Birthday> searchBirthday(String user) throws IOException {
         DateTime beginningOfToday = new DateTime(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        DateTime oneYear = new DateTime(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
         Events events = calendar.events().list(calendarId)
                 .setMaxResults(1)
                 .setTimeMin(beginningOfToday)
+                .setTimeMax(oneYear)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .setQ(user + "'s Birthday")

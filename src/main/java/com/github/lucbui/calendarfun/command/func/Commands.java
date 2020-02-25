@@ -5,6 +5,7 @@ import com.github.lucbui.calendarfun.annotation.Param;
 import com.github.lucbui.calendarfun.annotation.Params;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -90,22 +91,6 @@ public class Commands {
     }
 
     private String getDurationText(Duration duration) {
-        long timeLeft;
-        String durationStr;
-        if((timeLeft = duration.toDays()) > 0){
-            durationStr = timeLeft == 1 ? "day" : "days";
-            return String.format("%d %s", timeLeft, durationStr);
-        } else if((timeLeft = duration.toHours()) > 0) {
-            durationStr = timeLeft == 1 ? "hour" : "hours";
-            return String.format("%d %s", timeLeft, durationStr);
-        } else if((timeLeft = duration.toMinutes()) > 0) {
-            durationStr = timeLeft == 1 ? "minute" : "minutes";
-            return String.format("%d %s", timeLeft, durationStr);
-        } else if((timeLeft = duration.getSeconds()) > 0) {
-            durationStr = timeLeft == 1 ? "second" : "seconds";
-            return String.format("%d %s", timeLeft, durationStr);
-        } else {
-            return "today";
-        }
+        return DurationFormatUtils.formatDurationWords(duration.toMillis(), true, false);
     }
 }

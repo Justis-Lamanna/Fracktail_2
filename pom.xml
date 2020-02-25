@@ -60,6 +60,13 @@
 			<artifactId>google-api-services-calendar</artifactId>
 			<version>v3-rev305-1.23.0</version>
 		</dependency>
+
+		<!--Apache-->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.9</version>
+		</dependency>
 	</dependencies>
 
 	<build>
