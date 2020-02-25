@@ -37,10 +37,28 @@
 		</dependency>
 
 		<!--??? Why???-->
+		<!--Discord Bot Dependencies-->
 		<dependency>
 			<groupId>io.projectreactor.netty</groupId>
 			<artifactId>reactor-netty</artifactId>
 			<version>0.8.15.RELEASE</version>
+		</dependency>
+
+		<!--Google Dependencies-->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.oauth-client</groupId>
+			<artifactId>google-oauth-client-jetty</artifactId>
+			<version>1.23.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-calendar</artifactId>
+			<version>v3-rev305-1.23.0</version>
 		</dependency>
 	</dependencies>
 
