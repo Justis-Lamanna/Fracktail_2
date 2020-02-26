@@ -1,7 +1,6 @@
 package com.github.lucbui.calendarfun.config;
 
-import com.github.lucbui.calendarfun.command.CommandStoreImpl;
-import com.github.lucbui.calendarfun.command.CommandStore;
+import com.github.lucbui.calendarfun.command.store.CommandStore;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;

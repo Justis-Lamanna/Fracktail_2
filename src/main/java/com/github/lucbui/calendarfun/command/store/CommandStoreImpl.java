@@ -1,6 +1,5 @@
-package com.github.lucbui.calendarfun.command;
+package com.github.lucbui.calendarfun.command.store;
 
-import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -13,10 +12,15 @@ import java.util.*;
 
 @Service
 public class CommandStoreImpl implements CommandStore {
-    @Autowired
-    private Tokenizer tokenizer;
 
-    private Map<String, BotCommand> commandMap = new HashMap<>();
+    private final Tokenizer tokenizer;
+    private final Map<String, BotCommand> commandMap;
+
+    @Autowired
+    public CommandStoreImpl(Tokenizer tokenizer, CommandStoreMapFactory commandStoreMapFactory) {
+        this.tokenizer = tokenizer;
+        this.commandMap = commandStoreMapFactory.getMap();
+    }
 
     @Override
     public Mono<Void> handleMessageCreateEvent(MessageCreateEvent event) {
@@ -25,7 +29,7 @@ public class CommandStoreImpl implements CommandStore {
         }
         return event.getMessage()
                 .getContent()
-                .filter(message -> tokenizer.isValid(message))
+                .filter(tokenizer::isValid)
                 .map(cmdMessage -> {
                     return commandMap.get(tokenizer.tokenize(cmdMessage).getCommand());
                 })
@@ -51,7 +55,7 @@ public class CommandStoreImpl implements CommandStore {
     @Override
     public void removeCommand(String... names) {
         Arrays.stream(names)
-                .forEach(name -> commandMap.remove(name));
+                .forEach(commandMap::remove);
     }
 
     @Override

@@ -1,17 +1,16 @@
 package com.github.lucbui.calendarfun.command;
 
-import com.github.lucbui.calendarfun.annotation.Command;
-import com.github.lucbui.calendarfun.annotation.Message;
-import com.github.lucbui.calendarfun.annotation.Param;
-import com.github.lucbui.calendarfun.annotation.Params;
+import com.github.lucbui.calendarfun.annotation.*;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.command.func.BotMessageBehavior;
 import com.github.lucbui.calendarfun.command.func.ParameterExtractor;
+import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.exception.BotException;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import com.github.lucbui.calendarfun.token.Tokens;
-import com.github.lucbui.calendarfun.util.OptionalUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +22,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.github.lucbui.calendarfun.command.func.ParameterExtractor.ofType;
+
 public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private final Object bean;
     private final CommandStore store;
@@ -31,6 +32,8 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private final ParameterExtractor<discord4j.core.object.entity.Message> messageExtractor;
     private final ParameterExtractor<Optional<Tokens>> parametersExtractor;
     private final ParameterExtractor<Optional<String>> parameterExtractor;
+    private final ParameterExtractor<Optional<User>> userExtractor;
+    private final ParameterExtractor<Optional<Member>> memberExtractor;
 
     public CommandFieldCallback(CommandStore store, Tokenizer tokenizer, Object bean) {
         this.store = store;
@@ -40,43 +43,53 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         this.messageExtractor = getMessageExtractor();
         this.parametersExtractor = getParametersExtractor();
         this.parameterExtractor = getParameterExtractor();
+        this.userExtractor = getUserExtractor();
+        this.memberExtractor = getMemberExtractor();
     }
 
     protected ParameterExtractor<discord4j.core.object.entity.Message> getMessageExtractor() {
         return new ParameterExtractor.Builder<discord4j.core.object.entity.Message>()
-                .with(ParameterExtractor.ofType(String.class), msg -> tokenize(msg).map(Tokens::getFull).orElse(null))
-                .with(ParameterExtractor.ofType(String[].class), msg -> tokenize(msg).map(CommandFieldCallback::getFullMessageAsArray).orElse(null))
-                .with(ParameterExtractor.ofType(OptionalUtils.PTR_OPTIONAL_STRING), msg -> tokenize(msg).map(Tokens::getFull))
-                .with(ParameterExtractor.ofType(OptionalUtils.PTR_OPTIONAL_STRING_ARRAY), msg -> tokenize(msg).map(CommandFieldCallback::getFullMessageAsArray))
-                .with(ParameterExtractor.ofType(discord4j.core.object.entity.Message.class), Function.identity())
+                .with(ofType(String.class), msg -> tokenize(msg).map(Tokens::getFull).orElse(null))
+                .with(ofType(String[].class), msg -> tokenize(msg).map(CommandFieldCallback::getFullMessageAsArray).orElse(null))
+                .with(ofType(discord4j.core.object.entity.Message.class), Function.identity())
                 .build();
     }
 
     protected ParameterExtractor<Optional<Tokens>> getParametersExtractor() {
         return new ParameterExtractor.Builder<Optional<Tokens>>()
-                .with(ParameterExtractor.ofType(String.class), tokens -> tokens.map(Tokens::getParamString).orElse(null))
-                .with(ParameterExtractor.ofType(String[].class), tokens -> tokens.map(Tokens::getParams).orElse(null))
-                .with(ParameterExtractor.ofType(OptionalUtils.PTR_OPTIONAL_STRING), tokens -> tokens.map(Tokens::getParamString))
-                .with(ParameterExtractor.ofType(OptionalUtils.PTR_OPTIONAL_STRING_ARRAY), tokens -> tokens.map(Tokens::getParams))
+                .with(ofType(String.class), tokens -> tokens.map(Tokens::getParamString).orElse(null))
+                .with(ofType(String[].class), tokens -> tokens.map(Tokens::getParams).orElse(null))
                 .build();
     }
 
     protected ParameterExtractor<Optional<String>> getParameterExtractor() {
         return new ParameterExtractor.Builder<Optional<String>>()
-                .with(ParameterExtractor.ofType(String.class), param -> param.orElse(null))
-                .with(ParameterExtractor.ofType(OptionalUtils.PTR_OPTIONAL_STRING), Function.identity())
-                .with(ParameterExtractor.ofType(OptionalInt.class), param -> param.map(str -> {
+                .with(ofType(String.class), param -> param.orElse(null))
+                .with(ofType(OptionalInt.class), param -> param.map(str -> {
                     try { return OptionalInt.of(Integer.parseInt(str)); }
                     catch (NumberFormatException ex) { return OptionalInt.empty(); }
                 }).orElse(OptionalInt.empty()))
-                .with(ParameterExtractor.ofType(OptionalLong.class), param -> param.map(str -> {
+                .with(ofType(OptionalLong.class), param -> param.map(str -> {
                     try { return OptionalLong.of(Long.parseLong(str)); }
                     catch (NumberFormatException ex) { return OptionalLong.empty(); }
                 }).orElse(OptionalLong.empty()))
-                .with(ParameterExtractor.ofType(OptionalDouble.class), param -> param.map(str -> {
+                .with(ofType(OptionalDouble.class), param -> param.map(str -> {
                     try { return OptionalDouble.of(Double.parseDouble(str)); }
                     catch (NumberFormatException ex) { return OptionalDouble.empty(); }
                 }).orElse(OptionalDouble.empty()))
+                .build();
+    }
+
+    protected ParameterExtractor<Optional<User>> getUserExtractor() {
+        return new ParameterExtractor.Builder<Optional<User>>()
+                .with(ofType(String.class), user -> user.map(User::getUsername).orElse(null))
+                .with(ofType(User.class), user -> user.orElse(null))
+                .build();
+    }
+
+    protected ParameterExtractor<Optional<Member>> getMemberExtractor() {
+        return new ParameterExtractor.Builder<Optional<Member>>()
+                .with(ofType(Member.class), member -> member.orElse(null))
                 .build();
     }
 
@@ -151,6 +164,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
             return getParametersExtractor(param);
         } else if(param.isAnnotationPresent(Param.class)){
             return getParameterExtractor(param);
+        } else if(param.isAnnotationPresent(BasicSender.class)){
+            return getUserExtractor(param);
+        } else if(param.isAnnotationPresent(Sender.class)){
+            return getMemberExtractor(param);
         } else {
             throw new IllegalArgumentException("Method contains too many arguments");
         }
@@ -179,6 +196,16 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                     .map(params -> params[idx]);
             return extractor.apply(paramIfPresent);
         };
+    }
+
+    private Function<MessageCreateEvent, Object> getUserExtractor(Parameter param) {
+        Function<Optional<User>, ?> extractor = userExtractor.getExtractor(param);
+        return event -> extractor.apply(event.getMessage().getAuthor());
+    }
+
+    private Function<MessageCreateEvent, Object> getMemberExtractor(Parameter param) {
+        Function<Optional<Member>, ?> extractor = memberExtractor.getExtractor(param);
+        return event -> extractor.apply(event.getMember());
     }
 
     private Optional<Tokens> tokenize(discord4j.core.object.entity.Message message) {

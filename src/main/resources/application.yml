@@ -4,3 +4,4 @@ calendar:
 
 discord:
   prefix: '!'
+  caseInsensitiveCommands: true

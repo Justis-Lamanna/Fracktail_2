@@ -1,13 +1,15 @@
-package com.github.lucbui.calendarfun.command.func;
+package com.github.lucbui.calendarfun.command;
 
 import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.annotation.Param;
-import com.github.lucbui.calendarfun.command.CommandStore;
+import com.github.lucbui.calendarfun.annotation.Sender;
+import com.github.lucbui.calendarfun.command.func.BotCommand;
+import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
+import discord4j.core.object.entity.Member;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,9 +27,6 @@ public class Commands {
 
     @Autowired
     private CommandStore commandStore;
-
-    @Value("${discord.prefix}")
-    private String prefix;
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
     public String help(@Param(0) String cmd) {
@@ -48,8 +47,17 @@ public class Commands {
                 .stream()
                 .flatMap(cmd -> Arrays.stream(cmd.getNames()))
                 .sorted()
-                .map(cmd -> prefix + cmd)
+                .map(cmd -> "!" + cmd)
                 .collect(Collectors.joining(", "));
+    }
+
+    @Command
+    public String whoami(@Sender Member user) {
+        String message = "You are " + user.getDisplayName() + "!";
+        if(user.getNickname().isPresent()) {
+            message += " (but your real name is " + user.getUsername() + ")";
+        }
+        return message;
     }
 
     @Command(help = "Perform arithmetic. Usage is !math [expression]")

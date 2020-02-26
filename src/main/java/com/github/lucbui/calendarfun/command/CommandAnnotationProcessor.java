@@ -11,7 +11,7 @@ import org.springframework.util.ReflectionUtils;
 @Component
 public class CommandAnnotationProcessor implements BeanPostProcessor {
     @Autowired
-    private CommandStore CommandStore;
+    private com.github.lucbui.calendarfun.command.store.CommandStore CommandStore;
 
     @Autowired
     private Tokenizer tokenizer;
