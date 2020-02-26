@@ -11,14 +11,17 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class BasicCalendarServiceImpl implements CalendarService {
+public class GoogleCalendarService implements CalendarService {
+    private static final String BIRTHDAY_STR = "Birthday";
 
     @Value("${calendar.id}")
     private String calendarId;
@@ -28,14 +31,16 @@ public class BasicCalendarServiceImpl implements CalendarService {
 
     @Override
     public List<Birthday> getNextNBirthdays(int n) throws IOException {
-        // List the next n events from the birthday calendar.
-        LocalDate today = LocalDate.now();
-        DateTime now = new DateTime(today.atStartOfDay().minus(1, ChronoUnit.SECONDS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        DateTime now = from(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        //Cut off the search at one year from now, at which point birthdays will start to repeat.
+        DateTime oneYear = from(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS));
         Events events = calendar.events().list(calendarId)
                 .setMaxResults(n)
                 .setTimeMin(now)
+                .setTimeMax(oneYear)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
+                .setQ(BIRTHDAY_STR)
                 .execute();
         return events.getItems().stream()
                 .map(Birthday::new)
@@ -46,14 +51,15 @@ public class BasicCalendarServiceImpl implements CalendarService {
     public List<Birthday> getTodaysBirthday() throws IOException {
         //Lists all birthday's on today
         LocalDate today = LocalDate.now();
-        DateTime beginningOfToday = new DateTime(today.atStartOfDay().minus(1, ChronoUnit.SECONDS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
-        DateTime endOfToday = new DateTime(today.atStartOfDay().plus(1, ChronoUnit.DAYS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        DateTime beginningOfToday = from(today.atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        DateTime endOfToday = from(today.atStartOfDay().plus(1, ChronoUnit.DAYS));
         Events events = calendar.events().list(calendarId)
                 .setMaxResults(1)
                 .setTimeMin(beginningOfToday)
                 .setTimeMax(endOfToday)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
+                .setQ(BIRTHDAY_STR)
                 .execute();
         return events.getItems().stream()
                 .map(Birthday::new)
@@ -62,8 +68,9 @@ public class BasicCalendarServiceImpl implements CalendarService {
 
     @Override
     public Optional<Birthday> searchBirthday(String user) throws IOException {
-        DateTime beginningOfToday = new DateTime(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
-        DateTime oneYear = new DateTime(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        DateTime beginningOfToday = from(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        //Cut off the search at one year from now, at which point birthdays will start to repeat.
+        DateTime oneYear = from(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS));
         Events events = calendar.events().list(calendarId)
                 .setMaxResults(1)
                 .setTimeMin(beginningOfToday)
@@ -78,5 +85,9 @@ public class BasicCalendarServiceImpl implements CalendarService {
         } else {
             return Optional.of(new Birthday(eventList.get(0)));
         }
+    }
+
+    private DateTime from(LocalDateTime time) {
+        return new DateTime(time.atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
     }
 }
