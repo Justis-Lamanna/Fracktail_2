@@ -85,6 +85,7 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         if(!method.isAnnotationPresent(Command.class)){
             return;
         }
+        System.out.println("Found a method: " + method.getName());
         ReflectionUtils.makeAccessible(method);
         validateMethod(method);
         store.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method)));

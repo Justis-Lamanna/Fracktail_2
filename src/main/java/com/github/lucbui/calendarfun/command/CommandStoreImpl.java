@@ -1,5 +1,6 @@
 package com.github.lucbui.calendarfun.command;
 
+import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -8,13 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class CommandStoreImpl implements CommandStore {
-
     @Autowired
     private Tokenizer tokenizer;
 
@@ -54,5 +52,15 @@ public class CommandStoreImpl implements CommandStore {
     public void removeCommand(String... names) {
         Arrays.stream(names)
                 .forEach(name -> commandMap.remove(name));
+    }
+
+    @Override
+    public BotCommand getCommand(String name) {
+        return commandMap.get(name);
+    }
+
+    @Override
+    public List<BotCommand> getAllCommands() {
+        return new ArrayList<>(commandMap.values());
     }
 }

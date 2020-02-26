@@ -11,9 +11,6 @@ public class BotStartupRunner implements CommandLineRunner {
     @Autowired
     private DiscordClient bot;
 
-    @Autowired
-    private CalendarService calendarService;
-
     @Override
     public void run(String... args) throws Exception {
         bot.login().block();

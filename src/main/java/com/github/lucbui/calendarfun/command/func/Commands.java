@@ -2,18 +2,19 @@ package com.github.lucbui.calendarfun.command.func;
 
 import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.annotation.Param;
-import com.github.lucbui.calendarfun.annotation.Params;
+import com.github.lucbui.calendarfun.command.CommandStore;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
@@ -22,22 +23,41 @@ public class Commands {
     @Autowired
     private CalendarService calendarService;
 
-    @Command
-    public String test() {
-        return "Yes, I am working fine.";
+    @Autowired
+    private CommandStore commandStore;
+
+    @Value("${discord.prefix}")
+    private String prefix;
+
+    @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
+    public String help(@Param(0) String cmd) {
+        if(cmd == null) {
+            cmd = "help";
+        }
+        BotCommand command = commandStore.getCommand(cmd);
+        if(command == null) {
+            return cmd + " is not a valid command.";
+        } else {
+            return command.getHelpText();
+        }
     }
 
-    @Command
+    @Command(help = "Get a list of all usable commands")
+    public String commands() {
+        return "Commands are: " + commandStore.getAllCommands()
+                .stream()
+                .flatMap(cmd -> Arrays.stream(cmd.getNames()))
+                .sorted()
+                .map(cmd -> prefix + cmd)
+                .collect(Collectors.joining(", "));
+    }
+
+    @Command(help = "Perform arithmetic. Usage is !math [expression]")
     public String math() {
         return "The answer is 3";
     }
 
-    @Command
-    public String echo(@Params String message) {
-        return message;
-    }
-
-    @Command
+    @Command(help = "Get the next birthday, or birthdays, coming up. Optionally, specify a number between 1 and 10 to get the next n birthdays.")
     public String nextbirthday(@Param(0) OptionalInt in) throws IOException {
         int n = in.orElse(1);
         if(n < 1) {
@@ -58,7 +78,7 @@ public class Commands {
         }
     }
 
-    @Command
+    @Command(help = "Get all birthdays occuring today.")
     public String todaybirthday() throws IOException {
         List<Birthday> birthdays = calendarService.getTodaysBirthday();
         if(birthdays.isEmpty()) {
@@ -73,7 +93,7 @@ public class Commands {
         }
     }
 
-    @Command
+    @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name]. Note that this is a work in progress.")
     public String birthday(@Param(0) String user) throws IOException {
        if(user != null){
            return calendarService
