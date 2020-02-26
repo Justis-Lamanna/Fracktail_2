@@ -2,7 +2,6 @@ package com.github.lucbui.calendarfun.command.store;
 
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.token.Tokenizer;
-import com.github.lucbui.calendarfun.token.PrefixTokenizer;
 import com.github.lucbui.calendarfun.validation.CommandValidator;
 import com.github.lucbui.calendarfun.validation.MessageValidator;
 
@@ -47,6 +46,6 @@ public class CommandStoreBuilder {
     public CommandStore build() {
         Map<String, BotCommand> commands = this.commandStoreMapFactory.getMap();
         commands.putAll(this.commandMap);
-        return new CommandStoreImpl(tokenizer, messageValidators, commandValidators, commandMap);
+        return new MapCommandStore(tokenizer, messageValidators, commandValidators, commandMap);
     }
 }

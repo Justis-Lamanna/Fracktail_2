@@ -7,16 +7,19 @@ import com.github.lucbui.calendarfun.validation.MessageValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-public class CommandStoreImpl implements CommandStore {
+public class MapCommandStore implements CommandStore {
 
     private final Tokenizer tokenizer;
     private final List<MessageValidator> messageValidators;
     private final List<CommandValidator> commandValidators;
     private final Map<String, BotCommand> commandMap;
 
-    public CommandStoreImpl(Tokenizer tokenizer, List<MessageValidator> messageValidators, List<CommandValidator> commandValidators, Map<String, BotCommand> commandMap) {
+    public MapCommandStore(Tokenizer tokenizer, List<MessageValidator> messageValidators, List<CommandValidator> commandValidators, Map<String, BotCommand> commandMap) {
         this.tokenizer = tokenizer;
         this.messageValidators = messageValidators;
         this.commandValidators = commandValidators;
