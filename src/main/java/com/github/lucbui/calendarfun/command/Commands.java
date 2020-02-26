@@ -7,6 +7,7 @@ import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
+import com.github.lucbui.calendarfun.validation.PermissionsService;
 import discord4j.core.object.entity.Member;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,6 +29,9 @@ public class Commands {
 
     @Autowired
     private CommandStore commandStore;
+
+    @Autowired
+    private PermissionsService permissionsService;
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
     public String help(@Param(0) String cmd) {
@@ -58,6 +63,16 @@ public class Commands {
             message += " (but your real name is " + user.getUsername() + ")";
         }
         return message;
+    }
+
+    @Command
+    public String roles(@Sender Member member) {
+        Set<String> permissions = permissionsService.getPermissions(member.getId());
+        if(permissions.isEmpty()) {
+            return "You have no permissions";
+        } else {
+            return "Your permissions are: " + permissions.stream().sorted().collect(Collectors.joining(", "));
+        }
     }
 
     @Command(help = "Perform arithmetic. Usage is !math [expression]")

@@ -5,3 +5,5 @@ calendar:
 discord:
   prefix: '!'
   caseInsensitiveCommands: true
+  permissions:
+    preload: '248612704019808258:admin'
