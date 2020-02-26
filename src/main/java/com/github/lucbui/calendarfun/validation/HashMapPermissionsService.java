@@ -13,7 +13,7 @@ import java.util.Set;
 public class HashMapPermissionsService implements PermissionsService {
     private Map<Snowflake, Set<String>> permissions;
 
-    public HashMapPermissionsService( @Value("${discord.permissions.preload:}") String preload) {
+    public HashMapPermissionsService(@Value("${discord.permissions.preload:}") String preload) {
         permissions = new HashMap<>();
         if(preload.length() > 0) {
             handlePreload(preload);

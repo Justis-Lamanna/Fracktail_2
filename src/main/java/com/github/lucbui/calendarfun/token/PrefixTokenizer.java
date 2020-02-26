@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.regex.Pattern;
 
 @Service
-public class TokenizerImpl implements Tokenizer {
+public class PrefixTokenizer implements Tokenizer {
 
     @Value("${discord.prefix}")
     private String prefix;

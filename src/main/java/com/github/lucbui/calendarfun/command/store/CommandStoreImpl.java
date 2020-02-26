@@ -5,32 +5,37 @@ import com.github.lucbui.calendarfun.token.Tokenizer;
 import com.github.lucbui.calendarfun.validation.CommandValidator;
 import com.github.lucbui.calendarfun.validation.MessageValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
 
-@Service
 public class CommandStoreImpl implements CommandStore {
 
     private final Tokenizer tokenizer;
-    private final MessageValidator messageValidator;
-    private final CommandValidator commandValidator;
+    private final List<MessageValidator> messageValidators;
+    private final List<CommandValidator> commandValidators;
     private final Map<String, BotCommand> commandMap;
 
-    @Autowired
-    public CommandStoreImpl(Tokenizer tokenizer, MessageValidator messageValidator, CommandValidator commandValidator, CommandStoreMapFactory commandStoreMapFactory) {
+    public CommandStoreImpl(Tokenizer tokenizer, List<MessageValidator> messageValidators, List<CommandValidator> commandValidators, Map<String, BotCommand> commandMap) {
         this.tokenizer = tokenizer;
-        this.messageValidator = messageValidator;
-        this.commandValidator = commandValidator;
-        this.commandMap = commandStoreMapFactory.getMap();
+        this.messageValidators = messageValidators;
+        this.commandValidators = commandValidators;
+        this.commandMap = commandMap;
+    }
+
+    private boolean validateMessage(MessageCreateEvent event) {
+        return messageValidators.stream()
+                .allMatch(validator -> validator.validate(event));
+    }
+
+    private boolean validateCommand(MessageCreateEvent event, BotCommand command) {
+        return commandValidators.stream()
+                .allMatch(validator -> validator.validate(event, command));
     }
 
     @Override
     public Mono<Void> handleMessageCreateEvent(MessageCreateEvent event) {
-        if(messageValidator.validate(event)){
+        if(validateMessage(event)){
             return event.getMessage()
                     .getContent()
                     .filter(tokenizer::isValid)
@@ -39,14 +44,15 @@ public class CommandStoreImpl implements CommandStore {
                     })
                     .map(cmd -> {
                         try {
-                            if(commandValidator.validate(event, cmd)) {
+                            if(validateCommand(event, cmd)) {
                                 return cmd.getBehavior().execute(event);
                             } else {
                                 return Mono.<Void>empty();
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();
-                            event.getMessage().getChannel()
+                            event.getMessage()
+                                    .getChannel()
                                     .flatMap(channel -> channel.createMessage("I'm sorry, I encountered an exception. Please check the logs."))
                                     .then();
                             return Mono.<Void>empty();

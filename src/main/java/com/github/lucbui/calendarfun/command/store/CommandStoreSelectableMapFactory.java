@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class CommandStoreMapFactoryImpl implements CommandStoreMapFactory {
+public class CommandStoreSelectableMapFactory implements CommandStoreMapFactory {
     @Value("${discord.caseInsensitiveCommands:false}")
     private boolean caseInsensitiveCommands;
 
