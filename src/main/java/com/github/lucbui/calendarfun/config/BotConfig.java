@@ -5,6 +5,8 @@ import com.github.lucbui.calendarfun.command.store.CommandStoreBuilder;
 import com.github.lucbui.calendarfun.command.store.CommandStoreMapFactory;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import com.github.lucbui.calendarfun.validation.NotBotUserMessageValidator;
+import com.github.lucbui.calendarfun.validation.PermissionsService;
+import com.github.lucbui.calendarfun.validation.UserPermissionCommandValidator;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -19,10 +21,14 @@ public class BotConfig {
     private String token;
 
     @Bean
-    public CommandStore commandStore(Tokenizer tokenizer, CommandStoreMapFactory commandStoreMapFactory) {
+    public CommandStore commandStore(
+            Tokenizer tokenizer,
+            CommandStoreMapFactory commandStoreMapFactory,
+            UserPermissionCommandValidator userPermissionCommandValidator) {
         return new CommandStoreBuilder(tokenizer)
                 .setCommandStoreMapFactory(commandStoreMapFactory)
                 .setMessageValidators(new NotBotUserMessageValidator())
+                .setCommandValidators(userPermissionCommandValidator)
                 .build();
     }
 

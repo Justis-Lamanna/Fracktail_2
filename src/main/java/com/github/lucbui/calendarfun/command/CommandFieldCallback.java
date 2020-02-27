@@ -101,7 +101,15 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         System.out.println("Found a method: " + method.getName());
         ReflectionUtils.makeAccessible(method);
         validateMethod(method);
-        store.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method)));
+        store.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method)));
+    }
+
+    private Set<String> getPermissions(Method method) {
+        if(method.isAnnotationPresent(Permissions.class)){
+            String[] permissions = method.getAnnotation(Permissions.class).value();
+            return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
+        }
+        return Collections.emptySet();
     }
 
     private void validateMethod(Method method) {

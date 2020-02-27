@@ -2,12 +2,14 @@ package com.github.lucbui.calendarfun.command;
 
 import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.annotation.Param;
+import com.github.lucbui.calendarfun.annotation.Permissions;
 import com.github.lucbui.calendarfun.annotation.Sender;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
 import com.github.lucbui.calendarfun.validation.PermissionsService;
+import com.github.lucbui.calendarfun.validation.UserPermissionCommandValidator;
 import discord4j.core.object.entity.Member;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class Commands {
     @Autowired
     private PermissionsService permissionsService;
 
+    @Autowired
+    private UserPermissionCommandValidator userPermissionCommandValidator;
+
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
     public String help(@Param(0) String cmd) {
         if(cmd == null) {
@@ -47,9 +52,10 @@ public class Commands {
     }
 
     @Command(help = "Get a list of all usable commands")
-    public String commands() {
+    public String commands(@Sender Member user) {
         return "Commands are: " + commandStore.getAllCommands()
                 .stream()
+                .filter(cmd -> userPermissionCommandValidator.validate(user, cmd))
                 .flatMap(cmd -> Arrays.stream(cmd.getNames()))
                 .sorted()
                 .map(cmd -> "!" + cmd)
@@ -78,6 +84,12 @@ public class Commands {
     @Command(help = "Perform arithmetic. Usage is !math [expression]")
     public String math() {
         return "The answer is 3";
+    }
+
+    @Command
+    @Permissions("admin")
+    public String admin() {
+        return "This is a cool command that only admins can use!";
     }
 
     @Command(help = "Get the next birthday, or birthdays, coming up. Optionally, specify a number between 1 and 10 to get the next n birthdays.")
