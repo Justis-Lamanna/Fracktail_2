@@ -1,10 +1,8 @@
 package com.github.lucbui.calendarfun.autoconfig;
 
-import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.validation.command.CommandValidator;
 import com.github.lucbui.calendarfun.validation.message.MessageValidator;
 import com.github.lucbui.calendarfun.validation.user.UserValidator;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

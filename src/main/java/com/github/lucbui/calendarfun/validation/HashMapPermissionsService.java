@@ -51,13 +51,13 @@ public class HashMapPermissionsService implements PermissionsService {
         permissions.computeIfAbsent(userId, key -> new HashSet<>()).remove(permission);
     }
 
-    @Command(help = "Display all permissions you have")
+    @Command(help = "Display all permissions you have.")
     public String permissions(@Sender Member member) {
         Set<String> permissions = getPermissions(member.getId());
         if(permissions.isEmpty()) {
-            return "You have no permissions";
+            return "You have no permissions.";
         } else {
-            return "Your permissions are: " + permissions.stream().sorted().collect(Collectors.joining(", "));
+            return "Your permissions are: " + permissions.stream().sorted().collect(Collectors.joining(", ")) + ".";
         }
     }
 }
