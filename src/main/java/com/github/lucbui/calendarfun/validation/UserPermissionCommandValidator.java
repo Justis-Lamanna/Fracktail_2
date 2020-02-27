@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 
 @Service
-public class UserPermissionCommandValidator implements CommandValidator {
+public class UserPermissionCommandValidator implements CommandValidator, UserCommandValidator {
     private final PermissionsService permissionsService;
 
     @Autowired
@@ -27,5 +27,10 @@ public class UserPermissionCommandValidator implements CommandValidator {
             Set<String> permissionsUserHas = permissionsService.getPermissions(user.getId());
             return permissionsUserHas.containsAll(permissionsCommandNeeds);
         }
+    }
+
+    @Override
+    public boolean validate(MessageCreateEvent event, BotCommand command) {
+        return event.getMember().map(member -> validate(member, command)).orElse(false);
     }
 }

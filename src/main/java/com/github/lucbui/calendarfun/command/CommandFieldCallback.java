@@ -4,6 +4,7 @@ import com.github.lucbui.calendarfun.annotation.*;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.command.func.BotMessageBehavior;
 import com.github.lucbui.calendarfun.command.func.ParameterExtractor;
+import com.github.lucbui.calendarfun.command.store.CommandList;
 import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.exception.BotException;
 import com.github.lucbui.calendarfun.token.Tokenizer;
@@ -26,7 +27,7 @@ import static com.github.lucbui.calendarfun.command.func.ParameterExtractor.ofTy
 
 public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private final Object bean;
-    private final CommandStore store;
+    private final CommandList commands;
     private final Tokenizer tokenizer;
 
     private final ParameterExtractor<discord4j.core.object.entity.Message> messageExtractor;
@@ -35,8 +36,8 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private final ParameterExtractor<Optional<User>> userExtractor;
     private final ParameterExtractor<Optional<Member>> memberExtractor;
 
-    public CommandFieldCallback(CommandStore store, Tokenizer tokenizer, Object bean) {
-        this.store = store;
+    public CommandFieldCallback(CommandList commands, Tokenizer tokenizer, Object bean) {
+        this.commands = commands;
         this.tokenizer = tokenizer;
         this.bean = bean;
 
@@ -101,7 +102,7 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         System.out.println("Found a method: " + method.getName());
         ReflectionUtils.makeAccessible(method);
         validateMethod(method);
-        store.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method)));
+        commands.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method)));
     }
 
     private Set<String> getPermissions(Method method) {

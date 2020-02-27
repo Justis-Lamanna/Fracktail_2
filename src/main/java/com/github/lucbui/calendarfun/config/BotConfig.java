@@ -1,5 +1,6 @@
 package com.github.lucbui.calendarfun.config;
 
+import com.github.lucbui.calendarfun.command.store.CommandList;
 import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.command.store.CommandStoreBuilder;
 import com.github.lucbui.calendarfun.command.store.CommandStoreMapFactory;
@@ -22,10 +23,12 @@ public class BotConfig {
 
     @Bean
     public CommandStore commandStore(
+            CommandList commandList,
             Tokenizer tokenizer,
             CommandStoreMapFactory commandStoreMapFactory,
             UserPermissionCommandValidator userPermissionCommandValidator) {
         return new CommandStoreBuilder(tokenizer)
+                .setCommandList(commandList)
                 .setCommandStoreMapFactory(commandStoreMapFactory)
                 .setMessageValidators(new NotBotUserMessageValidator())
                 .setCommandValidators(userPermissionCommandValidator)

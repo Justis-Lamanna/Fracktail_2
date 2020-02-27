@@ -13,6 +13,7 @@ public class CommandStoreBuilder {
     private List<CommandValidator> commandValidators;
     private CommandStoreMapFactory commandStoreMapFactory;
     private Map<String, BotCommand> commandMap;
+    private CommandList commandList;
 
     public CommandStoreBuilder(Tokenizer tokenizer) {
         this.tokenizer = tokenizer;
@@ -20,6 +21,7 @@ public class CommandStoreBuilder {
         this.commandValidators = new ArrayList<>();
         this.commandStoreMapFactory = HashMap::new;
         this.commandMap = new HashMap<>();
+        this.commandList = null;
     }
 
     public CommandStoreBuilder setMessageValidators(MessageValidator... validators) {
@@ -37,6 +39,11 @@ public class CommandStoreBuilder {
         return this;
     }
 
+    public CommandStoreBuilder setCommandList(CommandList commandList) {
+        this.commandList = commandList;
+        return this;
+    }
+
     public CommandStoreBuilder addCommand(BotCommand command, String... names) {
         Arrays.stream(names)
                 .forEach(name -> this.commandMap.put(name, command));
@@ -45,6 +52,9 @@ public class CommandStoreBuilder {
 
     public CommandStore build() {
         Map<String, BotCommand> commands = this.commandStoreMapFactory.getMap();
+        if(this.commandList != null) {
+            this.commandList.getCommands().forEach(cmd -> Arrays.stream(cmd.getNames()).forEach(name -> commands.put(name, cmd)));
+        }
         commands.putAll(this.commandMap);
         return new MapCommandStore(tokenizer, messageValidators, commandValidators, commandMap);
     }

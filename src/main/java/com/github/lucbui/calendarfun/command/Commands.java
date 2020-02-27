@@ -9,7 +9,7 @@ import com.github.lucbui.calendarfun.command.store.CommandStore;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
 import com.github.lucbui.calendarfun.validation.PermissionsService;
-import com.github.lucbui.calendarfun.validation.UserPermissionCommandValidator;
+import com.github.lucbui.calendarfun.validation.UserCommandValidator;
 import discord4j.core.object.entity.Member;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,18 +33,15 @@ public class Commands {
     private CommandStore commandStore;
 
     @Autowired
-    private PermissionsService permissionsService;
-
-    @Autowired
-    private UserPermissionCommandValidator userPermissionCommandValidator;
+    private UserCommandValidator userCommandValidator;
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
-    public String help(@Param(0) String cmd) {
+    public String help(@Param(0) String cmd, @Sender Member user) {
         if(cmd == null) {
             cmd = "help";
         }
         BotCommand command = commandStore.getCommand(cmd);
-        if(command == null) {
+        if(command == null || !userCommandValidator.validate(user, command)) {
             return cmd + " is not a valid command.";
         } else {
             return command.getHelpText();
@@ -55,30 +52,11 @@ public class Commands {
     public String commands(@Sender Member user) {
         return "Commands are: " + commandStore.getAllCommands()
                 .stream()
-                .filter(cmd -> userPermissionCommandValidator.validate(user, cmd))
+                .filter(cmd -> userCommandValidator.validate(user, cmd))
                 .flatMap(cmd -> Arrays.stream(cmd.getNames()))
                 .sorted()
                 .map(cmd -> "!" + cmd)
                 .collect(Collectors.joining(", "));
-    }
-
-    @Command
-    public String whoami(@Sender Member user) {
-        String message = "You are " + user.getDisplayName() + "!";
-        if(user.getNickname().isPresent()) {
-            message += " (but your real name is " + user.getUsername() + ")";
-        }
-        return message;
-    }
-
-    @Command
-    public String roles(@Sender Member member) {
-        Set<String> permissions = permissionsService.getPermissions(member.getId());
-        if(permissions.isEmpty()) {
-            return "You have no permissions";
-        } else {
-            return "Your permissions are: " + permissions.stream().sorted().collect(Collectors.joining(", "));
-        }
     }
 
     @Command(help = "Perform arithmetic. Usage is !math [expression]")
@@ -86,7 +64,7 @@ public class Commands {
         return "The answer is 3";
     }
 
-    @Command
+    @Command(help = "Taunt the others in your server with a command they can't use")
     @Permissions("admin")
     public String admin() {
         return "This is a cool command that only admins can use!";
