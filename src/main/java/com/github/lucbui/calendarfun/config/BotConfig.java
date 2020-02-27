@@ -1,13 +1,6 @@
 package com.github.lucbui.calendarfun.config;
 
-import com.github.lucbui.calendarfun.command.store.CommandList;
-import com.github.lucbui.calendarfun.command.store.CommandStore;
-import com.github.lucbui.calendarfun.command.store.CommandStoreBuilder;
-import com.github.lucbui.calendarfun.command.store.CommandStoreMapFactory;
-import com.github.lucbui.calendarfun.token.Tokenizer;
-import com.github.lucbui.calendarfun.validation.NotBotUserMessageValidator;
-import com.github.lucbui.calendarfun.validation.PermissionsService;
-import com.github.lucbui.calendarfun.validation.UserPermissionCommandValidator;
+import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -22,27 +15,13 @@ public class BotConfig {
     private String token;
 
     @Bean
-    public CommandStore commandStore(
-            CommandList commandList,
-            Tokenizer tokenizer,
-            CommandStoreMapFactory commandStoreMapFactory,
-            UserPermissionCommandValidator userPermissionCommandValidator) {
-        return new CommandStoreBuilder(tokenizer)
-                .setCommandList(commandList)
-                .setCommandStoreMapFactory(commandStoreMapFactory)
-                .setMessageValidators(new NotBotUserMessageValidator())
-                .setCommandValidators(userPermissionCommandValidator)
-                .build();
-    }
-
-    @Bean
-    public DiscordClient bot(CommandStore commandStore) {
+    public DiscordClient bot(CommandHandler commandHandler) {
         DiscordClient bot = new DiscordClientBuilder(token)
                 .setInitialPresence(Presence.doNotDisturb())
                 .build();
 
         bot.getEventDispatcher().on(MessageCreateEvent.class)
-                .flatMap(commandStore::handleMessageCreateEvent)
+                .flatMap(commandHandler::handleMessageCreateEvent)
                 .subscribe();
 
         return bot;

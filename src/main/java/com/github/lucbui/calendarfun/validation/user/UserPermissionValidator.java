@@ -1,20 +1,22 @@
-package com.github.lucbui.calendarfun.validation;
+package com.github.lucbui.calendarfun.validation.user;
 
 import com.github.lucbui.calendarfun.command.func.BotCommand;
+import com.github.lucbui.calendarfun.validation.PermissionsService;
+import com.github.lucbui.calendarfun.validation.command.CommandValidator;
+import com.github.lucbui.calendarfun.validation.user.UserValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
 @Service
-public class UserPermissionCommandValidator implements CommandValidator, UserCommandValidator {
+public class UserPermissionValidator implements UserValidator {
     private final PermissionsService permissionsService;
 
     @Autowired
-    public UserPermissionCommandValidator(PermissionsService permissionsService){
+    public UserPermissionValidator(PermissionsService permissionsService){
         this.permissionsService = permissionsService;
     }
 
@@ -27,10 +29,5 @@ public class UserPermissionCommandValidator implements CommandValidator, UserCom
             Set<String> permissionsUserHas = permissionsService.getPermissions(user.getId());
             return permissionsUserHas.containsAll(permissionsCommandNeeds);
         }
-    }
-
-    @Override
-    public boolean validate(MessageCreateEvent event, BotCommand command) {
-        return event.getMember().map(member -> validate(member, command)).orElse(false);
     }
 }

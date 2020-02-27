@@ -3,14 +3,10 @@ package com.github.lucbui.calendarfun.command;
 import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.annotation.Param;
 import com.github.lucbui.calendarfun.annotation.Permissions;
-import com.github.lucbui.calendarfun.annotation.Sender;
-import com.github.lucbui.calendarfun.command.func.BotCommand;
-import com.github.lucbui.calendarfun.command.store.CommandStore;
+import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
-import com.github.lucbui.calendarfun.validation.PermissionsService;
-import com.github.lucbui.calendarfun.validation.UserCommandValidator;
-import discord4j.core.object.entity.Member;
+import com.github.lucbui.calendarfun.validation.user.UserValidator;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,10 +14,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -30,34 +24,10 @@ public class Commands {
     private CalendarService calendarService;
 
     @Autowired
-    private CommandStore commandStore;
+    private CommandHandler commandHandler;
 
     @Autowired
-    private UserCommandValidator userCommandValidator;
-
-    @Command(help = "Get help for any command. Usage is !help [command name without exclamation point]")
-    public String help(@Param(0) String cmd, @Sender Member user) {
-        if(cmd == null) {
-            cmd = "help";
-        }
-        BotCommand command = commandStore.getCommand(cmd);
-        if(command == null || !userCommandValidator.validate(user, command)) {
-            return cmd + " is not a valid command.";
-        } else {
-            return command.getHelpText();
-        }
-    }
-
-    @Command(help = "Get a list of all usable commands")
-    public String commands(@Sender Member user) {
-        return "Commands are: " + commandStore.getAllCommands()
-                .stream()
-                .filter(cmd -> userCommandValidator.validate(user, cmd))
-                .flatMap(cmd -> Arrays.stream(cmd.getNames()))
-                .sorted()
-                .map(cmd -> "!" + cmd)
-                .collect(Collectors.joining(", "));
-    }
+    private UserValidator userValidator;
 
     @Command(help = "Perform arithmetic. Usage is !math [expression]")
     public String math() {

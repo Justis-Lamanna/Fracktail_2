@@ -6,14 +6,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface CommandStore {
+public interface CommandHandler {
     Mono<Void> handleMessageCreateEvent(MessageCreateEvent event);
-
-    void addCommand(BotCommand command);
-
-    void removeCommand(String... names);
-
-    BotCommand getCommand(String name);
-
-    List<BotCommand> getAllCommands();
 }
