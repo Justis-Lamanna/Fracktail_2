@@ -2,9 +2,7 @@ package com.github.lucbui.calendarfun.validation.message;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
-import org.springframework.stereotype.Component;
 
-@Component
 public class NotBotUserMessageValidator implements MessageValidator {
     @Override
     public boolean validate(MessageCreateEvent event) {

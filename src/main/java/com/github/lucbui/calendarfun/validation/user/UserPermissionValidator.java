@@ -8,11 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-@Service
 public class UserPermissionValidator implements UserValidator {
     private final PermissionsService permissionsService;
 
-    @Autowired
     public UserPermissionValidator(PermissionsService permissionsService){
         this.permissionsService = permissionsService;
     }
