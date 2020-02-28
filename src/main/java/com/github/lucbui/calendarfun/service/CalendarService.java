@@ -10,4 +10,5 @@ public interface CalendarService {
     List<Birthday> getNextNBirthdays(int n) throws IOException;
     List<Birthday> getTodaysBirthday() throws IOException;
     Optional<Birthday> searchBirthday(String user) throws IOException;
+    void addBirthday(Birthday birthday) throws IOException;
 }

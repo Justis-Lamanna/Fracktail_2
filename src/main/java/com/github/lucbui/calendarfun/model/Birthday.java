@@ -27,6 +27,11 @@ public class Birthday {
         }
     }
 
+    public Birthday(String name, LocalDate date) {
+        this.date = date;
+        this.name = name;
+    }
+
     public LocalDate getDate() {
         return date;
     }

@@ -4,18 +4,18 @@ import com.github.lucbui.calendarfun.model.Birthday;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -84,6 +84,23 @@ public class GoogleCalendarService implements CalendarService {
         } else {
             return Optional.of(new Birthday(eventList.get(0)));
         }
+    }
+
+    @Override
+    public void addBirthday(Birthday birthday) throws IOException {
+        EventDateTime eventTime = new EventDateTime()
+            .setDate(new DateTime(DateTimeFormatter.ISO_LOCAL_DATE.format(birthday.getDate())))
+            .setTimeZone(ZoneId.systemDefault().getId());
+
+        Event event = new Event()
+            .setStart(eventTime)
+            .setEnd(eventTime)
+            .setSummary(birthday.getName() + "'s Birthday")
+            .setRecurrence(Collections.singletonList("RRULE:FREQ=YEARLY"))
+            .setTransparency("transparent")
+            .setVisibility("public");
+
+        calendar.events().insert(calendarId, event).execute();
     }
 
     private DateTime from(LocalDateTime time) {

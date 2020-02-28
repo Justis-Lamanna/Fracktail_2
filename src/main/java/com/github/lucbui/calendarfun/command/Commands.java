@@ -7,13 +7,16 @@ import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
 import com.github.lucbui.calendarfun.validation.user.UserValidator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
@@ -86,6 +89,17 @@ public class Commands {
        } else {
            return "You must specify a user to search for.";
        }
+    }
+
+    @Command(help = "Add a user's birthday")
+    @Permissions("admin")
+    public String addbirthday(@Param(0) String name, @Param(1) String date) throws IOException {
+        if(name == null || date == null) {
+            return "Correct usage: !addbirthday [name] [date]";
+        }
+        Birthday birthday = new Birthday(StringUtils.capitalize(name), LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE));
+        calendarService.addBirthday(birthday);
+        return "Added " + name + "'s birthday to your calendar";
     }
 
     private String getBirthdayText(Birthday nextBirthday) {
