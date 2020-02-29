@@ -19,6 +19,10 @@ public class CooldownCommandValidator implements CommandValidator {
 
     @Override
     public boolean validate(MessageCreateEvent event, BotCommand command) {
+        Duration timeoutToUse = timeout;
+        if(command.getTimeout() != null) {
+            timeoutToUse = command.getTimeout();
+        }
         Instant lastUse = getLatestTimeForCommand(command);
         if(lastUse == null) {
             setLatestTimeToNow(command, Instant.now());
@@ -26,7 +30,7 @@ public class CooldownCommandValidator implements CommandValidator {
         } else {
             Instant now = Instant.now();
             Duration timeSinceLastUse = Duration.between(lastUse, now);
-            return timeSinceLastUse.compareTo(timeout) >= 0;
+            return timeSinceLastUse.compareTo(timeoutToUse) >= 0;
         }
     }
 

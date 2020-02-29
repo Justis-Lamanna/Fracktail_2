@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -101,15 +102,7 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         System.out.println("Found a method: " + method.getName());
         ReflectionUtils.makeAccessible(method);
         validateMethod(method);
-        commands.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method)));
-    }
-
-    private Set<String> getPermissions(Method method) {
-        if(method.isAnnotationPresent(Permissions.class)){
-            String[] permissions = method.getAnnotation(Permissions.class).value();
-            return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
-        }
-        return Collections.emptySet();
+        commands.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method), getTimeout(method)));
     }
 
     private void validateMethod(Method method) {
@@ -159,6 +152,24 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                 throw new BotException("Error invoking reflected method", e);
             }
         };
+    }
+
+    private Set<String> getPermissions(Method method) {
+        if(method.isAnnotationPresent(Permissions.class)){
+            String[] permissions = method.getAnnotation(Permissions.class).value();
+            return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
+        }
+        return Collections.emptySet();
+    }
+
+    private Duration getTimeout(Method method) {
+        if(method.isAnnotationPresent(Timeout.class)) {
+            Timeout timeout = method.getAnnotation(Timeout.class);
+            if(timeout.value() > 0) {
+                return Duration.of(timeout.value(), timeout.unit());
+            }
+        }
+        return null;
     }
 
     private List<Function<MessageCreateEvent, Object>> getExtractorsFor(Method method) {

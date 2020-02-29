@@ -3,6 +3,7 @@ package com.github.lucbui.calendarfun.command;
 import com.github.lucbui.calendarfun.annotation.Command;
 import com.github.lucbui.calendarfun.annotation.Param;
 import com.github.lucbui.calendarfun.annotation.Permissions;
+import com.github.lucbui.calendarfun.annotation.Timeout;
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ public class Commands {
     private UserValidator userValidator;
 
     @Command(help = "Perform arithmetic. Usage is !math [expression]")
+    @Timeout(value = 1, unit = ChronoUnit.MINUTES)
     public String math() {
         return "The answer is 3";
     }
