@@ -1,30 +1,36 @@
 package com.github.lucbui.calendarfun.command;
 
-import com.github.lucbui.calendarfun.annotation.Command;
-import com.github.lucbui.calendarfun.annotation.Param;
-import com.github.lucbui.calendarfun.annotation.Permissions;
-import com.github.lucbui.calendarfun.annotation.Timeout;
+import com.github.lucbui.calendarfun.annotation.*;
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.CalendarService;
+import com.github.lucbui.calendarfun.util.DiscordUtils;
 import com.github.lucbui.calendarfun.validation.user.UserValidator;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 @Component
 public class Commands {
+    private static final int OLDEST_POSSIBLE_YEAR = 1903;
+
     @Autowired
     private CalendarService calendarService;
 
@@ -82,27 +88,52 @@ public class Commands {
         }
     }
 
-    @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name]. Note that this is a work in progress.")
-    public String birthday(@Param(0) String user) throws IOException {
+    @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
+    public String birthday(@Param(0) String user, @Sender Member member) throws IOException {
        if(user != null){
-           return calendarService
-                   .searchBirthday(user)
+           Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(user);
+           Optional<Birthday> birthday;
+           if(userIdIfPresent.isPresent()) {
+               birthday = calendarService.searchBirthdayById(Snowflake.of(userIdIfPresent.get()));
+           } else {
+               birthday = calendarService.searchBirthday(user);
+           }
+           return birthday
                    .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
                    .orElse("Sorry, I don't know when " + user + "'s birthday is.");
        } else {
-           return "You must specify a user to search for.";
+           return calendarService.searchBirthdayById(member.getId())
+                   .map(bday -> String.format("Your birthday is on %tD (%s)", bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
+                   .orElse("Sorry, I don't know when your birthday is.");
        }
     }
 
-    @Command(help = "Add a user's birthday")
-    @Permissions("admin")
-    public String addbirthday(@Param(0) String name, @Param(1) String date) throws IOException {
-        if(name == null || date == null) {
-            return "Correct usage: !addbirthday [name] [date]";
+    @Command(help = "Add a user's birthday. Usage is !addbirthday [yyyy-mm-dd]")
+    public String addbirthday(@Sender Member sender, @Param(0) String date) throws IOException {
+        Optional<Birthday> birthdayIfPresent = calendarService.searchBirthdayById(sender.getId());
+        if(birthdayIfPresent.isPresent()) {
+            return "You already have a birthday set.";
         }
-        Birthday birthday = new Birthday(StringUtils.capitalize(name), LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE));
+
+        LocalDate dateOfBirth;
+        try {
+            dateOfBirth = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+            int currentYear = LocalDate.now().get(ChronoField.YEAR);
+            if(dateOfBirth.get(ChronoField.YEAR) < OLDEST_POSSIBLE_YEAR) {
+                return "You are definitely not that old.";
+            } else if(dateOfBirth.get(ChronoField.YEAR) > currentYear) {
+                return "You were not born in the future, either";
+            }
+        } catch (DateTimeParseException ex) {
+            return "Correct usage: !addbirthday [yyyy-mm-dd]";
+        }
+
+        Birthday birthday = new Birthday(
+            sender.getId().asString(),
+            StringUtils.capitalize(sender.getUsername()),
+            dateOfBirth);
         calendarService.addBirthday(birthday);
-        return "Added " + name + "'s birthday to your calendar";
+        return "Added " + sender.getUsername() + "'s birthday to the birthday calendar";
     }
 
     private String getBirthdayText(Birthday nextBirthday) {

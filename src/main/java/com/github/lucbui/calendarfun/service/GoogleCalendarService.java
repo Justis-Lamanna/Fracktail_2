@@ -7,6 +7,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
+import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -87,6 +88,27 @@ public class GoogleCalendarService implements CalendarService {
     }
 
     @Override
+    public Optional<Birthday> searchBirthdayById(Snowflake id) throws IOException {
+        DateTime beginningOfToday = from(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        //Cut off the search at one year from now, at which point birthdays will start to repeat.
+        DateTime oneYear = from(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS));
+        Events events = calendar.events().list(calendarId)
+                .setMaxResults(1)
+                .setTimeMin(beginningOfToday)
+                .setTimeMax(oneYear)
+                .setOrderBy("startTime")
+                .setSingleEvents(true)
+                .setPrivateExtendedProperty(Collections.singletonList("discord_id=" + id.asString()))
+                .execute();
+        List<Event> eventList = events.getItems();
+        if(eventList.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(new Birthday(eventList.get(0)));
+        }
+    }
+
+    @Override
     public void addBirthday(Birthday birthday) throws IOException {
         EventDateTime eventTime = new EventDateTime()
             .setDate(new DateTime(DateTimeFormatter.ISO_LOCAL_DATE.format(birthday.getDate())))
@@ -98,6 +120,7 @@ public class GoogleCalendarService implements CalendarService {
             .setSummary(birthday.getName() + "'s Birthday")
             .setRecurrence(Collections.singletonList("RRULE:FREQ=YEARLY"))
             .setTransparency("transparent")
+            .setExtendedProperties(new Event.ExtendedProperties().setPrivate(Collections.singletonMap("discord_id", birthday.getMemberId())))
             .setVisibility("public");
 
         calendar.events().insert(calendarId, event).execute();

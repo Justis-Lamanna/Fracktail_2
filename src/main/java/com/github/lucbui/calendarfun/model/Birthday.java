@@ -12,6 +12,7 @@ public class Birthday {
 
     private LocalDate date;
     private String name;
+    private String memberId;
 
     public Birthday(Event event) {
         DateTime date = event.getStart().getDateTime();
@@ -19,17 +20,21 @@ public class Birthday {
             date = event.getStart().getDate();
         }
         this.date = LocalDate.parse(date.toStringRfc3339());
+
         Matcher matcher = BIRTHDAY_PATTERN.matcher(event.getSummary());
         if(matcher.matches()) {
             this.name = matcher.group(1);
         } else {
             this.name = event.getSummary();
         }
+
+        this.memberId = event.getExtendedProperties().getPrivate().get("discord_id");
     }
 
-    public Birthday(String name, LocalDate date) {
+    public Birthday(String memberId, String name, LocalDate date) {
         this.date = date;
         this.name = name;
+        this.memberId = memberId;
     }
 
     public LocalDate getDate() {
@@ -46,6 +51,14 @@ public class Birthday {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
     }
 
     @Override
