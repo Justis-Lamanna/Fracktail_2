@@ -5,9 +5,9 @@ import discord4j.core.object.util.Snowflake;
 import java.util.Set;
 
 public interface PermissionsService {
-    Set<String> getPermissions(Snowflake userId);
+    Set<String> getPermissions(Snowflake guildId, Snowflake userId);
 
-    void addPermission(Snowflake userId, String permission);
+    void addPermission(Snowflake guildId, Snowflake userId, String permission);
 
-    void removePermission(Snowflake userId, String permission);
+    void removePermission(Snowflake guildId, Snowflake userId, String permission);
 }

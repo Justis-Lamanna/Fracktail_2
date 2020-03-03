@@ -21,7 +21,7 @@ public class UserPermissionValidator implements UserValidator {
         if(permissionsCommandNeeds.isEmpty()){
             return true;
         } else {
-            Set<String> permissionsUserHas = permissionsService.getPermissions(user.getId());
+            Set<String> permissionsUserHas = permissionsService.getPermissions(user.getGuildId(), user.getId());
             return permissionsUserHas.containsAll(permissionsCommandNeeds);
         }
     }

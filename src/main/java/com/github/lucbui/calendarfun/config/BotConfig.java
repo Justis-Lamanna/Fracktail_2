@@ -1,6 +1,7 @@
 package com.github.lucbui.calendarfun.config;
 
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
+import com.github.lucbui.calendarfun.validation.BasicPermissionsService;
 import com.github.lucbui.calendarfun.validation.PermissionsService;
 import com.github.lucbui.calendarfun.validation.command.CommandValidator;
 import com.github.lucbui.calendarfun.validation.command.CooldownCommandValidator;
@@ -26,6 +27,9 @@ public class BotConfig {
     @Value("${discord.timeout:30s}")
     private Duration timeout;
 
+    @Value("${discord.permissions.preload:}")
+    private String preload;
+
     @Bean
     public MessageValidator messageValidator() {
         return new NotBotUserMessageValidator();
@@ -37,8 +41,8 @@ public class BotConfig {
     }
 
     @Bean
-    public UserValidator userValidator(PermissionsService permissionsService) {
-        return new UserPermissionValidator(permissionsService);
+    public UserValidator userValidator() {
+        return new UserPermissionValidator(new BasicPermissionsService(preload));
     }
 
     @Bean

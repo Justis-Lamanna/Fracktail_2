@@ -63,7 +63,9 @@ public class DefaultCommandHandler implements CommandHandler {
 
     private boolean validateCommand(MessageCreateEvent event, BotCommand cmd) {
         return commandValidator.validate(event, cmd) && event.getMember().map(usr -> userValidator.validate(usr, cmd)).orElse(true);
-    }@Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
+    }
+
+    @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
     public String help(@Param(0) String cmd, @Sender Member user) {
         if(cmd == null) {
             cmd = "help";
