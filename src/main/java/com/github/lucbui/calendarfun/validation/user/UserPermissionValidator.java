@@ -3,8 +3,6 @@ package com.github.lucbui.calendarfun.validation.user;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.validation.PermissionsService;
 import discord4j.core.object.entity.Member;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.Set;
 

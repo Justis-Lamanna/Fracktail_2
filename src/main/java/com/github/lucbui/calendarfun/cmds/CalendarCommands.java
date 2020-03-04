@@ -1,11 +1,11 @@
-package com.github.lucbui.calendarfun;
+package com.github.lucbui.calendarfun.cmds;
 
-import com.github.lucbui.calendarfun.annotation.*;
-import com.github.lucbui.calendarfun.command.store.CommandHandler;
+import com.github.lucbui.calendarfun.annotation.Command;
+import com.github.lucbui.calendarfun.annotation.Param;
+import com.github.lucbui.calendarfun.annotation.Sender;
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.github.lucbui.calendarfun.service.calendar.CalendarService;
 import com.github.lucbui.calendarfun.util.DiscordUtils;
-import com.github.lucbui.calendarfun.validation.user.UserValidator;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.StringUtils;
@@ -20,38 +20,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @Component
-public class Commands {
+public class CalendarCommands {
     private static final int OLDEST_POSSIBLE_YEAR = 1903;
 
     @Autowired
     private CalendarService calendarService;
-
-    @Autowired
-    private CommandHandler commandHandler;
-
-    @Autowired
-    private UserValidator userValidator;
-
-    @Command(help = "Perform arithmetic. Usage is !math [expression]")
-    @Timeout(value = 1, unit = ChronoUnit.MINUTES)
-    public String math() {
-        return "The answer is 3";
-    }
-
-    @Command(help = "Taunt the others in your server with a command they can't use")
-    @Permissions("admin")
-    public String admin() {
-        return "This is a cool command that only admins can use!";
-    }
 
     @Command(help = "Get the next birthday, or birthdays, coming up. Optionally, specify a number between 1 and 10 to get the next n birthdays.")
     public String nextbirthday(@Param(0) OptionalInt in) throws IOException {
@@ -68,9 +47,9 @@ public class Commands {
             return "The next birthday is " + getBirthdayText(birthdays.get(0));
         } else {
             String preText = "Sure, here are the next " + birthdays.size() + " birthdays:\n";
-                    return birthdays.stream()
-                            .map(this::getBirthdayText)
-                            .collect(Collectors.joining("\n", preText, ""));
+            return birthdays.stream()
+                    .map(this::getBirthdayText)
+                    .collect(Collectors.joining("\n", preText, ""));
         }
     }
 
@@ -91,22 +70,22 @@ public class Commands {
 
     @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
     public String birthday(@Param(0) String user, @Sender Member member) throws IOException {
-       if(user != null){
-           Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(user);
-           Optional<Birthday> birthday;
-           if(userIdIfPresent.isPresent()) {
-               birthday = calendarService.searchBirthdayById(Snowflake.of(userIdIfPresent.get()));
-           } else {
-               birthday = calendarService.searchBirthday(user);
-           }
-           return birthday
-                   .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
-                   .orElse("Sorry, I don't know when " + user + "'s birthday is.");
-       } else {
-           return calendarService.searchBirthdayById(member.getId())
-                   .map(bday -> String.format("Your birthday is on %tD (%s)", bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
-                   .orElse("Sorry, I don't know when your birthday is.");
-       }
+        if(user != null){
+            Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(user);
+            Optional<Birthday> birthday;
+            if(userIdIfPresent.isPresent()) {
+                birthday = calendarService.searchBirthdayById(Snowflake.of(userIdIfPresent.get()));
+            } else {
+                birthday = calendarService.searchBirthday(user);
+            }
+            return birthday
+                    .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
+                    .orElse("Sorry, I don't know when " + user + "'s birthday is.");
+        } else {
+            return calendarService.searchBirthdayById(member.getId())
+                    .map(bday -> String.format("Your birthday is on %tD (%s)", bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
+                    .orElse("Sorry, I don't know when your birthday is.");
+        }
     }
 
     @Command(help = "Add a user's birthday. Usage is !addbirthday [yyyy-mm-dd]")
@@ -130,20 +109,11 @@ public class Commands {
         }
 
         Birthday birthday = new Birthday(
-            sender.getId().asString(),
-            StringUtils.capitalize(sender.getUsername()),
-            dateOfBirth);
+                sender.getId().asString(),
+                StringUtils.capitalize(sender.getUsername()),
+                dateOfBirth);
         calendarService.addBirthday(birthday);
         return "Added " + sender.getUsername() + "'s birthday to the birthday calendar";
-    }
-
-    @Command(help = "RAFO!")
-    @Timeout(value = 5, unit = ChronoUnit.MINUTES)
-    public String rafo() {
-        return "<:rafo1:596138147285434415><:rafo2:596138147797270538><:rafo3:596138379603869697><:rafo4:596138380132089879>\n" +
-                "<:rafo5:596138380211781641><:rafo6:596138491469889536><:rafo7:596138588584804373><:rafo8:596138610193858581>\n" +
-                "<:rafo9:596138646130917376><:rafo10:596138678108291082><:rafo11:596138697607348257><:rafo12:596138718817943552>\n" +
-                "<:rafo13:596138741052211210><:rafo14:596138758160515073><:rafo15:596138771779682315><:rafo16:596138788984586268>";
     }
 
     private String getBirthdayText(Birthday nextBirthday) {

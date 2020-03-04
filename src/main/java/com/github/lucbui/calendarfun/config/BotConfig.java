@@ -2,7 +2,6 @@ package com.github.lucbui.calendarfun.config;
 
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.validation.BasicPermissionsService;
-import com.github.lucbui.calendarfun.validation.PermissionsService;
 import com.github.lucbui.calendarfun.validation.command.CommandValidator;
 import com.github.lucbui.calendarfun.validation.command.CooldownCommandValidator;
 import com.github.lucbui.calendarfun.validation.message.MessageValidator;
