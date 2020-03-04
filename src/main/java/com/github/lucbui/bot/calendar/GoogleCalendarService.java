@@ -1,6 +1,6 @@
-package com.github.lucbui.calendarfun.service.calendar;
+package com.github.lucbui.bot.calendar;
 
-import com.github.lucbui.calendarfun.model.Birthday;
+import com.github.lucbui.bot.model.Birthday;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;

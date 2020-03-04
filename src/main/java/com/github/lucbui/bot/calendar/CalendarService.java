@@ -1,6 +1,6 @@
-package com.github.lucbui.calendarfun.service.calendar;
+package com.github.lucbui.bot.calendar;
 
-import com.github.lucbui.calendarfun.model.Birthday;
+import com.github.lucbui.bot.model.Birthday;
 import discord4j.core.object.util.Snowflake;
 
 import java.io.IOException;

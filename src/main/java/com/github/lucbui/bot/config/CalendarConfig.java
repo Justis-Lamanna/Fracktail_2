@@ -1,6 +1,6 @@
-package com.github.lucbui.calendarfun.config;
+package com.github.lucbui.bot.config;
 
-import com.github.lucbui.calendarfun.CalendarFunApplication;
+import com.github.lucbui.bot.CalendarFunApplication;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;

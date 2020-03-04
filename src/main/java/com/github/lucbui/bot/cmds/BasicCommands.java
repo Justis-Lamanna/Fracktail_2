@@ -1,16 +1,18 @@
-package com.github.lucbui.calendarfun.cmds;
+package com.github.lucbui.bot.cmds;
 
 import com.github.lucbui.calendarfun.annotation.Command;
+import com.github.lucbui.calendarfun.annotation.Commands;
 import com.github.lucbui.calendarfun.annotation.Permissions;
 import com.github.lucbui.calendarfun.annotation.Timeout;
-import com.github.lucbui.calendarfun.service.calendar.CalendarService;
+import com.github.lucbui.bot.calendar.CalendarService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.temporal.ChronoUnit;
 
 @Component
-public class Commands {
+@Commands
+public class BasicCommands {
     private static final int OLDEST_POSSIBLE_YEAR = 1903;
 
     @Autowired

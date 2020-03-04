@@ -8,9 +8,12 @@ import com.github.lucbui.calendarfun.command.store.CommandList;
 import com.github.lucbui.calendarfun.exception.BotException;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import com.github.lucbui.calendarfun.token.Tokens;
+import com.github.lucbui.calendarfun.util.DiscordUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +29,8 @@ import java.util.stream.Stream;
 import static com.github.lucbui.calendarfun.command.func.ParameterExtractor.ofType;
 
 public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandFieldCallback.class);
+
     private final Object bean;
     private final CommandList commands;
     private final Tokenizer tokenizer;
@@ -96,20 +101,21 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
 
     @Override
     public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
-        if(!method.isAnnotationPresent(Command.class)){
-            return;
-        }
-        System.out.println("Found a method: " + method.getName());
+        LOGGER.debug("Found command in method " + method.getName());
         ReflectionUtils.makeAccessible(method);
         validateMethod(method);
-        commands.addCommand(new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method), getTimeout(method)));
+        commands.addCommand(createBotCommand(method));
     }
 
-    private void validateMethod(Method method) {
+    protected BotCommand createBotCommand(Method method) {
+        return new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method), getTimeout(method));
+    }
+
+    protected void validateMethod(Method method) {
         //TODO
     }
 
-    private String[] getNames(Method method) {
+    protected String[] getNames(Method method) {
         Command cmdAnnotation = method.getAnnotation(Command.class);
         if(cmdAnnotation.value().length == 0) {
             return new String[]{method.getName()};
@@ -118,43 +124,27 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         }
     }
 
-    private String getHelpText(Method method) {
+    protected String getHelpText(Method method) {
         Command cmdAnnotation = method.getAnnotation(Command.class);
         return cmdAnnotation.help();
     }
 
     protected BotMessageBehavior getBehavior(Method method) {
         List<Function<MessageCreateEvent, Object>> extractors = getExtractorsFor(method);
+        Invoker<MessageCreateEvent, Object[], Mono<Void>> invoker = getInvokerFor(method);
         return event -> {
             Object[] parameters = extractors.stream()
                     .map(func -> func.apply(event))
                     .toArray();
             try{
-                if(method.getReturnType() == null) {
-                    method.invoke(bean, parameters);
-                    return Mono.empty();
-                }
-                Object returnValue = method.invoke(bean, parameters);
-                if(returnValue == null){
-                    return Mono.empty();
-                } else if(returnValue instanceof String) {
-                    return event.getMessage()
-                            .getChannel()
-                            .flatMap(
-                                channel -> channel.createMessage((String)returnValue)
-                            ).then();
-                } else if(returnValue instanceof Mono) {
-                    return ((Mono<?>)returnValue).then();
-                } else {
-                    throw new BotException("Return is unexpected type, expected is String or Mono");
-                }
-            } catch (IllegalAccessException | InvocationTargetException e) {
+                return invoker.invoke(event, parameters);
+            } catch (Exception e) {
                 throw new BotException("Error invoking reflected method", e);
             }
         };
     }
 
-    private Set<String> getPermissions(Method method) {
+    protected Set<String> getPermissions(Method method) {
         if(method.isAnnotationPresent(Permissions.class)){
             String[] permissions = method.getAnnotation(Permissions.class).value();
             return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
@@ -162,7 +152,7 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         return Collections.emptySet();
     }
 
-    private Duration getTimeout(Method method) {
+    protected Duration getTimeout(Method method) {
         if(method.isAnnotationPresent(Timeout.class)) {
             Timeout timeout = method.getAnnotation(Timeout.class);
             if(timeout.value() > 0) {
@@ -227,11 +217,36 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         return event -> extractor.apply(event.getMember());
     }
 
+    private Invoker<MessageCreateEvent, Object[], Mono<Void>> getInvokerFor(Method method) {
+        if(method.getReturnType() == null) {
+            return (event, params) -> {
+                method.invoke(bean, params);
+                return Mono.empty();
+            };
+        } else if(method.getReturnType().equals(String.class)) {
+            return (event, params) -> {
+                String response = (String) method.invoke(bean, params);
+                return response == null ? Mono.empty() : DiscordUtils.respond(event.getMessage(), response);
+            };
+        } else if(method.getReturnType().equals(Mono.class)) {
+            return (event, params) -> {
+                Mono<?> response = (Mono<?>) method.invoke(bean, params);
+                return response == null ? Mono.empty() : response.then();
+            };
+        } else {
+            throw new BotException("Return is unexpected type, expected is String, Mono, or none.");
+        }
+    }
+
     private Optional<Tokens> tokenize(discord4j.core.object.entity.Message message) {
         return message.getContent().filter(tokenizer::isValid).map(tokenizer::tokenize);
     }
 
     private static String[] getFullMessageAsArray(Tokens tokens) {
         return Stream.concat(Stream.of(tokens.getCommand()), Arrays.stream(tokens.getParams())).toArray(String[]::new);
+    }
+
+    private interface Invoker<I1, I2, O> {
+        O invoke(I1 in1, I2 in2) throws Exception;
     }
 }

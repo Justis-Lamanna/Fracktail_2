@@ -6,11 +6,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
 
-@Service
 public class PrefixTokenizer implements Tokenizer {
+    private final String prefix;
 
-    @Value("${discord.prefix}")
-    private String prefix;
+    public PrefixTokenizer(String prefix) {
+        this.prefix = prefix;
+    }
 
     private static final Pattern SPACE = Pattern.compile("\\s+");
 

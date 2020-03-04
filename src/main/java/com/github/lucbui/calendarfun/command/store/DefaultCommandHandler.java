@@ -17,7 +17,6 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-@Service
 public class DefaultCommandHandler implements CommandHandler {
 
     private final Tokenizer tokenizer;

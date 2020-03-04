@@ -1,10 +1,11 @@
-package com.github.lucbui.calendarfun.cmds;
+package com.github.lucbui.bot.cmds;
 
 import com.github.lucbui.calendarfun.annotation.Command;
+import com.github.lucbui.calendarfun.annotation.Commands;
 import com.github.lucbui.calendarfun.annotation.Param;
 import com.github.lucbui.calendarfun.annotation.Sender;
-import com.github.lucbui.calendarfun.model.Birthday;
-import com.github.lucbui.calendarfun.service.calendar.CalendarService;
+import com.github.lucbui.bot.model.Birthday;
+import com.github.lucbui.bot.calendar.CalendarService;
 import com.github.lucbui.calendarfun.util.DiscordUtils;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.util.Snowflake;
@@ -26,6 +27,7 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 @Component
+@Commands
 public class CalendarCommands {
     private static final int OLDEST_POSSIBLE_YEAR = 1903;
 

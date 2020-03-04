@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@Component
 public class CommandList {
     private final Map<String, BotCommand> commandMap;
 

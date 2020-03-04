@@ -8,10 +8,12 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
 public class CommandStoreSelectableMapFactory implements CommandStoreMapFactory {
-    @Value("${discord.caseInsensitiveCommands:false}")
     private boolean caseInsensitiveCommands;
+
+    public CommandStoreSelectableMapFactory(boolean caseInsensitive) {
+        this.caseInsensitiveCommands = caseInsensitive;
+    }
 
     @Override
     public Map<String, BotCommand> getMap() {

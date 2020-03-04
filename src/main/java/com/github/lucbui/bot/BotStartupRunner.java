@@ -1,4 +1,4 @@
-package com.github.lucbui.calendarfun;
+package com.github.lucbui.bot;
 
 import discord4j.core.DiscordClient;
 import org.springframework.beans.factory.annotation.Autowired;

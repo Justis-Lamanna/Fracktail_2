@@ -1,6 +1,7 @@
 package com.github.lucbui.calendarfun.command;
 
 import com.github.lucbui.calendarfun.annotation.Command;
+import com.github.lucbui.calendarfun.annotation.Commands;
 import com.github.lucbui.calendarfun.command.store.CommandList;
 import com.github.lucbui.calendarfun.token.Tokenizer;
 import org.springframework.beans.BeansException;
@@ -11,27 +12,19 @@ import org.springframework.util.ReflectionUtils;
 
 @Component
 public class CommandAnnotationProcessor implements BeanPostProcessor {
-    private CommandList commandList;
-    private Tokenizer tokenizer;
+    private final CommandFieldCallbackFactory commandFieldCallbackFactory;
 
     @Autowired
-    public CommandAnnotationProcessor(Tokenizer tokenizer, CommandList commandList) {
-        this.tokenizer = tokenizer;
-        this.commandList = commandList;
+    public CommandAnnotationProcessor(CommandFieldCallbackFactory commandFieldCallbackFactory) {
+        this.commandFieldCallbackFactory = commandFieldCallbackFactory;
     }
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if(bean.getClass().isAnnotationPresent(Command.class)){
-            processCommandAsClass(bean);
-        } else {
-            ReflectionUtils.doWithMethods(bean.getClass(), new CommandFieldCallback(commandList, tokenizer, bean), method -> method.isAnnotationPresent(Command.class));
+        if(bean.getClass().isAnnotationPresent(Commands.class)){
+            ReflectionUtils.doWithMethods(bean.getClass(), commandFieldCallbackFactory.getCommandFieldCallback(bean), method -> method.isAnnotationPresent(Command.class));
         }
         return bean;
-    }
-
-    private void processCommandAsClass(Object bean) {
-        System.out.println("Found a class! " + bean.getClass());
     }
 
     @Override

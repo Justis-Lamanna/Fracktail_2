@@ -1,6 +1,8 @@
-package com.github.lucbui.calendarfun.config;
+package com.github.lucbui.bot.config;
 
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
+import com.github.lucbui.calendarfun.token.PrefixTokenizer;
+import com.github.lucbui.calendarfun.token.Tokenizer;
 import com.github.lucbui.calendarfun.validation.BasicPermissionsService;
 import com.github.lucbui.calendarfun.validation.command.CommandValidator;
 import com.github.lucbui.calendarfun.validation.command.CooldownCommandValidator;
@@ -20,32 +22,23 @@ import java.time.Duration;
 
 @Configuration
 public class BotConfig {
-    @Value("${discord.token}")
-    private String token;
-
-    @Value("${discord.timeout:30s}")
-    private Duration timeout;
-
-    @Value("${discord.permissions.preload:}")
-    private String preload;
-
-    @Bean
-    public MessageValidator messageValidator() {
-        return new NotBotUserMessageValidator();
-    }
-
-    @Bean
-    public CommandValidator commandValidator() {
-        return new CooldownCommandValidator(timeout);
-    }
+//    @Bean
+//    public MessageValidator messageValidator() {
+//        return new NotBotUserMessageValidator();
+//    }
+//
+//    @Bean
+//    public CommandValidator commandValidator(@Value("${discord.timeout:30s}") Duration timeout) {
+//        return new CooldownCommandValidator(timeout);
+//    }
+//
+//    @Bean
+//    public UserValidator userValidator(@Value("${discord.permissions.preload:}") String preload) {
+//        return new UserPermissionValidator(new BasicPermissionsService(preload));
+//    }
 
     @Bean
-    public UserValidator userValidator() {
-        return new UserPermissionValidator(new BasicPermissionsService(preload));
-    }
-
-    @Bean
-    public DiscordClient bot(CommandHandler commandHandler) {
+    public DiscordClient bot(CommandHandler commandHandler, @Value("${discord.token}") String token) {
         DiscordClient bot = new DiscordClientBuilder(token)
                 .setInitialPresence(Presence.doNotDisturb())
                 .build();
