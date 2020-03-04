@@ -24,4 +24,8 @@ public class DiscordUtils {
             return Optional.empty();
         }
     }
+
+    public static String getMentionFromId(String id) {
+        return "<@!" + id + ">";
+    }
 }

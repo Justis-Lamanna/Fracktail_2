@@ -5,6 +5,7 @@ import com.github.lucbui.calendarfun.annotation.Param;
 import com.github.lucbui.calendarfun.annotation.Sender;
 import com.github.lucbui.calendarfun.command.func.BotCommand;
 import com.github.lucbui.calendarfun.token.Tokenizer;
+import com.github.lucbui.calendarfun.util.DiscordUtils;
 import com.github.lucbui.calendarfun.validation.command.CommandValidator;
 import com.github.lucbui.calendarfun.validation.message.MessageValidator;
 import com.github.lucbui.calendarfun.validation.user.UserValidator;
@@ -50,11 +51,7 @@ public class DefaultCommandHandler implements CommandHandler {
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();
-                            event.getMessage()
-                                    .getChannel()
-                                    .flatMap(channel -> channel.createMessage("I'm sorry, I encountered an exception. Please check the logs."))
-                                    .then();
-                            return Mono.<Void>empty();
+                            return DiscordUtils.respond(event.getMessage(), "I'm sorry, I encountered an exception. Please check the logs.");
                         }
                     }).orElse(Mono.empty());
         }
@@ -62,7 +59,7 @@ public class DefaultCommandHandler implements CommandHandler {
     }
 
     private boolean validateCommand(MessageCreateEvent event, BotCommand cmd) {
-        return commandValidator.validate(event, cmd) && event.getMember().map(usr -> userValidator.validate(usr, cmd)).orElse(true);
+        return commandValidator.validate(event, cmd) && event.getMember().map(usr -> userValidator.validate(usr, cmd)).orElse(false);
     }
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
