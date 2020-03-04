@@ -5,6 +5,7 @@ import com.github.lucbui.magic.annotation.Commands;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
@@ -19,7 +20,7 @@ public class CommandAnnotationProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if(bean.getClass().isAnnotationPresent(Commands.class)){
+        if(bean.getClass().isAnnotationPresent(Commands.class) || bean.getClass().getSuperclass().isAnnotationPresent(Commands.class)){
             ReflectionUtils.doWithMethods(bean.getClass(), commandFieldCallbackFactory.getCommandFieldCallback(bean), method -> method.isAnnotationPresent(Command.class));
         }
         return bean;
