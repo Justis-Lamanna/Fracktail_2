@@ -34,4 +34,8 @@ public class Tokens {
     public String[] getParams() {
         return params;
     }
+
+    public String getParam(int idx) {
+        return idx < params.length ? params[idx] : null;
+    }
 }

@@ -11,7 +11,6 @@ import java.util.Map;
 public class CommandList {
     private final Map<String, BotCommand> commandMap;
 
-    @Autowired
     public CommandList(CommandStoreMapFactory commandStoreMapFactory) {
         this.commandMap = commandStoreMapFactory.getMap();
     }

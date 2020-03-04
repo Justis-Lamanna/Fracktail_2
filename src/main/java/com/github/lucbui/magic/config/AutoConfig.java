@@ -25,6 +25,19 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
+    public CommandList commandList(CommandStoreMapFactory commandStoreMapFactory) {
+        return new CommandList(commandStoreMapFactory);
+    }
+
+    @Bean
+    @ConditionalOnProperty("discord.commands.prefix")
+    @ConditionalOnMissingBean
+    public Tokenizer tokenizer(@Value("${discord.commands.prefix}") String prefix) {
+        return new PrefixTokenizer(prefix);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public MessageValidator messageValidator() {
         return event -> true;
     }
@@ -42,9 +55,9 @@ public class AutoConfig {
     }
 
     @Bean
-    @ConditionalOnProperty("discord.caseInsensitiveCommands")
+    @ConditionalOnProperty("discord.commands.caseInsensitive")
     @ConditionalOnMissingBean
-    public CommandStoreMapFactory commandStoreMapFactory(@Value("${discord.caseInsensitiveCommands}") boolean caseInsensitive) {
+    public CommandStoreMapFactory commandStoreMapFactory(@Value("${discord.commands.caseInsensitive}") boolean caseInsensitive) {
         return new CommandStoreSelectableMapFactory(caseInsensitive);
     }
 
@@ -52,19 +65,6 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public CommandStoreMapFactory commandStoreMapFactory() {
         return HashMap::new;
-    }
-
-    @Bean
-    @ConditionalOnProperty("discord.prefix")
-    @ConditionalOnMissingBean
-    public Tokenizer tokenizer(@Value("${discord.prefix}") String prefix) {
-        return new PrefixTokenizer(prefix);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CommandList commandList(CommandStoreMapFactory commandStoreMapFactory) {
-        return new CommandList(commandStoreMapFactory);
     }
 
     @Bean

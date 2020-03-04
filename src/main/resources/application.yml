@@ -1,10 +1,10 @@
 calendar:
-  #id: pm55m4v8c03peksvbas3h40er0@group.calendar.google.com
   id: hlclne2tbhr27ijqbkadigkjqk@group.calendar.google.com
 
 discord:
-  prefix: '!'
-  caseInsensitiveCommands: true
-  timeout: '5s'
+  commands:
+    prefix: '!'
+    caseInsensitive: true
+    timeout: '5s'
   permissions:
     preload: '248612704019808258:admin'

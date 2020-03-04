@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.func;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Set;
 
 public class BotCommand {
@@ -16,6 +17,22 @@ public class BotCommand {
         this.behavior = behavior;
         this.permissions = permissions;
         this.timeout = timeout;
+    }
+
+    public BotCommand(String name, String helpText, BotMessageBehavior behavior, Set<String> permissions, Duration timeout) {
+        this.names = new String[]{name};
+        this.helpText = helpText;
+        this.behavior = behavior;
+        this.permissions = permissions;
+        this.timeout = timeout;
+    }
+
+    public BotCommand(String name, String helpText, BotMessageBehavior behavior) {
+        this.names = new String[]{name};
+        this.helpText = helpText;
+        this.behavior = behavior;
+        this.permissions = Collections.emptySet();
+        this.timeout = null;
     }
 
     public String[] getNames() {

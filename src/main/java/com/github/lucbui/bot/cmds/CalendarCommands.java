@@ -1,12 +1,12 @@
 package com.github.lucbui.bot.cmds;
 
-import com.github.lucbui.calendarfun.annotation.Command;
-import com.github.lucbui.calendarfun.annotation.Commands;
-import com.github.lucbui.calendarfun.annotation.Param;
-import com.github.lucbui.calendarfun.annotation.Sender;
+import com.github.lucbui.magic.annotation.Command;
+import com.github.lucbui.magic.annotation.Commands;
+import com.github.lucbui.magic.annotation.Param;
+import com.github.lucbui.magic.annotation.Sender;
 import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.bot.calendar.CalendarService;
-import com.github.lucbui.calendarfun.util.DiscordUtils;
+import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.StringUtils;

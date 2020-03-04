@@ -29,16 +29,6 @@ public class BasicPermissionsService implements PermissionsService {
         }
     }
 
-//    @Command(help = "Display all permissions you have.")
-//    public String permissions(@Sender Member member) {
-//        Set<String> permissions = getPermissions(member.getGuildId(), member.getId());
-//        if(permissions.isEmpty()) {
-//            return "You have no permissions.";
-//        } else {
-//            return "Your permissions are: " + permissions.stream().sorted().collect(Collectors.joining(", ")) + ".";
-//        }
-//    }
-
     @Override
     public Set<String> getPermissions(Snowflake guildId, Snowflake userId) {
         return new HashSet<>(permissions.computeIfAbsent(userId, key -> new HashSet<>()));
