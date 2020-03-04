@@ -1,15 +1,6 @@
 package com.github.lucbui.bot.config;
 
-import com.github.lucbui.calendarfun.command.store.CommandHandler;
-import com.github.lucbui.calendarfun.token.PrefixTokenizer;
-import com.github.lucbui.calendarfun.token.Tokenizer;
-import com.github.lucbui.calendarfun.validation.BasicPermissionsService;
-import com.github.lucbui.calendarfun.validation.command.CommandValidator;
-import com.github.lucbui.calendarfun.validation.command.CooldownCommandValidator;
-import com.github.lucbui.calendarfun.validation.message.MessageValidator;
-import com.github.lucbui.calendarfun.validation.message.NotBotUserMessageValidator;
-import com.github.lucbui.calendarfun.validation.user.UserPermissionValidator;
-import com.github.lucbui.calendarfun.validation.user.UserValidator;
+import com.github.lucbui.magic.command.store.CommandHandler;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -17,8 +8,6 @@ import discord4j.core.object.presence.Presence;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
 
 @Configuration
 public class BotConfig {
