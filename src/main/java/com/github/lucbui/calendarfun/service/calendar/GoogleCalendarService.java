@@ -1,11 +1,10 @@
-package com.github.lucbui.calendarfun.service;
+package com.github.lucbui.calendarfun.service.calendar;
 
 import com.github.lucbui.calendarfun.model.Birthday;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
-import com.google.api.services.calendar.model.EventReminder;
 import com.google.api.services.calendar.model.Events;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
-package com.github.lucbui.calendarfun.command;
+package com.github.lucbui.calendarfun;
 
 import com.github.lucbui.calendarfun.annotation.*;
 import com.github.lucbui.calendarfun.command.store.CommandHandler;
 import com.github.lucbui.calendarfun.model.Birthday;
-import com.github.lucbui.calendarfun.service.CalendarService;
+import com.github.lucbui.calendarfun.service.calendar.CalendarService;
 import com.github.lucbui.calendarfun.util.DiscordUtils;
 import com.github.lucbui.calendarfun.validation.user.UserValidator;
 import discord4j.core.object.entity.Member;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -26,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Component
 public class Commands {
@@ -134,6 +135,15 @@ public class Commands {
             dateOfBirth);
         calendarService.addBirthday(birthday);
         return "Added " + sender.getUsername() + "'s birthday to the birthday calendar";
+    }
+
+    @Command(help = "RAFO!")
+    @Timeout(value = 5, unit = ChronoUnit.MINUTES)
+    public String rafo() {
+        return "<:rafo1:596138147285434415><:rafo2:596138147797270538><:rafo3:596138379603869697><:rafo4:596138380132089879>\n" +
+                "<:rafo5:596138380211781641><:rafo6:596138491469889536><:rafo7:596138588584804373><:rafo8:596138610193858581>\n" +
+                "<:rafo9:596138646130917376><:rafo10:596138678108291082><:rafo11:596138697607348257><:rafo12:596138718817943552>\n" +
+                "<:rafo13:596138741052211210><:rafo14:596138758160515073><:rafo15:596138771779682315><:rafo16:596138788984586268>";
     }
 
     private String getBirthdayText(Birthday nextBirthday) {
