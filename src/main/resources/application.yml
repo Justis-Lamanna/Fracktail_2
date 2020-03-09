@@ -8,3 +8,6 @@ discord:
     timeout: '5s'
   permissions:
     preload: '248612704019808258:admin'
+
+scheduler:
+  enabled: true
