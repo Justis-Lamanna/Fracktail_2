@@ -1,17 +1,12 @@
 package com.github.lucbui.bot.cmds;
 
-import com.github.lucbui.magic.annotation.*;
-import com.github.lucbui.bot.calendar.CalendarService;
-import com.github.lucbui.magic.command.func.BotCommand;
-import com.github.lucbui.magic.command.store.CommandList;
-import com.github.lucbui.magic.validation.user.UserValidator;
-import discord4j.core.object.entity.Member;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.github.lucbui.magic.annotation.Command;
+import com.github.lucbui.magic.annotation.Commands;
+import com.github.lucbui.magic.annotation.Permissions;
+import com.github.lucbui.magic.annotation.Timeout;
 import org.springframework.stereotype.Component;
 
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @Component
 @Commands

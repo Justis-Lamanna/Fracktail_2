@@ -1,7 +1,6 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.Arrays;
