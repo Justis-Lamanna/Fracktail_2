@@ -6,9 +6,16 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A CommandStoreMapFactory which allows for chosing between case-sensitive and case-insensitive maps
+ */
 public class CommandStoreSelectableMapFactory implements CommandStoreMapFactory {
     private boolean caseInsensitiveCommands;
 
+    /**
+     * Create A CommandStoreSelectableMapFactory
+     * @param caseInsensitive If true, a case-insensitive map is created.
+     */
     public CommandStoreSelectableMapFactory(boolean caseInsensitive) {
         this.caseInsensitiveCommands = caseInsensitive;
     }

@@ -1,5 +1,8 @@
 package com.github.lucbui.magic.exception;
 
+/**
+ * General exception for bot-related issues
+ */
 public class BotException extends RuntimeException {
     public BotException() {
     }

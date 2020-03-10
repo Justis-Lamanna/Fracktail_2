@@ -8,6 +8,9 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
+/**
+ * A BeanProcessor which extracts Commands
+ */
 @Component
 public class CommandAnnotationProcessor implements BeanPostProcessor {
     private final CommandFieldCallbackFactory commandFieldCallbackFactory;

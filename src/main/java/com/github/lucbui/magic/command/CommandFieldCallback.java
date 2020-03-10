@@ -27,6 +27,9 @@ import java.util.stream.Stream;
 
 import static com.github.lucbui.magic.command.func.ParameterExtractor.ofType;
 
+/**
+ * A callback which handles each Method in a class
+ */
 public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandFieldCallback.class);
 
@@ -40,6 +43,12 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     private final ParameterExtractor<Optional<User>> userExtractor;
     private final ParameterExtractor<Optional<Member>> memberExtractor;
 
+    /**
+     * Initializes the CommandFieldCallback
+     * @param commands The commands to use and modify
+     * @param tokenizer The tokenizer to use
+     * @param bean The bean being processed
+     */
     public CommandFieldCallback(CommandList commands, Tokenizer tokenizer, Object bean) {
         this.commands = commands;
         this.tokenizer = tokenizer;
@@ -52,6 +61,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         this.memberExtractor = getMemberExtractor();
     }
 
+    /**
+     * Get the ParameterExtractor for {@link com.github.lucbui.magic.annotation.Message}
+     * @return ParameterExtractor for @Message annotations
+     */
     protected ParameterExtractor<discord4j.core.object.entity.Message> getMessageExtractor() {
         return new ParameterExtractor.Builder<discord4j.core.object.entity.Message>()
                 .with(ofType(String.class), msg -> tokenize(msg).map(Tokens::getFull).orElse(null))
@@ -60,6 +73,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                 .build();
     }
 
+    /**
+     * Get the ParameterExtractor for {@link com.github.lucbui.magic.annotation.Params}
+     * @return ParameterExtractor for @Params annotations
+     */
     protected ParameterExtractor<Optional<Tokens>> getParametersExtractor() {
         return new ParameterExtractor.Builder<Optional<Tokens>>()
                 .with(ofType(String.class), tokens -> tokens.map(Tokens::getParamString).orElse(null))
@@ -67,6 +84,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                 .build();
     }
 
+    /**
+     * Get the ParameterExtractor for {@link com.github.lucbui.magic.annotation.Param}
+     * @return ParameterExtractor for @Param annotations
+     */
     protected ParameterExtractor<Optional<String>> getParameterExtractor() {
         return new ParameterExtractor.Builder<Optional<String>>()
                 .with(ofType(String.class), param -> param.orElse(null))
@@ -85,6 +106,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                 .build();
     }
 
+    /**
+     * Get the ParameterExtractor for {@link com.github.lucbui.magic.annotation.BasicSender}
+     * @return ParameterExtractor for @BasicSender annotations
+     */
     protected ParameterExtractor<Optional<User>> getUserExtractor() {
         return new ParameterExtractor.Builder<Optional<User>>()
                 .with(ofType(String.class), user -> user.map(User::getUsername).orElse(null))
@@ -92,6 +117,10 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
                 .build();
     }
 
+    /**
+     * Get the ParameterExtractor for {@link com.github.lucbui.magic.annotation.Sender}
+     * @return ParameterExtractor for @Sender annotations
+     */
     protected ParameterExtractor<Optional<Member>> getMemberExtractor() {
         return new ParameterExtractor.Builder<Optional<Member>>()
                 .with(ofType(Member.class), member -> member.orElse(null))
@@ -106,14 +135,28 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         commands.addCommand(createBotCommand(method));
     }
 
+    /**
+     * Create a BotCommand from a Method
+     * @param method The Method to make a command
+     * @return The created command
+     */
     protected BotCommand createBotCommand(Method method) {
         return new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method), getTimeout(method));
     }
 
+    /**
+     * Validate a method for use as a BotCommand
+     * @param method The method to validate
+     */
     protected void validateMethod(Method method) {
         //TODO
     }
 
+    /**
+     * Get the names of a command from the method
+     * @param method The method to get the command names from
+     * @return The command names
+     */
     protected String[] getNames(Method method) {
         Command cmdAnnotation = method.getAnnotation(Command.class);
         if(cmdAnnotation.value().length == 0) {
@@ -123,11 +166,21 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         }
     }
 
+    /**
+     * Get the help text from the method
+     * @param method The method to get the help text of
+     * @return The help text
+     */
     protected String getHelpText(Method method) {
         Command cmdAnnotation = method.getAnnotation(Command.class);
         return cmdAnnotation.help();
     }
 
+    /**
+     * Get the behavior of the command from the method
+     * @param method The method to get the behavior of
+     * @return The behavior the command exhibits
+     */
     protected BotMessageBehavior getBehavior(Method method) {
         List<Function<MessageCreateEvent, Object>> extractors = getExtractorsFor(method);
         Invoker<MessageCreateEvent, Object[], Mono<Void>> invoker = getInvokerFor(method);
@@ -143,6 +196,11 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         };
     }
 
+    /**
+     * Get the permissions of a command from the method
+     * @param method The method to get the permissions of
+     * @return The permissions the command requires
+     */
     protected Set<String> getPermissions(Method method) {
         if(method.isAnnotationPresent(Permissions.class)){
             String[] permissions = method.getAnnotation(Permissions.class).value();
@@ -151,6 +209,11 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         return Collections.emptySet();
     }
 
+    /**
+     * Get the timeout of a command from the method
+     * @param method The method to get the timeout from
+     * @return The timeout of the command
+     */
     protected Duration getTimeout(Method method) {
         if(method.isAnnotationPresent(Timeout.class)) {
             Timeout timeout = method.getAnnotation(Timeout.class);

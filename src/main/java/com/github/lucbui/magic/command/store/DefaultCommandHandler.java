@@ -12,6 +12,13 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
+/**
+ * A Default Command Handler, used if no other is specified.
+ * This basic handler handles:
+ * Tokenizing messages
+ * Validating commands
+ * Executing commands
+ */
 public class DefaultCommandHandler implements CommandHandler {
 
     private final Tokenizer tokenizer;
@@ -20,6 +27,14 @@ public class DefaultCommandHandler implements CommandHandler {
     private final UserValidator userValidator;
     private final CommandList commandList;
 
+    /**
+     * Initialize DefaultCommandHandler
+     * @param tokenizer The tokenizer to use
+     * @param messageValidator A validator which validates a message should be handled
+     * @param commandValidator A command validator, which validates if a command should be handled
+     * @param userValidator A user validator, which validates if a user can use a command
+     * @param commandList A list of commands
+     */
     public DefaultCommandHandler(Tokenizer tokenizer, MessageValidator messageValidator, CommandValidator commandValidator,
                                  UserValidator userValidator, CommandList commandList) {
         this.tokenizer = tokenizer;
