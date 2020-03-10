@@ -375,8 +375,12 @@ public class Cron implements CronPart{
 
         /* Helpers */
         public Builder everyMinute() {
+            return everyMinuteOnSecond(0);
+        }
+
+        public Builder everyNMinutes(int minutes) {
             return onSeconds(0)
-                    .anyMinute()
+                    .onMinutesStep(minutes)
                     .anyHour()
                     .anyDayOfMonth()
                     .anyMonth()
@@ -393,9 +397,13 @@ public class Cron implements CronPart{
         }
 
         public Builder everyHour() {
+            return everyHourOnMinuteAndSecond(0, 0);
+        }
+
+        public Builder everyNHours(int hours) {
             return onSeconds(0)
                     .onMinutes(0)
-                    .anyHour()
+                    .onHoursStep(hours)
                     .anyDayOfMonth()
                     .anyMonth()
                     .anyDayOfWeek();
@@ -411,12 +419,7 @@ public class Cron implements CronPart{
         }
 
         public Builder everyDay() {
-            return onSeconds(0)
-                    .onMinutes(0)
-                    .onHours(0)
-                    .anyDayOfMonth()
-                    .anyMonth()
-                    .anyDayOfWeek();
+            return everyDayAt(0, 0, 0);
         }
 
         public Builder everyDayAt(int hour, int minute, int second) {
