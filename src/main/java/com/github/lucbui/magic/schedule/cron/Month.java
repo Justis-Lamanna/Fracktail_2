@@ -1,5 +1,8 @@
 package com.github.lucbui.magic.schedule.cron;
 
+/**
+ * A CronPart which represents a literal Month
+ */
 public enum Month implements CronPart {
     JANUARY("JAN"),
     FEBRUARY("FEB"),
