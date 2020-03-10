@@ -73,6 +73,12 @@ public class DefaultCommandHandler implements CommandHandler {
     }
 
     private boolean validateCommand(MessageCreateEvent event, BotCommand cmd) {
-        return commandValidator.validate(event, cmd) && event.getMember().map(usr -> userValidator.validate(usr, cmd)).orElse(false);
+        return commandValidator.validate(event, cmd) &&
+                event.getMember()
+                        .map(usr -> userValidator.validate(usr, cmd))
+                        .orElse(
+                                event.getMessage().getAuthor()
+                                        .map(usr -> userValidator.validate(usr, cmd))
+                                        .orElse(false));
     }
 }

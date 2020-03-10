@@ -10,6 +10,7 @@ import com.github.lucbui.magic.validation.user.UserPermissionValidator;
 import com.github.lucbui.magic.validation.user.UserValidator;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
+import discord4j.core.event.domain.channel.PrivateChannelCreateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.presence.Presence;
 import org.springframework.beans.factory.annotation.Value;

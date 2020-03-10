@@ -1,12 +1,15 @@
 package com.github.lucbui.magic.config;
 
 import com.github.lucbui.magic.command.CommandFieldCallbackFactory;
+import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.validation.command.CommandValidator;
 import com.github.lucbui.magic.validation.message.MessageValidator;
 import com.github.lucbui.magic.validation.user.UserValidator;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -51,7 +54,15 @@ public class AutoConfig {
     @Bean
     @ConditionalOnMissingBean
     public UserValidator userValidator() {
-        return (user, command) -> true;
+        return new UserValidator() {
+            @Override
+            public boolean validate(Member user, BotCommand command) { return true; }
+
+            @Override
+            public boolean validate(User user, BotCommand command) {
+                return true;
+            }
+        };
     }
 
     @Bean

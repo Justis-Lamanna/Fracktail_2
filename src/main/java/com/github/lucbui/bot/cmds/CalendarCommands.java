@@ -2,12 +2,10 @@ package com.github.lucbui.bot.cmds;
 
 import com.github.lucbui.bot.calendar.CalendarService;
 import com.github.lucbui.bot.model.Birthday;
-import com.github.lucbui.magic.annotation.Command;
-import com.github.lucbui.magic.annotation.Commands;
-import com.github.lucbui.magic.annotation.Param;
-import com.github.lucbui.magic.annotation.Sender;
+import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -71,7 +69,7 @@ public class CalendarCommands {
     }
 
     @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
-    public String birthday(@Param(0) String user, @Sender Member member) throws IOException {
+    public String birthday(@Param(0) String user, @BasicSender User sender) throws IOException {
         if(user != null){
             Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(user);
             Optional<Birthday> birthday;
@@ -84,14 +82,14 @@ public class CalendarCommands {
                     .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
                     .orElse("Sorry, I don't know when " + user + "'s birthday is.");
         } else {
-            return calendarService.searchBirthdayById(member.getId())
+            return calendarService.searchBirthdayById(sender.getId())
                     .map(bday -> String.format("Your birthday is on %tD (%s)", bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
                     .orElse("Sorry, I don't know when your birthday is.");
         }
     }
 
     @Command(help = "Add a user's birthday. Usage is !addbirthday [yyyy-mm-dd]")
-    public String addbirthday(@Sender Member sender, @Param(0) String date) throws IOException {
+    public String addbirthday(@BasicSender User sender, @Param(0) String date) throws IOException {
         Optional<Birthday> birthdayIfPresent = calendarService.searchBirthdayById(sender.getId());
         if(birthdayIfPresent.isPresent()) {
             return "You already have a birthday set.";
