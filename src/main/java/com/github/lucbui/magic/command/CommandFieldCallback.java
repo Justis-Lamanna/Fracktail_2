@@ -229,7 +229,9 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     }
 
     private Function<MessageCreateEvent, Object> getExtractorFor(Parameter param) {
-        if(param.isAnnotationPresent(Message.class)){
+        if(param.getType().equals(MessageCreateEvent.class)) {
+            return (evt) -> evt;
+        } else if(param.isAnnotationPresent(Message.class)){
             return getMessageExtractor(param);
         } else if(param.isAnnotationPresent(Params.class)){
             return getParametersExtractor(param);

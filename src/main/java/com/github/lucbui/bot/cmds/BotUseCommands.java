@@ -1,35 +1,36 @@
-package com.github.lucbui.magic.config;
+package com.github.lucbui.bot.cmds;
 
-import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.annotation.BasicSender;
+import com.github.lucbui.magic.annotation.Command;
+import com.github.lucbui.magic.annotation.Commands;
+import com.github.lucbui.magic.annotation.Param;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.CommandList;
-import com.github.lucbui.magic.validation.user.UserValidator;
-import discord4j.core.object.entity.Member;
+import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-@Configuration
-@ConditionalOnBean({CommandList.class, UserValidator.class})
+@Component
 @Commands
-public class CommandAutoConfig {
+public class BotUseCommands {
     @Autowired
     private CommandList commandList;
 
     @Autowired
-    private UserValidator userValidator;
+    private CreateMessageValidator validator;
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
-    public String help(@Param(0) String cmd, @BasicSender User user) {
+    public String help(MessageCreateEvent evt, @Param(0) String cmd) {
         if(cmd == null) {
             cmd = "help";
         }
         BotCommand command = commandList.getCommand(cmd);
-        if(command == null || !userValidator.validate(user, command)) {
+        if(command == null || !validator.validate(evt, command)) {
             return cmd + " is not a valid command.";
         } else {
             return command.getHelpText();
@@ -37,10 +38,10 @@ public class CommandAutoConfig {
     }
 
     @Command(help = "Get a list of all usable commands.")
-    public String commands(@BasicSender User user) {
+    public String commands(MessageCreateEvent evt) {
         return "Commands are: " + commandList.getAllCommands()
                 .stream()
-                .filter(cmd -> userValidator.validate(user, cmd))
+                .filter(cmd -> validator.validate(evt, cmd))
                 .flatMap(cmd -> Arrays.stream(cmd.getNames()))
                 .sorted()
                 .map(cmd -> "!" + cmd)

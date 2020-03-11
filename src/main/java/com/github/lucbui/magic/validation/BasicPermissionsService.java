@@ -2,10 +2,7 @@ package com.github.lucbui.magic.validation;
 
 import discord4j.core.object.util.Snowflake;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class BasicPermissionsService implements PermissionsService {
     private Map<Snowflake, Set<String>> permissions;
@@ -31,6 +28,9 @@ public class BasicPermissionsService implements PermissionsService {
 
     @Override
     public Set<String> getPermissions(Snowflake guildId, Snowflake userId) {
+        if(userId == null){
+            return Collections.emptySet();
+        }
         return new HashSet<>(permissions.computeIfAbsent(userId, key -> new HashSet<>()));
     }
 

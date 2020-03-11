@@ -1,13 +1,14 @@
-package com.github.lucbui.magic.validation.command;
+package com.github.lucbui.magic.validation.validators;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-public class CooldownCommandValidator implements CommandValidator {
+public class CooldownCommandValidator implements CreateMessageValidator {
 
     private Map<String, Instant> lastUserCommands;
     private Duration timeout;
