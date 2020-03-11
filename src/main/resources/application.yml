@@ -1,3 +1,7 @@
+logging:
+  level:
+    com.github.lucbui.magic: DEBUG
+
 calendar:
   id: hlclne2tbhr27ijqbkadigkjqk@group.calendar.google.com
 

@@ -8,7 +8,7 @@ public class CronValue implements CronPart {
 
     /**
      * Create a value from a literal int
-     * @param value
+     * @param value The literal int to wrap
      */
     public CronValue(int value) {
         this.value = value;
