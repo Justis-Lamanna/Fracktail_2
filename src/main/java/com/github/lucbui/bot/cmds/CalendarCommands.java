@@ -136,16 +136,16 @@ public class CalendarCommands {
 
         Snowflake requestedId = DiscordUtils.getIdFromMention(userId).map(Snowflake::of).orElse(Snowflake.of(userId));
 
-        return event.getGuild()
-                .flatMap(guild -> guild.getMemberById(requestedId))
-                .flatMap(member -> {
+        return event.getClient()
+                .getUserById(requestedId)
+                .flatMap(user -> {
                     Birthday birthday = new Birthday(
                             userId,
-                            StringUtils.capitalize(member.getUsername()),
+                            StringUtils.capitalize(user.getUsername()),
                             dateOfBirth);
                     try {
                         calendarService.addBirthday(birthday);
-                        return DiscordUtils.respond(event.getMessage(), "Added " + member.getUsername() + "'s birthday as " + date + ".");
+                        return DiscordUtils.respond(event.getMessage(), "Added " + user.getUsername() + "'s birthday as " + date + ".");
                     } catch (IOException e) {
                         e.printStackTrace();
                         return DiscordUtils.respond(event.getMessage(), "There was an error. Birthday was not added.");

@@ -48,4 +48,16 @@ public class DiscordUtils {
     public static String getMentionFromId(Snowflake id) {
         return "<@!" + id.asString() + ">";
     }
+
+    public static boolean isValidSnowflake(String test) {
+        if(test == null){
+            return false;
+        }
+        try {
+            Snowflake.of(test);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

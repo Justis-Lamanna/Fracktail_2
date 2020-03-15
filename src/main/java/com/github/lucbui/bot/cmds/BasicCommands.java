@@ -1,12 +1,15 @@
 package com.github.lucbui.bot.cmds;
 
-import com.github.lucbui.magic.annotation.Command;
-import com.github.lucbui.magic.annotation.Commands;
-import com.github.lucbui.magic.annotation.Permissions;
-import com.github.lucbui.magic.annotation.Timeout;
+import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.util.DiscordUtils;
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.User;
+import discord4j.core.object.util.Snowflake;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Component
 @Commands
@@ -30,5 +33,17 @@ public class BasicCommands {
                 "<:rafo5:596138380211781641><:rafo6:596138491469889536><:rafo7:596138588584804373><:rafo8:596138610193858581>\n" +
                 "<:rafo9:596138646130917376><:rafo10:596138678108291082><:rafo11:596138697607348257><:rafo12:596138718817943552>\n" +
                 "<:rafo13:596138741052211210><:rafo14:596138758160515073><:rafo15:596138771779682315><:rafo16:596138788984586268>";
+    }
+
+    @Command(help = "Check who someone is by their snowflake")
+    public Mono<Void> whodat(MessageCreateEvent event, @Param(0) String userId) {
+        if(!DiscordUtils.isValidSnowflake(userId)) {
+            return DiscordUtils.respond(event.getMessage(), "Correct usage: !whodat [user-snowflake]");
+        }
+        return event.getClient().getUserById(Snowflake.of(userId))
+                .map(Optional::of).onErrorReturn(Optional.empty())
+                .flatMap(possibleUser -> DiscordUtils.respond(event.getMessage(), possibleUser
+                        .map(user -> "They are " + user.getUsername() + ".")
+                        .orElse("I have no idea who that is.")));
     }
 }
