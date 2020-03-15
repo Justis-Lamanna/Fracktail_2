@@ -4,9 +4,17 @@ import com.github.lucbui.magic.exception.BotException;
 
 import java.util.regex.Pattern;
 
+/**
+ * A basic tokenizer which takes commands using a prefix strategy
+ * Format is [prefix][command] [param 1] [param 2]...
+ */
 public class PrefixTokenizer implements Tokenizer {
     private final String prefix;
 
+    /**
+     * Initialize the tokenizer.
+     * @param prefix The prefix to use.
+     */
     public PrefixTokenizer(String prefix) {
         this.prefix = prefix;
     }

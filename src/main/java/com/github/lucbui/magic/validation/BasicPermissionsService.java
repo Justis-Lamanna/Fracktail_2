@@ -4,9 +4,17 @@ import discord4j.core.object.util.Snowflake;
 
 import java.util.*;
 
+/**
+ * A basic permissions service, backed by a Map.
+ */
 public class BasicPermissionsService implements PermissionsService {
     private Map<Snowflake, Set<String>> permissions;
 
+    /**
+     * Initialize Permissions Service with a preload.
+     * Preload is of the format: [User ID]:[permission];[User ID]:[permission];...
+     * @param preload The preload to initialize the service with.
+     */
     public BasicPermissionsService(String preload) {
         permissions = new HashMap<>();
         if(preload.length() > 0) {

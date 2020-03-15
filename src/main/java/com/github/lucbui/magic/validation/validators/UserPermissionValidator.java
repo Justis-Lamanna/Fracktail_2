@@ -10,9 +10,16 @@ import discord4j.core.object.util.Snowflake;
 
 import java.util.Set;
 
+/**
+ * Uses a PermissionsService to validate if a command can be used
+ */
 public class UserPermissionValidator implements CreateMessageValidator {
     private final PermissionsService permissionsService;
 
+    /**
+     * Initialize a UserPermissionValidator
+     * @param permissionsService The PermissionsService to use when validating.
+     */
     public UserPermissionValidator(PermissionsService permissionsService){
         this.permissionsService = permissionsService;
     }

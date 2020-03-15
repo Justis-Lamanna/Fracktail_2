@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.util;
 
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -44,7 +45,7 @@ public class DiscordUtils {
      * @param id The ID to use
      * @return The formatted mention text
      */
-    public static String getMentionFromId(String id) {
-        return "<@!" + id + ">";
+    public static String getMentionFromId(Snowflake id) {
+        return "<@!" + id.asString() + ">";
     }
 }

@@ -19,12 +19,17 @@ import java.time.Duration;
 
 @Configuration
 public class BotConfig {
+    @Bean("userPermissionValidator")
+    public UserPermissionValidator userPermissionValidator(@Value("${discord.permissions.preload}.split(';')") String preload) {
+        return new UserPermissionValidator(new BasicPermissionsService(preload));
+    }
+
     @Bean
-    public CreateMessageValidator createMessageValidator(@Value("${discord.commands.timeout:30s}") Duration timeout, @Value("${discord.permissions.preload:}") String preload) {
+    public CreateMessageValidator createMessageValidator(@Value("${discord.commands.timeout:30s}") Duration timeout, UserPermissionValidator userPermissionValidator) {
         return new ChainCreateMessageValidator(
                 new NotBotUserMessageValidator(),
                 new CooldownCommandValidator(timeout),
-                new UserPermissionValidator(new BasicPermissionsService(preload)));
+                userPermissionValidator);
     }
 
     @Bean

@@ -5,6 +5,9 @@ import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 
+/**
+ * A Message Validator that verifies a user is not a bot.
+ */
 public class NotBotUserMessageValidator implements CreateMessageValidator {
     @Override
     public boolean validate(MessageCreateEvent event, BotCommand command) {

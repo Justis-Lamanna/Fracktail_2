@@ -6,10 +6,13 @@ import com.github.lucbui.magic.annotation.Commands;
 import com.github.lucbui.magic.annotation.Param;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.CommandList;
+import com.github.lucbui.magic.validation.PermissionsService;
 import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
+import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -22,7 +25,8 @@ public class BotUseCommands {
     private CommandList commandList;
 
     @Autowired
-    private CreateMessageValidator validator;
+    @Qualifier("userPermissionValidator")
+    private UserPermissionValidator userPermissionValidator;
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
     public String help(MessageCreateEvent evt, @Param(0) String cmd) {
@@ -30,7 +34,7 @@ public class BotUseCommands {
             cmd = "help";
         }
         BotCommand command = commandList.getCommand(cmd);
-        if(command == null || !validator.validate(evt, command)) {
+        if(command == null || !userPermissionValidator.validate(evt, command)) {
             return cmd + " is not a valid command.";
         } else {
             return command.getHelpText();
@@ -41,7 +45,7 @@ public class BotUseCommands {
     public String commands(MessageCreateEvent evt) {
         return "Commands are: " + commandList.getAllCommands()
                 .stream()
-                .filter(cmd -> validator.validate(evt, cmd))
+                .filter(cmd -> userPermissionValidator.validate(evt, cmd))
                 .flatMap(cmd -> Arrays.stream(cmd.getNames()))
                 .sorted()
                 .map(cmd -> "!" + cmd)
