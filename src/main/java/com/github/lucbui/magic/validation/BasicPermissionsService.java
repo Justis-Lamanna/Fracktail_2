@@ -6,6 +6,8 @@ import java.util.*;
 
 /**
  * A basic permissions service, backed by a Map.
+ * Users are identified solely by their ID, and no distinguishing is made between
+ * different servers.
  */
 public class BasicPermissionsService implements PermissionsService {
     private Map<Snowflake, Set<String>> permissions;

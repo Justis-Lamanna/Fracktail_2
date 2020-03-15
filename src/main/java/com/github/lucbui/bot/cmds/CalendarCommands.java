@@ -4,6 +4,7 @@ import com.github.lucbui.bot.calendar.CalendarService;
 import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -84,7 +86,7 @@ public class CalendarCommands {
         } else {
             return calendarService.searchBirthdayById(sender.getId())
                     .map(bday -> String.format("Your birthday is on %tD (%s)", bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
-                    .orElse("Sorry, I don't know when your birthday is.");
+                    .orElse("Sorry, I don't know when your birthday is. Use !addbirthday [yyyy-mm-dd] to add it!");
         }
     }
 
@@ -114,6 +116,41 @@ public class CalendarCommands {
                 dateOfBirth);
         calendarService.addBirthday(birthday);
         return "Added " + sender.getUsername() + "'s birthday to the birthday calendar";
+    }
+
+    @Command(help = "Add a user's birthday. Usage is !setbirthday [user-snowflake] [yyyy-mm-dd]")
+    @Permissions("admin")
+    public Mono<Void> setbirthday(MessageCreateEvent event, @Param(0) String userId, @Param(1) String date) throws IOException {
+        LocalDate dateOfBirth;
+        try {
+            dateOfBirth = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+            int currentYear = LocalDate.now().get(ChronoField.YEAR);
+            if(dateOfBirth.get(ChronoField.YEAR) < OLDEST_POSSIBLE_YEAR) {
+                return DiscordUtils.respond(event.getMessage(), "They are definitely not that old.");
+            } else if(dateOfBirth.get(ChronoField.YEAR) > currentYear) {
+                return DiscordUtils.respond(event.getMessage(), "They were not born in the future, either");
+            }
+        } catch (DateTimeParseException ex) {
+            return DiscordUtils.respond(event.getMessage(), "Correct usage: !setbirthday [user-snowflake] [yyyy-mm-dd]");
+        }
+
+        Snowflake requestedId = DiscordUtils.getIdFromMention(userId).map(Snowflake::of).orElse(Snowflake.of(userId));
+
+        return event.getGuild()
+                .flatMap(guild -> guild.getMemberById(requestedId))
+                .flatMap(member -> {
+                    Birthday birthday = new Birthday(
+                            userId,
+                            StringUtils.capitalize(member.getUsername()),
+                            dateOfBirth);
+                    try {
+                        calendarService.addBirthday(birthday);
+                        return DiscordUtils.respond(event.getMessage(), "Added " + member.getUsername() + "'s birthday as " + date + ".");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return DiscordUtils.respond(event.getMessage(), "There was an error. Birthday was not added.");
+                    }
+                });
     }
 
     private String getBirthdayText(Birthday nextBirthday) {

@@ -20,7 +20,7 @@ import java.time.Duration;
 @Configuration
 public class BotConfig {
     @Bean("userPermissionValidator")
-    public UserPermissionValidator userPermissionValidator(@Value("${discord.permissions.preload}.split(';')") String preload) {
+    public UserPermissionValidator userPermissionValidator(@Value("${discord.permissions.preload}") String preload) {
         return new UserPermissionValidator(new BasicPermissionsService(preload));
     }
 
