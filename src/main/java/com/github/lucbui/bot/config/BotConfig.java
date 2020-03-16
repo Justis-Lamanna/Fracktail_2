@@ -11,25 +11,32 @@ import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.presence.Presence;
+import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @Configuration
 public class BotConfig {
     @Bean("userPermissionValidator")
-    public UserPermissionValidator userPermissionValidator(@Value("${discord.permissions.preload}") String preload) {
+    public UserPermissionValidator userPermissionValidator() {
+        Map<Snowflake, Set<String>> preload = new HashMap<>();
+        preload.put(Snowflake.of("248612704019808258"), Collections.singleton("admin"));
         return new UserPermissionValidator(new BasicPermissionsService(preload));
     }
 
     @Bean
-    public CreateMessageValidator createMessageValidator(@Value("${discord.commands.timeout:30s}") Duration timeout, UserPermissionValidator userPermissionValidator) {
+    public CreateMessageValidator createMessageValidator(@Value("${discord.commands.timeout:30s}") Duration timeout) {
         return new ChainCreateMessageValidator(
                 new NotBotUserMessageValidator(),
                 new CooldownCommandValidator(timeout),
-                userPermissionValidator);
+                userPermissionValidator());
     }
 
     @Bean

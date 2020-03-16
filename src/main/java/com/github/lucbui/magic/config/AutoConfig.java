@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.config;
 
+import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandFieldCallbackFactory;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
@@ -25,6 +26,12 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public CommandList commandList(CommandStoreMapFactory commandStoreMapFactory) {
         return new CommandList(commandStoreMapFactory);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CommandAnnotationProcessor commandAnnotationProcessor(CommandFieldCallbackFactory commandFieldCallbackFactory) {
+        return new CommandAnnotationProcessor(commandFieldCallbackFactory);
     }
 
     @Bean

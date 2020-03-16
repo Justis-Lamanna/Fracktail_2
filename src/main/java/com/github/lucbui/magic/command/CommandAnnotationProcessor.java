@@ -11,11 +11,9 @@ import org.springframework.util.ReflectionUtils;
 /**
  * A BeanProcessor which extracts Commands
  */
-@Component
 public class CommandAnnotationProcessor implements BeanPostProcessor {
     private final CommandFieldCallbackFactory commandFieldCallbackFactory;
 
-    @Autowired
     public CommandAnnotationProcessor(CommandFieldCallbackFactory commandFieldCallbackFactory) {
         this.commandFieldCallbackFactory = commandFieldCallbackFactory;
     }

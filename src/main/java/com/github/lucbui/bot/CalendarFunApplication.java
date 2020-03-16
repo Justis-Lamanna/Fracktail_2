@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.github.lucbui")
 public class CalendarFunApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CalendarFunApplication.class, args);

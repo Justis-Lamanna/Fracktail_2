@@ -13,5 +13,6 @@ public class BotStartupRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         bot.login().block();
+        System.out.println("Should never happen?");
     }
 }

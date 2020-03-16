@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.github.lucbui.magic.config.AutoConfig,\
+com.github.lucbui.magic.config.QuartzConfig
