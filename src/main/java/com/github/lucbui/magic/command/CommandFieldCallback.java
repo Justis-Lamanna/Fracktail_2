@@ -204,7 +204,7 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
     protected Set<String> getPermissions(Method method) {
         if(method.isAnnotationPresent(Permissions.class)){
             String[] permissions = method.getAnnotation(Permissions.class).value();
-            return Arrays.stream(permissions).collect(Collectors.toUnmodifiableSet());
+            return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
         }
         return Collections.emptySet();
     }

@@ -40,7 +40,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
     @Override
     public Mono<Void> handleMessageCreateEvent(MessageCreateEvent event) {
-        if(event.getMember().isEmpty()){
+        if(!event.getMember().isPresent()){
             LOGGER.debug("Received message from {} via DM: {}",
                     event.getMessage().getAuthor().map(User::getUsername).orElse("???"),
                     event.getMessage().getContent().orElse("???"));
