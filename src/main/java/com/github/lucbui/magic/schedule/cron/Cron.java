@@ -541,7 +541,7 @@ public class Cron implements CronPart{
          * @param last The upper end of the range
          * @return This builder
          */
-        public Builder onDaysOfWeekRange(Month first, Month last) {
+        public Builder onDaysOfWeekRange(DayOfWeek first, DayOfWeek last) {
             return onDaysOfWeekRange(Range.between(first, last));
         }
 
@@ -564,9 +564,9 @@ public class Cron implements CronPart{
          * @return This builder
          */
         @SafeVarargs
-        public final Builder onDaysOfWeekRange(Range<Month>... ranges) {
+        public final Builder onDaysOfWeekRange(Range<DayOfWeek>... ranges) {
             validateHasElements(ranges);
-            this.dayOfWeek = createCronPartMonth(ranges);
+            this.dayOfWeek = createCronPartDOW(ranges);
             return this;
         }
 

@@ -3,11 +3,13 @@ package com.github.lucbui.bot.schedule;
 import com.github.lucbui.bot.Constants;
 import com.github.lucbui.magic.schedule.SchedulerService;
 import com.github.lucbui.magic.schedule.cron.Cron;
+import com.github.lucbui.magic.schedule.cron.DayOfWeek;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.TextChannel;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.VoiceChannel;
 import discord4j.core.object.presence.Status;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +28,10 @@ public class SchedulerPlayground {
 
     @PostConstruct
     private void scheduleThings() {
-        Cron atBedtime = new Cron.Builder().everyDayAt(22, 0, 0).build();
+        Cron atBedtime = new Cron.Builder()
+                .everyDayAt(22, 0, 0)
+                .onDaysOfWeekRange(DayOfWeek.SUNDAY, DayOfWeek.THURSDAY)
+                .build();
         schedulerService.scheduleJob("bedtime", () -> {
             bot.getGuildById(Constants.LUCBUILAND_GUILD_ID)
                     .filterWhen(guild -> guild.getMemberById(Constants.LUCBUI_ID)
