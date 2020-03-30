@@ -11,10 +11,14 @@ import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,13 @@ public class BotUseCommands {
     @Autowired
     @Qualifier("userPermissionValidator")
     private UserPermissionValidator userPermissionValidator;
+
+    private Instant startTime;
+
+    @PostConstruct
+    private void postConstruct() {
+        this.startTime = Instant.now();
+    }
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
     public String help(MessageCreateEvent evt, @Param(0) String cmd) {
@@ -50,5 +61,11 @@ public class BotUseCommands {
                 .sorted()
                 .map(cmd -> "!" + cmd)
                 .collect(Collectors.joining(", ")) + ".";
+    }
+
+    @Command(help = "Get the uptime of this bot.")
+    public String uptime() {
+        Duration uptime = Duration.between(startTime, Instant.now());
+        return "Bot has been up for " + DurationFormatUtils.formatDurationWords(uptime.toMillis(), true, true);
     }
 }
