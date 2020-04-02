@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 
@@ -44,7 +45,7 @@ public class AutoConfig {
     @Bean
     @ConditionalOnMissingBean
     public CreateMessageValidator createMessageValidator() {
-        return (event, command) -> true;
+        return (event, command) -> Mono.just(true);
     }
 
     @Bean

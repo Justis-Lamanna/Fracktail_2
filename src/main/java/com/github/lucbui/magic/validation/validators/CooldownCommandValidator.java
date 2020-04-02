@@ -17,7 +17,7 @@ import java.util.*;
  * This is a stateful validator, so might act a little squirrely. I have tried to make it safer by using
  * synchronized maps, and I hope that's enough.
  */
-public class CooldownCommandValidator implements CreateMessageValidator {
+public class CooldownCommandValidator extends BasicMessageValidator {
 
     private Map<Snowflake, Map<String, Instant>> lastUserCommands;
     private Duration timeout;
@@ -32,7 +32,7 @@ public class CooldownCommandValidator implements CreateMessageValidator {
     }
 
     @Override
-    public boolean validate(MessageCreateEvent event, BotCommand command) {
+    public boolean validateBool(MessageCreateEvent event, BotCommand command) {
         Snowflake channelId = event.getMessage().getChannelId();
         Duration timeoutToUse = timeout;
         if(command.getTimeout() != null) {

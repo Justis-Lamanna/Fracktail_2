@@ -2,8 +2,12 @@ package com.github.lucbui.magic.validation.validators;
 
 import com.github.lucbui.magic.command.func.BotCommand;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A validator which encapsulates multiple validators
@@ -20,8 +24,11 @@ public class ChainCreateMessageValidator implements CreateMessageValidator {
     }
 
     @Override
-    public boolean validate(MessageCreateEvent event, BotCommand command) {
-        return Arrays.stream(validators)
-                    .allMatch(v -> v.validate(event, command));
+    public Mono<Boolean> validate(MessageCreateEvent event, BotCommand command) {
+        return Flux.merge(Arrays.stream(validators)
+                .map(Mono::just)
+                .collect(Collectors.toList()))
+            .flatMap(v -> v.validate(event, command))
+            .all(b -> b);
     }
 }

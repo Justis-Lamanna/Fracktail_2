@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Uses a PermissionsService to validate if a command can be used
  */
-public class UserPermissionValidator implements CreateMessageValidator {
+public class UserPermissionValidator extends BasicMessageValidator {
     private final PermissionsService permissionsService;
 
     /**
@@ -25,7 +25,7 @@ public class UserPermissionValidator implements CreateMessageValidator {
     }
 
     @Override
-    public boolean validate(MessageCreateEvent event, BotCommand command) {
+    public boolean validateBool(MessageCreateEvent event, BotCommand command) {
         Set<String> permissionsCommandNeeds = command.getPermissions();
         if(permissionsCommandNeeds.isEmpty()){
             return true;

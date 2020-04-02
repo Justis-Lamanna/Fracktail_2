@@ -8,9 +8,9 @@ import discord4j.core.object.entity.User;
 /**
  * A Message Validator that verifies a user is not a bot.
  */
-public class NotBotUserMessageValidator implements CreateMessageValidator {
+public class NotBotUserMessageValidator extends BasicMessageValidator {
     @Override
-    public boolean validate(MessageCreateEvent event, BotCommand command) {
+    public boolean validateBool(MessageCreateEvent event, BotCommand command) {
         return !event.getMessage().getAuthor().map(User::isBot).orElse(true);
     }
 }

@@ -46,23 +46,17 @@ public class DefaultCommandHandler implements CommandHandler {
                     event.getMessage().getContent().orElse("???"));
         }
 
-        return getTokens(event)
+        return Mono.justOrEmpty(getTokens(event))
                 .map(tokens -> commandList.getCommand(tokens.getCommand()))
-                .map(cmd -> {
-                    try {
-                        if(createMessageValidator.validate(event, cmd)) {
-                            LOGGER.debug("Executing command {} from {}",
-                                    cmd.getNames()[0],
-                                    event.getMessage().getAuthor().map(User::getUsername).orElse("???"));
-                            return cmd.getBehavior().execute(event);
-                        } else {
-                            return Mono.<Void>empty();
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        return DiscordUtils.respond(event.getMessage(), "I'm sorry, I encountered an exception. Please check the logs.");
-                    }
-                }).orElse(Mono.empty());
+                .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
+                .doOnSuccess(cmd -> LOGGER.debug("Executing command {} from {}",
+                        cmd.getNames()[0],
+                        event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
+                .flatMap(cmd -> cmd.getBehavior().execute(event))
+                .onErrorResume(ex -> {
+                    LOGGER.error("Error handling message", ex);
+                    return DiscordUtils.respond(event.getMessage(), "I'm sorry, I encountered an exception. Please check the logs.");
+                });
     }
 
     protected Optional<Tokens> getTokens(MessageCreateEvent event) {
