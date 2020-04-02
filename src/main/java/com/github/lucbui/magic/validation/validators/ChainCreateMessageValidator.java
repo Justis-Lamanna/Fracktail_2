@@ -25,9 +25,7 @@ public class ChainCreateMessageValidator implements CreateMessageValidator {
 
     @Override
     public Mono<Boolean> validate(MessageCreateEvent event, BotCommand command) {
-        return Flux.merge(Arrays.stream(validators)
-                .map(Mono::just)
-                .collect(Collectors.toList()))
+        return Flux.just(validators)
             .flatMap(v -> v.validate(event, command))
             .all(b -> b);
     }
