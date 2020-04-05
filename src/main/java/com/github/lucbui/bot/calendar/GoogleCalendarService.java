@@ -12,9 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -34,9 +32,10 @@ public class GoogleCalendarService implements CalendarService {
 
     @Override
     public List<Birthday> getNextNBirthdays(int n) throws IOException {
-        DateTime now = from(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        LocalDate today = LocalDate.now();
+        DateTime now = from(today.atStartOfDay().minus(1, ChronoUnit.MILLIS));
         //Cut off the search at one year from now, at which point birthdays will start to repeat.
-        DateTime oneYear = from(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS));
+        DateTime oneYear = from(today.atStartOfDay().plus(1, ChronoUnit.YEARS));
         Events events = calendar.events().list(calendarId)
                 .setMaxResults(n)
                 .setTimeMin(now)
@@ -54,12 +53,29 @@ public class GoogleCalendarService implements CalendarService {
     public List<Birthday> getTodaysBirthday() throws IOException {
         //Lists all birthday's on today
         LocalDate today = LocalDate.now();
-        DateTime beginningOfToday = from(today.atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        DateTime beginningOfToday = from(today.atStartOfDay().minus(1, ChronoUnit.MILLIS));
         DateTime endOfToday = from(today.atStartOfDay().plus(1, ChronoUnit.DAYS));
         Events events = calendar.events().list(calendarId)
-                .setMaxResults(1)
+                .setMaxResults(25)
                 .setTimeMin(beginningOfToday)
                 .setTimeMax(endOfToday)
+                .setOrderBy("startTime")
+                .setSingleEvents(true)
+                .setQ(BIRTHDAY_STR)
+                .execute();
+        return events.getItems().stream()
+                .map(Birthday::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Birthday> getMonthsBirthday(Month month) throws IOException {
+        DateTime startOfTheMonth = from(Year.now().atMonth(month).atDay(1).atStartOfDay().minus(1, ChronoUnit.MILLIS));
+        DateTime endOfTheMonth = from(Year.now().atMonth(month).atEndOfMonth().atStartOfDay().plus(1, ChronoUnit.DAYS));
+        Events events = calendar.events().list(calendarId)
+                .setMaxResults(25)
+                .setTimeMin(startOfTheMonth)
+                .setTimeMax(endOfTheMonth)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
                 .setQ(BIRTHDAY_STR)

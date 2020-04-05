@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -47,9 +48,9 @@ public class DefaultCommandHandler implements CommandHandler {
         }
 
         return Mono.justOrEmpty(getTokens(event))
-                .map(tokens -> commandList.getCommand(tokens.getCommand()))
+                .flatMap(tokens -> Mono.justOrEmpty(commandList.getCommand(tokens.getCommand())))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
-                .doOnSuccess(cmd -> LOGGER.debug("Executing command {} from {}",
+                .doOnNext(cmd -> LOGGER.debug("Executing command {} from {}",
                         cmd.getNames()[0],
                         event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
                 .flatMap(cmd -> cmd.getBehavior().execute(event))

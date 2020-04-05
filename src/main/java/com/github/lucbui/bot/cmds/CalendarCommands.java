@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,13 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
@@ -69,6 +73,37 @@ public class CalendarCommands {
                     .collect(Collectors.joining("\n", preText, ""));
         }
     }
+
+    @Command(help = "Get all birthdays occuring this month.")
+    public String monthbirthday(@Param(0) String monthStr) throws IOException {
+        Month month;
+        String monthReturnStr;
+        if(monthStr == null) {
+            month = LocalDate.now().getMonth();
+            monthReturnStr = "this month";
+        } else if (EnumUtils.isValidEnum(Month.class, monthStr.toUpperCase())){
+            month = Month.valueOf(monthStr.toUpperCase());
+            monthReturnStr = "in " + month.getDisplayName(TextStyle.FULL, Locale.getDefault());
+        } else {
+            return "Invalid month specified. Must be: " + EnumUtils.getEnumList(Month.class)
+                    .stream()
+                    .map(m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()))
+                    .collect(Collectors.joining(", "));
+        }
+
+        List<Birthday> birthdays = calendarService.getMonthsBirthday(month);
+        if(birthdays.isEmpty()) {
+            return "There are no birthdays " + monthReturnStr + ".";
+        } else if(birthdays.size() == 1){
+            return "The only birthday " + monthReturnStr + " is " + getBirthdayText(birthdays.get(0));
+        } else {
+            String preText = "Sure, here are the " + birthdays.size() + " birthdays happening " + monthReturnStr + ":\n";
+            return birthdays.stream()
+                    .map(this::getBirthdayText)
+                    .collect(Collectors.joining("\n", preText, ""));
+        }
+    }
+
 
     @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
     public String birthday(@Param(0) String user, @BasicSender User sender) throws IOException {
