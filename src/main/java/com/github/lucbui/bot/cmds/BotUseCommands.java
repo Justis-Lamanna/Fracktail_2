@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,15 +43,12 @@ public class BotUseCommands {
 
     @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
     public Mono<Void> help(MessageCreateEvent evt, @Param(0) String cmd) {
-        if(cmd == null) {
-            cmd = "help";
-        }
-        BotCommand command = commandList.getCommand(cmd);
-        return Mono.just(command)
-                .filter(Objects::nonNull)
+        String cmdToSearch = (cmd == null) ? "help" : cmd;
+        BotCommand command = commandList.getCommand(cmdToSearch);
+        return Mono.justOrEmpty(command)
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
-                .flatMap(c -> DiscordUtils.respond(evt.getMessage(), command.getHelpText()))
-                .switchIfEmpty(DiscordUtils.respond(evt.getMessage(), cmd + " is not a valid command."));
+                .map(Optional::of).defaultIfEmpty(Optional.empty())
+                .flatMap(c -> DiscordUtils.respond(evt.getMessage(), c.map(BotCommand::getHelpText).orElse(cmdToSearch + " is not a valid command.")));
     }
 
     @Command(help = "Get a list of all usable commands.")
