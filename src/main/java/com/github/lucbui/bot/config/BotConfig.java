@@ -10,11 +10,16 @@ import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.presence.Presence;
 import discord4j.core.object.util.Snowflake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.time.Duration;
 import java.util.Collections;

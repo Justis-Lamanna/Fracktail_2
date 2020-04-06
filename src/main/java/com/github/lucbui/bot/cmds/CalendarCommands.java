@@ -1,11 +1,10 @@
 package com.github.lucbui.bot.cmds;
 
-import com.github.lucbui.bot.calendar.CalendarService;
+import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.EnumUtils;

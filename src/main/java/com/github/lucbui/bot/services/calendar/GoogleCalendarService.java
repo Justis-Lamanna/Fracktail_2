@@ -1,4 +1,4 @@
-package com.github.lucbui.bot.calendar;
+package com.github.lucbui.bot.services.calendar;
 
 import com.github.lucbui.bot.model.Birthday;
 import com.google.api.client.util.DateTime;
@@ -10,6 +10,7 @@ import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.*;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 public class GoogleCalendarService implements CalendarService {
     private static final String BIRTHDAY_STR = "Birthday";
 

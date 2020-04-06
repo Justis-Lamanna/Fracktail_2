@@ -1,4 +1,4 @@
-package com.github.lucbui.bot.calendar;
+package com.github.lucbui.bot.services.calendar;
 
 import com.github.lucbui.bot.model.Birthday;
 import discord4j.core.object.util.Snowflake;

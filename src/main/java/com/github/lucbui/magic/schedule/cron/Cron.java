@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.schedule.cron;
 
 import org.apache.commons.lang3.Range;
+import org.springframework.scheduling.support.CronTrigger;
 
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -85,6 +86,10 @@ public class Cron implements CronPart{
                 .add(month.toCronString())
                 .add(dayOfWeek.toCronString())
                 .toString();
+    }
+
+    public CronTrigger toCronTrigger() {
+        return new CronTrigger(toCronString());
     }
 
     /**
@@ -703,6 +708,22 @@ public class Cron implements CronPart{
          */
         public Cron build() {
             return new Cron(seconds, minute, hour, dayOfMonth, month, dayOfWeek);
+        }
+
+        /**
+         * Build the cron expression as a trigger
+         * @return The CronTrigger, to input into Spring's scheduler
+         */
+        public CronTrigger buildCronTrigger() {
+            return new CronTrigger(build().toCronString());
+        }
+
+        /**
+         * Build the cron expression as a standard string
+         * @return The Cron expression as a String
+         */
+        public String buildCronExpression() {
+            return build().toCronString();
         }
     }
 

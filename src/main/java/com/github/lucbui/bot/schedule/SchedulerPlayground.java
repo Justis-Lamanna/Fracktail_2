@@ -1,95 +1,80 @@
 package com.github.lucbui.bot.schedule;
 
-import com.github.lucbui.bot.Constants;
-import com.github.lucbui.bot.calendar.CalendarService;
+import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.model.Birthday;
-import com.github.lucbui.magic.schedule.SchedulerService;
+import com.github.lucbui.bot.services.channel.BotChannelService;
 import com.github.lucbui.magic.schedule.cron.Cron;
 import com.github.lucbui.magic.schedule.cron.DayOfWeek;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.TextChannel;
-import discord4j.core.object.entity.User;
-import discord4j.core.object.presence.Status;
+import discord4j.core.object.util.Permission;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Component
 public class SchedulerPlayground {
+    private static final Snowflake LUCBUI_ID = Snowflake.of("248612704019808258");
+    public static final String BOT_CHANNEL_ID = "424562931489964032";
+
     @Autowired
-    private SchedulerService schedulerService;
+    private BotChannelService botChannelService;
+
+    @Autowired
+    private CalendarService calendarService;
 
     @Autowired
     private DiscordClient bot;
 
     @Autowired
-    private CalendarService calendarService;
+    private TaskScheduler taskScheduler;
 
-    @PostConstruct
-    private void scheduleThings() {
-        scheduleBedtimePing();
-        scheduleBirthdayPing();
-    }
-
-    private Mono<TextChannel> getBotChannel() {
-        return bot.getGuildById(Constants.LUCBUILAND_GUILD_ID)
-                .filterWhen(guild -> guild.getMemberById(Constants.LUCBUI_ID)
-                        .flatMap(Member::getPresence)
-                        .map(presence -> presence.getStatus() != Status.OFFLINE))
-                .flatMap(guild -> guild.getChannelById(Constants.BOT_CHANNEL_ID))
-                .cast(TextChannel.class);
-    }
-
-    private void scheduleBedtimePing() {
+    @Scheduled(cron = "0 0 22 * * SUN-THU")
+    public void scheduleBedtimePing() {
         Cron atBedtime = new Cron.Builder()
                 .everyDayAt(22, 0, 0)
                 .onDaysOfWeekRange(DayOfWeek.SUNDAY, DayOfWeek.THURSDAY)
                 .build();
-        schedulerService.scheduleJob("bedtime", () -> {
-            getBotChannel()
-                    .flatMap(channel -> channel.createMessage(DiscordUtils.getMentionFromId(Constants.LUCBUI_ID) + ", GO THE HECK TO SLEEP"))
-                    .block();
-        }, atBedtime);
+        taskScheduler.schedule(() ->
+                bot.getChannelById(Snowflake.of(BOT_CHANNEL_ID))
+                    .cast(TextChannel.class)
+                    .flatMap(channel -> channel.createMessage(DiscordUtils.getMentionFromId(LUCBUI_ID) + ", GO THE HECK TO SLEEP"))
+                    .block(), atBedtime.toCronTrigger());
     }
 
-    private void scheduleBirthdayPing() {
+    @Scheduled(cron = "0 0 0 * * *")
+    public void scheduleBirthdayPing() {
         Cron atMidnight = new Cron.Builder().everyDay().build();
-        schedulerService.scheduleJob("birthday-check", () -> {
+        taskScheduler.schedule(() -> {
             try {
                 List<Birthday> birthdays = calendarService.getTodaysBirthday();
                 if(birthdays.size() > 0) {
-                    getBotChannel()
-                            .flatMap(channel -> channel.createMessage("Happy Birthday to: " + determineRecipients(birthdays) + "!"))
-                            .block();
+                    botChannelService.getAllAnnouncementChannels()
+                            .flatMap(tc -> Flux.fromIterable(birthdays)
+                                        .filter(b -> b.getMemberId() != null)
+                                        .filterWhen(b -> tc.getEffectivePermissions(Snowflake.of(b.getMemberId()))
+                                                .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
+                                        .map(Birthday::getName)
+                                        .collect(Collectors.joining(", "))
+                                        .flatMap(msg -> tc.createMessage("Happy Birthday to: " + msg + "!"))
+                            )
+                            .blockLast();
                 }
-            } catch (IOException e) {
-                bot.getUserById(Constants.LUCBUI_ID)
-                        .flatMap(User::getPrivateChannel)
+            } catch (Exception e) {
+                botChannelService.getAdminDMChannel()
                         .flatMap(dm -> dm.createMessage("There was an error running the Birthday job: " + e.getMessage() + " Please check the logs."))
                         .block();
             }
-        }, atMidnight);
-    }
-
-    private String determineRecipients(List<Birthday> birthdays) {
-        return birthdays.stream()
-                .map(this::determineRecipient)
-                .collect(Collectors.joining(", "));
-    }
-
-    private String determineRecipient(Birthday birthday) {
-        if(birthday.getMemberId() == null) {
-            return birthday.getName();
-        } else {
-            return DiscordUtils.getMentionFromId(Snowflake.of(birthday.getMemberId()));
-        }
+        }, atMidnight.toCronTrigger());
     }
 }
