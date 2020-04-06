@@ -3,7 +3,6 @@ package com.github.lucbui.bot.cmds;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

@@ -5,10 +5,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 /**
  * A validator which encapsulates multiple validators
  */
