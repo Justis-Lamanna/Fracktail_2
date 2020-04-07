@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.github.lucbui</groupId>
-	<artifactId>calendar-fun</artifactId>
+	<artifactId>fracktail</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>calendar-fun</name>
-	<description>Demo project for Spring Boot</description>
+	<name>fracktail</name>
+	<description>Code for Fracktail: A Discord Bot</description>
 
 	<dependencies>
 		<dependency>
