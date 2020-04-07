@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<project name="Fracktail" basedir="." default="deploy">
+    <description>
+        Deploy Fracktail code to Raspberry Pi
+    </description>
+
+    <property file="build.properties"/>
+
+    <target name="deploy" description="Deploy the code to remote">
+        <echo message="Moving file to remote..."/>
+        <scp file="./target/calendar-fun-0.0.1-SNAPSHOT.jar"
+             todir="${user}@${host}:/home/pi"
+             password="${password}"
+             trust="true"
+             verbose="true"/>
+    </target>
+
+    <target name="start" description="Start the application">
+        <echo message="Starting app..."/>
+        <sshexec command="systemctl start fracktail"
+            host="${host}"
+            username="${user}"
+            password="${password}"
+            trust="true"
+            verbose="true"/>
+    </target>
+
+    <target name="stop" description="Stop the application">
+        <echo message="Starting app..."/>
+        <sshexec command="systemctl stop fracktail"
+                 host="${host}"
+                 username="${user}"
+                 password="${password}"
+                 trust="true"
+                 verbose="true"/>
+    </target>
+
+    <target name="restart" description="Restart the application">
+        <echo message="Retarting app..."/>
+        <sshexec command="systemctl restart fracktail"
+                 host="${host}"
+                 username="${user}"
+                 password="${password}"
+                 trust="true"
+                 verbose="true"/>
+    </target>
+
+    <target name="logs" description="Download application logs">
+        <property name="logfile" value="/home/pi/fracktail.log"/>
+
+        <echo message="Retrieving app logs..."/>
+        <sshexec command="journalctl -u fracktail > ${logfile}"
+                 host="${host}"
+                 username="${user}"
+                 password="${password}"
+                 trust="true"
+                 verbose="true"/>
+
+        <echo message="Downloading logs..."/>
+        <scp file="${user}@${host}:${logfile}"
+             todir="."
+             password="${password}"
+             trust="true"
+             verbose="true"/>
+    </target>
+</project>

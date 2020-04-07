@@ -1,7 +1,5 @@
 package com.github.lucbui.magic.command.func;
 
-import org.springframework.core.ParameterizedTypeReference;
-
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;

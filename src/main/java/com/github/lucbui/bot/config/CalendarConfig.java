@@ -46,7 +46,7 @@ public class CalendarConfig {
         // Build flow and trigger user authorization request.
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 transport, JSON_FACTORY, clientSecrets, Collections.singletonList(CalendarScopes.CALENDAR))
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens")))
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File("/home/pi/tokens")))
                 .setAccessType("offline")
                 .build();
         LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();

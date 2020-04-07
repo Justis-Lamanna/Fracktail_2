@@ -33,3 +33,5 @@ build/
 .mvn/
 /tokens
 /javadocs
+build.properties
+fracktail.log
