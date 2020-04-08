@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -51,18 +50,15 @@ public class SchedulerPlayground {
 
     @Scheduled(cron = "0 0 0 * * *")
     public void scheduleBirthdayPing() throws IOException {
-        List<Birthday> birthdays = calendarService.getTodaysBirthday();
-        if (birthdays.size() > 0) {
-            botChannelService.getAllAnnouncementChannels()
-                    .flatMap(tc -> Flux.fromIterable(birthdays)
-                            .filter(b -> b.getMemberId() != null)
-                            .filterWhen(b -> tc.getEffectivePermissions(Snowflake.of(b.getMemberId()))
-                                    .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
-                            .map(Birthday::getName)
-                            .collect(Collectors.joining(", "))
-                            .flatMap(msg -> tc.createMessage("Happy Birthday to: " + msg + "!"))
-                    )
-                    .blockLast();
-        }
+        botChannelService.getAllAnnouncementChannels()
+                .flatMap(tc ->  calendarService.getTodaysBirthday()
+                        .filter(b -> b.getMemberId() != null)
+                        .filterWhen(b -> tc.getEffectivePermissions(Snowflake.of(b.getMemberId()))
+                                .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
+                        .map(Birthday::getName)
+                        .collect(Collectors.joining(", "))
+                        .flatMap(msg -> tc.createMessage("Happy Birthday to: " + msg + "!"))
+                )
+                .blockLast();
     }
 }

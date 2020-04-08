@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.command.store;
 
+import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -40,8 +41,8 @@ public class DefaultCommandHandler implements CommandHandler {
 
     @Override
     public Mono<Void> handleMessageCreateEvent(MessageCreateEvent event) {
-        if(!event.getMember().isPresent()){
-            LOGGER.debug("Received message from {} via DM: {}",
+        if(!event.getMember().isPresent() && !event.getMessage().getAuthor().map(User::isBot).orElse(false)){
+            LOGGER.info("Received message from {} via DM: {}",
                     event.getMessage().getAuthor().map(User::getUsername).orElse("???"),
                     event.getMessage().getContent().orElse("???"));
         }
@@ -49,10 +50,11 @@ public class DefaultCommandHandler implements CommandHandler {
         return Mono.justOrEmpty(getTokens(event))
                 .flatMap(tokens -> Mono.justOrEmpty(commandList.getCommand(tokens.getCommand())))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
-                .doOnNext(cmd -> LOGGER.debug("Executing command {} from {}",
+                .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getNames()[0],
                         event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
                 .flatMap(cmd -> cmd.getBehavior().execute(event))
+                .onErrorResume(CommandValidationException.class, ex -> DiscordUtils.respond(event.getMessage(), ex.getMessage()))
                 .onErrorResume(ex -> {
                     LOGGER.error("Error handling message", ex);
                     return DiscordUtils.respond(event.getMessage(), "I'm sorry, I encountered an exception. Please check the logs.");

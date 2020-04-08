@@ -15,6 +15,7 @@ import discord4j.core.object.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
@@ -295,10 +296,30 @@ public class CommandFieldCallback implements ReflectionUtils.MethodCallback {
         } else if(method.getReturnType().equals(Mono.class)) {
             return (event, params) -> {
                 Mono<?> response = (Mono<?>) method.invoke(bean, params);
-                return response == null ? Mono.empty() : response.then();
+                if(response == null){
+                    return Mono.empty();
+                }
+                return response.flatMap(res -> {
+                    if(res instanceof String) {
+                        return DiscordUtils.respond(event.getMessage(), (String)res);
+                    } else {
+                        return Mono.empty();
+                    }
+                });
+            };
+        } else if(method.getReturnType().equals(Flux.class)){
+            return (event, params) -> {
+                Flux<?> response = (Flux<?>) method.invoke(bean, params);
+                if(response == null){
+                    return Mono.empty();
+                }
+                return response.filter(Objects::nonNull)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining("\n"))
+                        .flatMap(msg -> DiscordUtils.respond(event.getMessage(), msg));
             };
         } else {
-            throw new BotException("Return is unexpected type, expected is String, Mono, or none.");
+            throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
         }
     }
 

@@ -45,4 +45,9 @@ public class BasicCommands {
                         .map(user -> "They are " + user.getUsername() + ".")
                         .orElse("I have no idea who that is.")));
     }
+
+    @Command(help = "Check who someone is by their snowflake")
+    public String updog() {
+        return "No I'm not adding this command.";
+    }
 }

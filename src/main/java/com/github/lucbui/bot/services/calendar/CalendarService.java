@@ -2,6 +2,8 @@ package com.github.lucbui.bot.services.calendar;
 
 import com.github.lucbui.bot.model.Birthday;
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Month;
@@ -9,12 +11,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CalendarService {
-    List<Birthday> getNextNBirthdays(int n) throws IOException;
-    List<Birthday> getTodaysBirthday() throws IOException;
-    List<Birthday> getMonthsBirthday(Month month) throws IOException;
+    Flux<Birthday> getNextNBirthdays(int n);
+    Flux<Birthday> getTodaysBirthday();
+    Flux<Birthday> getMonthsBirthday(Month month);
 
-    Optional<Birthday> searchBirthday(String user) throws IOException;
-    Optional<Birthday> searchBirthdayById(Snowflake id) throws IOException;
+    Mono<Birthday> searchBirthday(String user);
+    Mono<Birthday> searchBirthdayById(Snowflake id);
 
-    void addBirthday(Birthday birthday) throws IOException;
+    Mono<Void> addBirthday(Birthday birthday);
 }
