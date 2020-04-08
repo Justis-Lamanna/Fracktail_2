@@ -13,6 +13,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +29,9 @@ public class CalendarConfig {
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
+    @Value("${calendar.tokenPath}")
+    private String tokenPath;
+
     @Bean
     public Calendar calendar() throws GeneralSecurityException, IOException {
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -36,7 +40,7 @@ public class CalendarConfig {
                 .build();
     }
 
-    private static Credential getCredentials(NetHttpTransport transport) throws IOException {
+    private Credential getCredentials(NetHttpTransport transport) throws IOException {
         InputStream in = CalendarFunApplication.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (in == null) {
             throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
@@ -46,7 +50,7 @@ public class CalendarConfig {
         // Build flow and trigger user authorization request.
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 transport, JSON_FACTORY, clientSecrets, Collections.singletonList(CalendarScopes.CALENDAR))
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File("/home/pi/tokens")))
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(tokenPath)))
                 .setAccessType("offline")
                 .build();
         LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();

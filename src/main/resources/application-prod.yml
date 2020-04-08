@@ -1,0 +1,6 @@
+logging:
+  level:
+    com.github.lucbui: INFO
+
+calendar:
+  tokenPath: /home/pi/tokens

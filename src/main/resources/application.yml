@@ -1,15 +1,13 @@
 logging:
   level:
-    com.github.lucbui.magic: DEBUG
+    com.github.lucbui: DEBUG
 
 calendar:
   id: hlclne2tbhr27ijqbkadigkjqk@group.calendar.google.com
+  tokenPath: tokens
 
 discord:
   commands:
     prefix: '!'
     caseInsensitive: true
     timeout: '5s'
-
-scheduler:
-  enabled: true
