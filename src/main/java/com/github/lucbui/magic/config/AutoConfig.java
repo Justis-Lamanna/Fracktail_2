@@ -3,6 +3,8 @@ package com.github.lucbui.magic.config;
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandFieldCallbackFactory;
 import com.github.lucbui.magic.command.store.*;
+import com.github.lucbui.magic.localization.BasicLocaleService;
+import com.github.lucbui.magic.localization.LocaleService;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
@@ -65,5 +67,11 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public CommandHandler commandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandList commandList) {
         return new DefaultCommandHandler(tokenizer, createMessageValidator, commandList);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public LocaleService localeService() {
+        return new BasicLocaleService();
     }
 }
