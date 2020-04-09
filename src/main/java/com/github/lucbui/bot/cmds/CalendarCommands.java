@@ -120,7 +120,7 @@ public class CalendarCommands {
 
     @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
     public Mono<String> birthday(@Param(0) String user, @BasicSender User sender) {
-        return Mono.justOrEmpty(user)
+        return Mono.justOrEmpty(user == null ? sender.getUsername() : user)
                 .flatMap(userParam -> {
                     Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(userParam);
                     if(userIdIfPresent.isPresent()) {
@@ -129,7 +129,6 @@ public class CalendarCommands {
                         return calendarService.searchBirthday(userParam);
                     }
                 })
-                .switchIfEmpty(calendarService.searchBirthdayById(sender.getId()))
                 .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
                 .defaultIfEmpty("Sorry, I don't know when " + (user == null ? "your" : user + "'s") + " birthday is.");
     }

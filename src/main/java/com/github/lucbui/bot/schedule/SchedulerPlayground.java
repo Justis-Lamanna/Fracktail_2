@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public class SchedulerPlayground {
                                 .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
                         .map(Birthday::getName)
                         .collect(Collectors.joining(", "))
-                        .flatMap(msg -> tc.createMessage("Happy Birthday to: " + msg + "!"))
+                        .flatMap(msg -> msg.length() == 0 ? Mono.empty() : tc.createMessage("Happy Birthday to: " + msg + "!"))
                 )
                 .blockLast();
     }

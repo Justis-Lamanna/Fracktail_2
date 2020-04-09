@@ -97,7 +97,7 @@ public class GoogleCalendarService implements CalendarService {
                     .setSingleEvents(true)
                     .setQ(user + "'s Birthday")
                     .execute())
-                .flatMap(events -> events.isEmpty() ? Mono.empty() : Mono.just(events.getItems().get(0)))
+                .flatMap(events -> events.getItems().isEmpty() ? Mono.empty() : Mono.just(events.getItems().get(0)))
                 .map(Birthday::new);
     }
 
@@ -115,7 +115,7 @@ public class GoogleCalendarService implements CalendarService {
                     .setSingleEvents(true)
                     .setPrivateExtendedProperty(Collections.singletonList("discord_id=" + id.asString()))
                     .execute())
-                .flatMap(events -> events.isEmpty() ? Mono.empty() : Mono.just(events.getItems().get(0)))
+                .flatMap(events -> events.getItems().isEmpty() ? Mono.empty() : Mono.just(events.getItems().get(0)))
                 .map(Birthday::new);
     }
 
