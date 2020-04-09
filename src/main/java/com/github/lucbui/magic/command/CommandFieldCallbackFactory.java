@@ -267,43 +267,63 @@ public class CommandFieldCallbackFactory {
 
         private Invoker<MessageCreateEvent, Object[], Mono<Void>> getInvokerFor(Method method) {
             if (method.getReturnType() == null) {
-                return (event, params) -> {
-                    method.invoke(bean, params);
-                    return Mono.empty();
-                };
+                return getNoReturnInvoker(method);
             } else if (method.getReturnType().equals(String.class)) {
-                return (event, params) -> {
-                    String response = (String) method.invoke(bean, params);
-                    return response == null ? Mono.empty() : DiscordUtils.respond(event.getMessage(), response);
-                };
+                return getStringReturnInvoker(method);
             } else if (method.getReturnType().equals(Mono.class)) {
-                return (event, params) -> {
-                    Mono<?> response = (Mono<?>) method.invoke(bean, params);
-                    if (response == null) {
-                        return Mono.empty();
-                    }
-                    return response.flatMap(res -> {
-                        if (res instanceof String) {
-                            return DiscordUtils.respond(event.getMessage(), (String) res);
-                        } else {
-                            return Mono.empty();
-                        }
-                    });
-                };
+                return getMonoReturnInvoker(method);
             } else if (method.getReturnType().equals(Flux.class)) {
-                return (event, params) -> {
-                    Flux<?> response = (Flux<?>) method.invoke(bean, params);
-                    if (response == null) {
+                return getFluxReturnInvoker(method);
+            } else {
+                return getOtherReturnInvoker(method);
+            }
+        }
+
+        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getNoReturnInvoker(Method method) {
+            return (event, params) -> {
+                method.invoke(bean, params);
+                return Mono.empty();
+            };
+        }
+
+        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getStringReturnInvoker(Method method) {
+            return (event, params) -> {
+                String response = (String) method.invoke(bean, params);
+                return response == null ? Mono.empty() : DiscordUtils.respond(event.getMessage(), response);
+            };
+        }
+
+        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getMonoReturnInvoker(Method method) {
+            return (event, params) -> {
+                Mono<?> response = (Mono<?>) method.invoke(bean, params);
+                if (response == null) {
+                    return Mono.empty();
+                }
+                return response.flatMap(res -> {
+                    if (res instanceof String) {
+                        return DiscordUtils.respond(event.getMessage(), (String) res);
+                    } else {
                         return Mono.empty();
                     }
-                    return response.filter(Objects::nonNull)
-                            .map(Objects::toString)
-                            .collect(Collectors.joining("\n"))
-                            .flatMap(msg -> DiscordUtils.respond(event.getMessage(), msg));
-                };
-            } else {
-                throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
-            }
+                });
+            };
+        }
+
+        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getFluxReturnInvoker(Method method) {
+            return (event, params) -> {
+                Flux<?> response = (Flux<?>) method.invoke(bean, params);
+                if (response == null) {
+                    return Mono.empty();
+                }
+                return response.filter(Objects::nonNull)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining("\n"))
+                        .flatMap(msg -> DiscordUtils.respond(event.getMessage(), msg));
+            };
+        }
+
+        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getOtherReturnInvoker(Method method) {
+            throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
         }
 
         private String[] getFullMessageAsArray(Tokens tokens) {
@@ -311,7 +331,7 @@ public class CommandFieldCallbackFactory {
         }
     }
 
-    private interface Invoker<I1, I2, O> {
+    public interface Invoker<I1, I2, O> {
         O invoke(I1 in1, I2 in2) throws Exception;
     }
 }
