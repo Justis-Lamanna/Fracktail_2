@@ -1,5 +1,6 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.annotation.Commands;
 import com.github.lucbui.magic.annotation.Param;
@@ -20,6 +21,7 @@ import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 @Component
@@ -32,6 +34,9 @@ public class BotUseCommands {
     @Qualifier("userPermissionValidator")
     private UserPermissionValidator userPermissionValidator;
 
+    @Autowired
+    private TranslateService translateService;
+
     private Instant startTime;
 
     @PostConstruct
@@ -39,17 +44,19 @@ public class BotUseCommands {
         this.startTime = Instant.now();
     }
 
-    @Command(help = "Get help for any command. Usage is !help [command name without exclamation point].")
+    @Command
     public Mono<Void> help(MessageCreateEvent evt, @Param(0) String cmd) {
         String cmdToSearch = (cmd == null) ? "help" : cmd;
         BotCommand command = commandList.getCommand(cmdToSearch);
         return Mono.justOrEmpty(command)
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
                 .map(Optional::of).defaultIfEmpty(Optional.empty())
-                .flatMap(c -> DiscordUtils.respond(evt.getMessage(), c.map(BotCommand::getHelpText).orElse(cmdToSearch + " is not a valid command.")));
+                .flatMap(c -> DiscordUtils.respond(evt.getMessage(),
+                        c.map(BotCommand::getHelpText).map(translateService::getString)
+                            .orElse(cmdToSearch + " is not a valid command.")));
     }
 
-    @Command(help = "Get a list of all usable commands.")
+    @Command
     public Mono<Void> commands(MessageCreateEvent evt) {
         return Flux.fromIterable(commandList.getAllCommands())
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
@@ -61,13 +68,13 @@ public class BotUseCommands {
                 .flatMap(text -> DiscordUtils.respond(evt.getMessage(), "Commands are: " + text + "."));
     }
 
-    @Command(help = "Get the uptime of this bot.")
+    @Command
     public String uptime() {
         Duration uptime = Duration.between(startTime, Instant.now());
         return "Bot has been up for " + DurationFormatUtils.formatDurationWords(uptime.toMillis(), true, true);
     }
 
-    @Command(help = "Turn off the bot.")
+    @Command
     @Permissions("admin")
     public Mono<Void> sleep(MessageCreateEvent evt) {
         return DiscordUtils.respond(evt.getMessage(), "Okay. Good night!")

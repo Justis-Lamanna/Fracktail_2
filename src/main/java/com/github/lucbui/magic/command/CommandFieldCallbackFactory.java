@@ -13,6 +13,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
@@ -154,6 +155,9 @@ public class CommandFieldCallbackFactory {
          */
         protected String getHelpText(Method method) {
             Command cmdAnnotation = method.getAnnotation(Command.class);
+            if(StringUtils.isEmpty(cmdAnnotation.help())){
+                return getNames(method)[0] + ".help";
+            }
             return cmdAnnotation.help();
         }
 

@@ -13,19 +13,19 @@ import java.util.Optional;
 @Component
 @Commands
 public class BasicCommands {
-    @Command(help = "Perform arithmetic. Usage is !math [expression]")
+    @Command
     @Timeout(value = 1, unit = ChronoUnit.MINUTES)
     public String math() {
         return "The answer is 3";
     }
 
-    @Command(help = "Taunt the others in your server with a command they can't use")
+    @Command
     @Permissions("admin")
     public String admin() {
         return "This is a cool command that only admins can use!";
     }
 
-    @Command(help = "RAFO!")
+    @Command
     @Timeout(value = 5, unit = ChronoUnit.MINUTES)
     public String rafo() {
         return "<:rafo1:596138147285434415><:rafo2:596138147797270538><:rafo3:596138379603869697><:rafo4:596138380132089879>\n" +
@@ -34,7 +34,7 @@ public class BasicCommands {
                 "<:rafo13:596138741052211210><:rafo14:596138758160515073><:rafo15:596138771779682315><:rafo16:596138788984586268>";
     }
 
-    @Command(help = "Check who someone is by their snowflake")
+    @Command
     public Mono<Void> whodat(MessageCreateEvent event, @Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
             return DiscordUtils.respond(event.getMessage(), "Correct usage: !whodat [user-snowflake]");
@@ -46,7 +46,7 @@ public class BasicCommands {
                         .orElse("I have no idea who that is.")));
     }
 
-    @Command(help = "Check who someone is by their snowflake")
+    @Command
     public String updog() {
         return "No I'm not adding this command.";
     }

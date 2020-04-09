@@ -23,5 +23,5 @@ public @interface Command {
      * This text should explain how the command should be used.
      * @return Help text which explains usage of this command
      */
-    String help() default "Unknown";
+    String help() default "";
 }
