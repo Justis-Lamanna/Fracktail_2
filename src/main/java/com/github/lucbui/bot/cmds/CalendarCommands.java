@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 @Commands
 public class CalendarCommands {
     private static final int OLDEST_POSSIBLE_YEAR = 1903;
+    private static final int MIN_NEXT_BIRTHDAY = 1;
+    private static final int MAX_NEXT_BIRTHDAY = 10;
 
     @Autowired
     private CalendarService calendarService;
@@ -40,12 +42,12 @@ public class CalendarCommands {
     @Autowired
     private DiscordClient bot;
 
-    @Command(help = "Get the next birthday, or birthdays, coming up. Optionally, specify a number between 1 and 10 to get the next n birthdays.")
+    @Command
     public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
-        if(n < 1) {
+        if(n < MIN_NEXT_BIRTHDAY) {
             return Mono.just("Nice try, but you need to supply a number greater than 0.");
-        } else if(n > 10) {
+        } else if(n > MAX_NEXT_BIRTHDAY) {
             return Mono.just("Sorry, I can only give up to 10 birthdays");
         }
         return calendarService.getNextNBirthdays(n)
@@ -64,7 +66,7 @@ public class CalendarCommands {
                 });
     }
 
-    @Command(help = "Get all birthdays occuring today.")
+    @Command
     public Mono<String> todaysbirthdays() {
         return calendarService.getTodaysBirthday()
                 .collectList()
@@ -93,7 +95,7 @@ public class CalendarCommands {
                 .collect(Collectors.joining(", ")));
     }
 
-    @Command(help = "Get all birthdays occuring this month.")
+    @Command
     public Mono<String> monthsbirthdays(@Param(0) String monthStr) {
         return Mono.justOrEmpty(monthStr)
             .map(this::validateAndConvertMonth)
@@ -118,7 +120,7 @@ public class CalendarCommands {
     }
 
 
-    @Command(help = "Get the birthday of a specific user. Usage is !birthday [user's name or @].")
+    @Command
     public Mono<String> birthday(@Param(0) String user, @BasicSender User sender) {
         return Mono.justOrEmpty(user == null ? sender.getUsername() : user)
                 .flatMap(userParam -> {
@@ -148,7 +150,7 @@ public class CalendarCommands {
         }
     }
 
-    @Command(help = "Add a user's birthday. Usage is !addbirthday [yyyy-mm-dd]")
+    @Command
     public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
             return Mono.just("Correct usage: !addbirthday [yyyy-mm-dd]");
@@ -166,7 +168,7 @@ public class CalendarCommands {
                 .then(Mono.just("Added " + sender.getUsername() + "'s birthday to the birthday calendar"));
     }
 
-    @Command(help = "Add a user's birthday. Usage is !setbirthday [user-snowflake] [yyyy-mm-dd]")
+    @Command
     @Permissions("admin")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
