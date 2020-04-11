@@ -71,6 +71,13 @@
 			<version>1.6.2</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Internalization -->
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>66.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

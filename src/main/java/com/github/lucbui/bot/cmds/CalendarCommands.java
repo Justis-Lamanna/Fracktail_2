@@ -2,6 +2,8 @@ package com.github.lucbui.bot.cmds;
 
 import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.bot.services.calendar.CalendarService;
+import com.github.lucbui.bot.services.translate.TranslateHelper;
+import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -16,18 +18,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 @Commands
@@ -42,27 +41,26 @@ public class CalendarCommands {
     @Autowired
     private DiscordClient bot;
 
+    @Autowired
+    private TranslateService translateService;
+
     @Command
     public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
         if(n < MIN_NEXT_BIRTHDAY) {
-            return Mono.just("Nice try, but you need to supply a number greater than 0.");
+            return Mono.fromSupplier(() ->
+                    translateService.getFormattedString(TranslateHelper.LOW, MIN_NEXT_BIRTHDAY));
         } else if(n > MAX_NEXT_BIRTHDAY) {
-            return Mono.just("Sorry, I can only give up to 10 birthdays");
+            return Mono.fromSupplier(() ->
+                    translateService.getFormattedString(TranslateHelper.HIGH, MAX_NEXT_BIRTHDAY));
         }
         return calendarService.getNextNBirthdays(n)
                 .collectList()
                 .map(birthdays -> {
-                    if(birthdays.isEmpty()) {
-                        return "Sorry, I don't have any birthdays set up.";
-                    } if(birthdays.size() == 1){
-                        return "The next birthday is " + getBirthdayText(birthdays.get(0));
-                    } else {
-                        String preText = "Sure, here are the next " + birthdays.size() + " birthdays:\n";
-                        return birthdays.stream()
+                        String birthdayList = birthdays.stream()
                                 .map(this::getBirthdayText)
-                                .collect(Collectors.joining("\n", preText, ""));
-                    }
+                                .collect(Collectors.joining("\n"));
+                        return translateService.getFormattedString("nextbirthday.list", birthdays.size(), birthdayList);
                 });
     }
 
@@ -71,28 +69,29 @@ public class CalendarCommands {
         return calendarService.getTodaysBirthday()
                 .collectList()
                 .map(birthdays -> {
-                        if(birthdays.isEmpty()) {
-                            return "There are no birthdays today.";
-                        }
-                        else if(birthdays.size() == 1){
-                            return "The next birthday is " + getBirthdayText(birthdays.get(0));
-                        } else {
-                            String preText = "Sure, here are the " + birthdays.size() + " birthdays happening today:\n";
-                            return birthdays.stream()
-                                    .map(this::getBirthdayText)
-                                    .collect(Collectors.joining("\n", preText, ""));
-                        }
+                        String birthdayList = birthdays.stream()
+                                .map(this::getBirthdayText)
+                                .collect(Collectors.joining("\n"));
+                        return translateService.getFormattedString("todaysbirthdays.list", birthdays.size(), birthdayList);
                 });
     }
 
+    private List<String> getLocalizedMonths() {
+        return Arrays.stream(Month.values())
+                .map(month -> Date.from(Year.now().atMonth(month).atDay(1).atStartOfDay().atZone(ZoneOffset.systemDefault()).toInstant()))
+                .map(monthAsDate -> translateService.getFormattedString("{0,date,::MMMM}", monthAsDate))
+                .collect(Collectors.toList());
+    }
+
     private Month validateAndConvertMonth(String s) {
-        if(EnumUtils.isValidEnumIgnoreCase(Month.class, s)){
-            return EnumUtils.getEnumIgnoreCase(Month.class, s);
-        }
-        throw new CommandValidationException("Invalid month specified. Must be: " + EnumUtils.getEnumList(Month.class)
-                .stream()
-                .map(m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()))
-                .collect(Collectors.joining(", ")));
+        List<Month> months = EnumUtils.getEnumList(Month.class);
+        List<String> localizedMonths = getLocalizedMonths();
+        return IntStream.range(0, months.size())
+                .filter(i -> localizedMonths.get(i).equalsIgnoreCase(s))
+                .mapToObj(months::get)
+                .findFirst()
+                .orElseThrow(() ->
+                        new CommandValidationException(translateService.getFormattedString(TranslateHelper.MONTH, String.join(", ", localizedMonths))));
     }
 
     @Command
@@ -103,22 +102,16 @@ public class CalendarCommands {
             .flatMapMany(calendarService::getMonthsBirthday)
             .collectList()
             .map(birthdays -> {
-                String monthReturnStr = monthStr == null ?
-                        "this month" :
-                        "in " + EnumUtils.getEnumIgnoreCase(Month.class, monthStr).getDisplayName(TextStyle.FULL, Locale.getDefault());
-                if(birthdays.isEmpty()) {
-                    return "There are no birthdays " + monthReturnStr + ".";
-                } else if(birthdays.size() == 1){
-                    return "The only birthday " + monthReturnStr + " is " + getBirthdayText(birthdays.get(0));
+                String birthdayText = birthdays.stream()
+                        .map(this::getBirthdayText)
+                        .collect(Collectors.joining("\n"));
+                if(monthStr == null) {
+                    return translateService.getFormattedString("monthsbirthdays.thisMonth.list", birthdays.size(), birthdayText);
                 } else {
-                    String preText = "Sure, here are the " + birthdays.size() + " birthdays happening " + monthReturnStr + ":\n";
-                    return birthdays.stream()
-                            .map(this::getBirthdayText)
-                            .collect(Collectors.joining("\n", preText, ""));
+                    return translateService.getFormattedString("monthsbirthdays.otherMonth.list", birthdays.size(), StringUtils.capitalize(monthStr), birthdayText);
                 }
             });
     }
-
 
     @Command
     public Mono<String> birthday(@Param(0) String user, @BasicSender User sender) {
@@ -131,8 +124,14 @@ public class CalendarCommands {
                         return calendarService.searchBirthday(userParam);
                     }
                 })
-                .map(bday -> String.format("%s's birthday is on %tD (%s)", bday.getName(), bday.getDate(), getDurationText(Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()))))
-                .defaultIfEmpty("Sorry, I don't know when " + (user == null ? "your" : user + "'s") + " birthday is.");
+                .map(bday -> translateService.getFormattedString("birthday.success", bday.getName(), bday.getDate(), Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()).toMillis()))
+                .switchIfEmpty(Mono.fromSupplier(() -> {
+                    if(user == null) {
+                        return translateService.getString("birthday.failure.self");
+                    } else {
+                        return translateService.getFormattedString("birthday.failure.other", StringUtils.capitalize(user));
+                    }
+                }));
     }
 
     private LocalDate validateAndConvertDate(String date) {
@@ -192,7 +191,10 @@ public class CalendarCommands {
 
     private String getBirthdayText(Birthday nextBirthday) {
         Duration duration = Duration.between(LocalDateTime.now(), nextBirthday.getDate().atStartOfDay());
-        return String.format("%s's, on %tD (%s)", nextBirthday.getName(), nextBirthday.getDate(), getDurationText(duration));
+        return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
+                nextBirthday.getName(),
+                Date.from(nextBirthday.getDate().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
+                duration.toMillis());
     }
 
     private String getDurationText(Duration duration) {
