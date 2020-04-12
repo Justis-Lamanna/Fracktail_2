@@ -3,6 +3,7 @@ package com.github.lucbui.bot.schedule;
 import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.services.channel.BotChannelService;
+import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.TextChannel;
@@ -33,11 +34,15 @@ public class SchedulerPlayground {
     @Autowired
     private DiscordClient bot;
 
+    @Autowired
+    private TranslateService translateService;
+
     @Scheduled(cron = "0 0 22 * * SUN-THU")
     public void scheduleBedtimePing() {
         bot.getChannelById(BOT_CHANNEL_ID)
                 .cast(TextChannel.class)
-                .flatMap(channel -> channel.createMessage(DiscordUtils.getMentionFromId(LUCBUI_ID) + ", GO THE HECK TO SLEEP"))
+                .flatMap(channel -> channel.createMessage(
+                        translateService.getFormattedString("job.bedtime.lucbui", DiscordUtils.getMentionFromId(LUCBUI_ID))))
                 .block();
     }
 
@@ -45,7 +50,8 @@ public class SchedulerPlayground {
     public void scheduleSneppyBedtimePing() {
         bot.getUserById(SNEPPY_ID)
                 .flatMap(User::getPrivateChannel)
-                .flatMap(pc -> pc.createMessage(DiscordUtils.getMentionFromId(SNEPPY_ID) + ", Go to sleep or I take your tail!"))
+                .flatMap(pc -> pc.createMessage(
+                        translateService.getFormattedString("job.bedtime.snowpaws", DiscordUtils.getMentionFromId(SNEPPY_ID))))
                 .block();
     }
 
@@ -58,7 +64,9 @@ public class SchedulerPlayground {
                                 .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
                         .map(Birthday::getName)
                         .collect(Collectors.joining(", "))
-                        .flatMap(msg -> msg.length() == 0 ? Mono.empty() : tc.createMessage("Happy Birthday to: " + msg + "!"))
+                        .flatMap(msg -> msg.length() == 0 ?
+                                Mono.empty() :
+                                tc.createMessage(translateService.getFormattedString("job.birthday.text", msg)))
                 )
                 .blockLast();
     }

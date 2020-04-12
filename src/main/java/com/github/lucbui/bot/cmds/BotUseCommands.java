@@ -71,7 +71,7 @@ public class BotUseCommands {
     @Command
     public String uptime() {
         Duration uptime = Duration.between(startTime, Instant.now());
-        return translateService.getFormattedString("uptime.text", uptime);
+        return translateService.getFormattedString("uptime.text", uptime.getSeconds());
     }
 
     @Command
