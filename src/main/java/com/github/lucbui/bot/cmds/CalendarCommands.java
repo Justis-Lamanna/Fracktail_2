@@ -82,19 +82,9 @@ public class CalendarCommands {
                 .collect(Collectors.toList());
     }
 
-    private Month validateAndConvertMonth(String s) {
-        List<Month> months = EnumUtils.getEnumList(Month.class);
-        List<String> localizedMonths = getLocalizedMonths();
-        return IntStream.range(0, months.size())
-                .filter(i -> localizedMonths.get(i).equalsIgnoreCase(s))
-                .mapToObj(months::get)
-                .findFirst()
-                .orElseThrow(() ->
-                        new CommandValidationException(translateService.getFormattedString(TranslateHelper.MONTH, String.join(", ", localizedMonths))));
-    }
-
     @Command
     public Mono<String> monthsbirthdays(@Param(0) String monthStr) {
+        LocalDate now = LocalDate.now();
         return Mono.justOrEmpty(monthStr)
             .map(this::validateAndConvertMonth)
             .switchIfEmpty(Mono.fromSupplier(() -> LocalDate.now().getMonth()))
@@ -104,12 +94,25 @@ public class CalendarCommands {
                 String birthdayText = birthdays.stream()
                         .map(this::getBirthdayText)
                         .collect(Collectors.joining("\n"));
-                if(monthStr == null) {
+                Month birthdayMonth = validateAndConvertMonth(monthStr);
+                Month thisMonth = YearMonth.now().getMonth();
+                if(monthStr == null || birthdayMonth == thisMonth) {
                     return translateService.getFormattedString("monthsbirthdays.thisMonth.list", birthdays.size(), birthdayText);
                 } else {
                     return translateService.getFormattedString("monthsbirthdays.otherMonth.list", birthdays.size(), StringUtils.capitalize(monthStr), birthdayText);
                 }
             });
+    }
+
+    private Month validateAndConvertMonth(String s) {
+        List<Month> months = EnumUtils.getEnumList(Month.class);
+        List<String> localizedMonths = getLocalizedMonths();
+        return IntStream.range(0, months.size())
+                .filter(i -> localizedMonths.get(i).equalsIgnoreCase(s))
+                .mapToObj(months::get)
+                .findFirst()
+                .orElseThrow(() ->
+                        new CommandValidationException(translateService.getFormattedString(TranslateHelper.MONTH, String.join(", ", localizedMonths))));
     }
 
     @Command
@@ -131,15 +134,6 @@ public class CalendarCommands {
                         return translateService.getFormattedString("birthday.failure.other", StringUtils.capitalize(user));
                     }
                 }));
-    }
-
-    private LocalDate validateAndConvertDate(String date) {
-        try {
-            MonthDay dateOfBirth = MonthDay.parse(date, MONTH_DAY_FORMATTER);
-            return dateOfBirth.atYear(DEFAULT_YEAR);
-        } catch (DateTimeParseException ex) {
-            throw new CommandValidationException(translateService.getString("validation.illegalDate"));
-        }
     }
 
     @Command
@@ -186,11 +180,31 @@ public class CalendarCommands {
                 .map(birthday -> translateService.getFormattedString("setbirthday.success", birthday.getName()));
     }
 
+    private LocalDate validateAndConvertDate(String date) {
+        try {
+            MonthDay dateOfBirth = MonthDay.parse(date, MONTH_DAY_FORMATTER);
+            return dateOfBirth.atYear(DEFAULT_YEAR);
+        } catch (DateTimeParseException ex) {
+            throw new CommandValidationException(translateService.getString("validation.illegalDate"));
+        }
+    }
+
     private String getBirthdayText(Birthday nextBirthday) {
-        Duration duration = Duration.between(LocalDateTime.now(), nextBirthday.getDate().atStartOfDay());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate normalizedDate = normalize(nextBirthday, now.toLocalDate());
+        Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
                 nextBirthday.getName(),
-                TranslateHelper.toDate(nextBirthday.getDate()),
-                duration.getSeconds());
+                TranslateHelper.toDate(normalizedDate),
+                duration.toDays() == 0 ? 0 : duration.getSeconds());
+    }
+
+    //Dates before now need to be advanced to the next year (we only ever deal with future + present dates).
+    private LocalDate normalize(Birthday birthday, LocalDate now) {
+        if(birthday.getDate().isBefore(now)){
+            return birthday.getDate().plusYears(1);
+        } else {
+            return birthday.getDate();
+        }
     }
 }

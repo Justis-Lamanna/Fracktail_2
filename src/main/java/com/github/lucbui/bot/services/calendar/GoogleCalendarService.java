@@ -68,8 +68,9 @@ public class GoogleCalendarService implements CalendarService {
 
     @Override
     public Flux<Birthday> getMonthsBirthday(Month month) {
-        DateTime startOfTheMonth = from(Year.now().atMonth(month).atDay(1).atStartOfDay().minus(1, ChronoUnit.MILLIS));
-        DateTime endOfTheMonth = from(Year.now().atMonth(month).atEndOfMonth().atStartOfDay().plus(1, ChronoUnit.DAYS));
+        Year searchYear = Year.now();
+        DateTime startOfTheMonth = from(searchYear.atMonth(month).atDay(1).atStartOfDay().minus(1, ChronoUnit.MILLIS));
+        DateTime endOfTheMonth = from(searchYear.atMonth(month).atEndOfMonth().atStartOfDay().plus(1, ChronoUnit.DAYS));
         return Mono.fromCallable(() ->
                 calendar.events().list(calendarId)
                     .setMaxResults(25)
