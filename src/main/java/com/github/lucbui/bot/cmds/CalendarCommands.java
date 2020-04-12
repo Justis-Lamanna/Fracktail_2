@@ -8,12 +8,10 @@ import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -21,19 +19,20 @@ import reactor.core.publisher.Mono;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.format.TextStyle;
-import java.time.temporal.ChronoField;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Component
 @Commands
 public class CalendarCommands {
-    private static final int OLDEST_POSSIBLE_YEAR = 1903;
     private static final int MIN_NEXT_BIRTHDAY = 1;
     private static final int MAX_NEXT_BIRTHDAY = 10;
+    //2020 was selected because it is the most recent leap year, and thus will accept Feb 29th birthdays.
+    private static final int DEFAULT_YEAR = 2020;
+
+    private static final DateTimeFormatter MONTH_DAY_FORMATTER =
+            DateTimeFormatter.ofPattern("MM-dd");
 
     @Autowired
     private CalendarService calendarService;
@@ -136,27 +135,24 @@ public class CalendarCommands {
 
     private LocalDate validateAndConvertDate(String date) {
         try {
-            LocalDate dateOfBirth = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-            int currentYear = LocalDate.now().get(ChronoField.YEAR);
-            if(dateOfBirth.get(ChronoField.YEAR) < OLDEST_POSSIBLE_YEAR) {
-                throw new CommandValidationException("You are definitely not that old.");
-            } else if(dateOfBirth.get(ChronoField.YEAR) > currentYear) {
-                throw new CommandValidationException("You were not born in the future.");
-            }
-            return dateOfBirth;
+            MonthDay dateOfBirth = MonthDay.parse(date, MONTH_DAY_FORMATTER);
+            return dateOfBirth.atYear(DEFAULT_YEAR);
         } catch (DateTimeParseException ex) {
-            throw new CommandValidationException("Date provided was invalid, should be formatted as [yyyy-mm-dd]");
+            throw new CommandValidationException(translateService.getString("validation.illegalDate"));
         }
     }
 
     @Command
     public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
-            return Mono.just("Correct usage: !addbirthday [yyyy-mm-dd]");
+            return Mono.fromSupplier(() -> translateService.getString("addbirthday.validation.illegalParams"));
         }
 
         return calendarService.searchBirthdayById(sender.getId())
-                .flatMap(bday -> Mono.error(new CommandValidationException(String.format("You already have a birthday set to %tD.", bday.getDate()))))
+                .flatMap(bday -> Mono.error(() ->
+                        new CommandValidationException(translateService.getFormattedString(
+                                "addbirthday.validation.alreadyExists",
+                                TranslateHelper.toDate(bday.getDate())))))
                 .then(Mono.just(date))
                 .map(this::validateAndConvertDate)
                 .map(bday -> new Birthday(
@@ -164,14 +160,15 @@ public class CalendarCommands {
                         StringUtils.capitalize(sender.getUsername()),
                         bday))
                 .flatMap(calendarService::addBirthday)
-                .then(Mono.just("Added " + sender.getUsername() + "'s birthday to the birthday calendar"));
+                .then(Mono.fromSupplier(() ->
+                        translateService.getFormattedString("addbirthday.success", sender.getUsername())));
     }
 
     @Command
     @Permissions("admin")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
-            return Mono.just("Correct usage: !setbirthday [user-snowflake] [yyyy-mm-dd]");
+            return Mono.fromSupplier(() -> translateService.getString("setbirthday.validation.illegalParams"));
         }
 
         Mono<User> userMono = Mono.just(userId)
@@ -186,18 +183,14 @@ public class CalendarCommands {
                         StringUtils.capitalize(userDate.getT1().getUsername()),
                         userDate.getT2()))
                 .flatMap(birthday -> calendarService.addBirthday(birthday).thenReturn(birthday))
-                .map(birthday -> String.format("Added %s's birthday as %tD.", birthday.getName(), birthday.getDate()));
+                .map(birthday -> translateService.getFormattedString("setbirthday.success", birthday.getName()));
     }
 
     private String getBirthdayText(Birthday nextBirthday) {
         Duration duration = Duration.between(LocalDateTime.now(), nextBirthday.getDate().atStartOfDay());
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
                 nextBirthday.getName(),
-                Date.from(nextBirthday.getDate().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
-                duration.toMillis());
-    }
-
-    private String getDurationText(Duration duration) {
-        return DurationFormatUtils.formatDurationWords(duration.toMillis(), true, false);
+                TranslateHelper.toDate(nextBirthday.getDate()),
+                duration.getSeconds());
     }
 }
