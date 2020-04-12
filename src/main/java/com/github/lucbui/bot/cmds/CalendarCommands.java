@@ -196,7 +196,7 @@ public class CalendarCommands {
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
                 nextBirthday.getName(),
                 TranslateHelper.toDate(normalizedDate),
-                duration.toDays() == 0 ? 0 : duration.getSeconds());
+                duration.toDays() == 0 ? Duration.ZERO: duration);
     }
 
     //Dates before now need to be advanced to the next year (we only ever deal with future + present dates).
