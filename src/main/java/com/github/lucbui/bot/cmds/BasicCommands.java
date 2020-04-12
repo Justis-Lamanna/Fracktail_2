@@ -1,9 +1,11 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.util.Snowflake;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -13,16 +15,19 @@ import java.util.Optional;
 @Component
 @Commands
 public class BasicCommands {
+    @Autowired
+    private TranslateService translateService;
+
     @Command
     @Timeout(value = 1, unit = ChronoUnit.MINUTES)
     public String math() {
-        return "The answer is 3";
+        return translateService.getString("math.text");
     }
 
     @Command
     @Permissions("admin")
     public String admin() {
-        return "This is a cool command that only admins can use!";
+        return translateService.getString("admin.text");
     }
 
     @Command
@@ -37,17 +42,18 @@ public class BasicCommands {
     @Command
     public Mono<Void> whodat(MessageCreateEvent event, @Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
-            return DiscordUtils.respond(event.getMessage(), "Correct usage: !whodat [user-snowflake]");
+            return DiscordUtils.respond(event.getMessage(),
+                    translateService.getString("whodat.validation.illegalParams"));
         }
         return event.getClient().getUserById(Snowflake.of(userId))
                 .map(Optional::of).onErrorReturn(Optional.empty())
                 .flatMap(possibleUser -> DiscordUtils.respond(event.getMessage(), possibleUser
-                        .map(user -> "They are " + user.getUsername() + ".")
-                        .orElse("I have no idea who that is.")));
+                        .map(user -> translateService.getFormattedString("whodat.success", user.getUsername()))
+                        .orElse(translateService.getString("whodat.failure"))));
     }
 
     @Command
     public String updog() {
-        return "No I'm not adding this command.";
+        return translateService.getString("updog.text");
     }
 }

@@ -53,7 +53,7 @@ public class BotUseCommands {
                 .map(Optional::of).defaultIfEmpty(Optional.empty())
                 .flatMap(c -> DiscordUtils.respond(evt.getMessage(),
                         c.map(BotCommand::getHelpText).map(translateService::getString)
-                            .orElse(cmdToSearch + " is not a valid command.")));
+                            .orElse(translateService.getFormattedString("help.validation.unknownCommand", cmd))));
     }
 
     @Command
@@ -65,19 +65,19 @@ public class BotUseCommands {
                 .sort()
                 .map(c -> "!" + c)
                 .collect(Collectors.joining(", "))
-                .flatMap(text -> DiscordUtils.respond(evt.getMessage(), "Commands are: " + text + "."));
+                .flatMap(text -> DiscordUtils.respond(evt.getMessage(), translateService.getFormattedString("commands.text", text)));
     }
 
     @Command
     public String uptime() {
         Duration uptime = Duration.between(startTime, Instant.now());
-        return "Bot has been up for " + DurationFormatUtils.formatDurationWords(uptime.toMillis(), true, true);
+        return translateService.getFormattedString("uptime.text", uptime);
     }
 
     @Command
     @Permissions("admin")
     public Mono<Void> sleep(MessageCreateEvent evt) {
-        return DiscordUtils.respond(evt.getMessage(), "Okay. Good night!")
+        return DiscordUtils.respond(evt.getMessage(), translateService.getString("sleep.text"))
                 .then(evt.getClient().logout());
     }
 }

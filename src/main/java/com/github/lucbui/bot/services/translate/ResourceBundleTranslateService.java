@@ -1,7 +1,6 @@
 package com.github.lucbui.bot.services.translate;
 
 import com.ibm.icu.text.MessageFormat;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
@@ -9,25 +8,27 @@ import java.util.ResourceBundle;
 
 @Service
 public class ResourceBundleTranslateService implements TranslateService {
-    @Autowired
-    private ResourceBundle resourceBundle;
+    private Locale getLocaleOrDefault(Locale locale) {
+        return locale == null ? Locale.ENGLISH : locale;
+    }
 
-    private Locale getLocale() {
-        return Locale.GERMAN;
+    private ResourceBundle getBundleForCache(Locale locale) {
+        return ResourceBundle.getBundle("fracktail", getLocaleOrDefault(locale));
     }
 
     @Override
-    public String getString(String key) {
-        if(resourceBundle.containsKey(key)){
-            return resourceBundle.getString(key);
+    public String getString(String key, Locale locale) {
+        ResourceBundle bundle = getBundleForCache(locale);
+        if(bundle.containsKey(key)){
+            return bundle.getString(key);
         }
         return key;
     }
 
     @Override
-    public String getFormattedString(String key, Object... args) {
-        String preFormat = getString(key);
-        MessageFormat format = new MessageFormat(preFormat, getLocale());
+    public String getFormattedString(String key, Locale locale, Object... args) {
+        String preFormat = getString(key, locale);
+        MessageFormat format = new MessageFormat(preFormat, getLocaleOrDefault(locale));
         return format.format(args);
     }
 }
