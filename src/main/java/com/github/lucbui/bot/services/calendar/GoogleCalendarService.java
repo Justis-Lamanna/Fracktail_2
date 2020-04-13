@@ -48,29 +48,26 @@ public class GoogleCalendarService implements CalendarService {
     }
 
     @Override
-    public Flux<Birthday> getTodaysBirthday() {
-        //Lists all birthday's on today
-        LocalDate today = LocalDate.now();
-        DateTime beginningOfToday = from(today.atStartOfDay().minus(1, ChronoUnit.MILLIS));
-        DateTime endOfToday = from(today.atStartOfDay().plus(1, ChronoUnit.DAYS));
+    public Flux<Birthday> getDaysBirthday(LocalDate date){
+        DateTime beginningOfToday = from(date.atStartOfDay().minus(1, ChronoUnit.MILLIS));
+        DateTime endOfToday = from(date.atStartOfDay().plus(1, ChronoUnit.DAYS));
         return Mono.fromCallable(() ->
                 calendar.events().list(calendarId)
-                    .setMaxResults(25)
-                    .setTimeMin(beginningOfToday)
-                    .setTimeMax(endOfToday)
-                    .setOrderBy("startTime")
-                    .setSingleEvents(true)
-                    .setQ(BIRTHDAY_STR)
-                    .execute())
+                        .setMaxResults(25)
+                        .setTimeMin(beginningOfToday)
+                        .setTimeMax(endOfToday)
+                        .setOrderBy("startTime")
+                        .setSingleEvents(true)
+                        .setQ(BIRTHDAY_STR)
+                        .execute())
                 .flatMapIterable(Events::getItems)
                 .map(Birthday::new);
     }
 
     @Override
-    public Flux<Birthday> getMonthsBirthday(Month month) {
-        Year searchYear = Year.now();
-        DateTime startOfTheMonth = from(searchYear.atMonth(month).atDay(1).atStartOfDay().minus(1, ChronoUnit.MILLIS));
-        DateTime endOfTheMonth = from(searchYear.atMonth(month).atEndOfMonth().atStartOfDay().plus(1, ChronoUnit.DAYS));
+    public Flux<Birthday> getMonthsBirthday(YearMonth month) {
+        DateTime startOfTheMonth = from(month.atDay(1).atStartOfDay().minus(1, ChronoUnit.MILLIS));
+        DateTime endOfTheMonth = from(month.atEndOfMonth().atStartOfDay().plus(1, ChronoUnit.DAYS));
         return Mono.fromCallable(() ->
                 calendar.events().list(calendarId)
                     .setMaxResults(25)
@@ -140,6 +137,6 @@ public class GoogleCalendarService implements CalendarService {
     }
 
     private DateTime from(LocalDateTime time) {
-        return new DateTime(time.atZone(ZoneId.systemDefault()).toEpochSecond() * 1000);
+        return new DateTime(time.atZone(ZoneOffset.UTC).toEpochSecond() * 1000);
     }
 }

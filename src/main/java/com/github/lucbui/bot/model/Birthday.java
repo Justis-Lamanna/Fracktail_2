@@ -4,13 +4,14 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Birthday {
     private static final Pattern BIRTHDAY_PATTERN = Pattern.compile("(\\w+)'s Birthday", Pattern.CASE_INSENSITIVE);
 
-    private LocalDate date;
+    private MonthDay date;
     private String name;
     private String memberId;
 
@@ -19,7 +20,8 @@ public class Birthday {
         if(date == null){
             date = event.getStart().getDate();
         }
-        this.date = LocalDate.parse(date.toStringRfc3339());
+        LocalDate d = LocalDate.parse(date.toStringRfc3339());
+        this.date = MonthDay.of(d.getMonth(), d.getDayOfMonth());
 
         Matcher matcher = BIRTHDAY_PATTERN.matcher(event.getSummary());
         if(matcher.matches()) {
@@ -31,17 +33,17 @@ public class Birthday {
         this.memberId = event.getExtendedProperties().getPrivate().get("discord_id");
     }
 
-    public Birthday(String memberId, String name, LocalDate date) {
+    public Birthday(String memberId, String name, MonthDay date) {
         this.date = date;
         this.name = name;
         this.memberId = memberId;
     }
 
-    public LocalDate getDate() {
+    public MonthDay getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(MonthDay date) {
         this.date = date;
     }
 

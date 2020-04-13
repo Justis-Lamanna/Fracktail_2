@@ -11,8 +11,10 @@ import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.convert.DurationFormat;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -26,13 +28,13 @@ import java.util.stream.IntStream;
 @Component
 @Commands
 public class CalendarCommands {
-    private static final int MIN_NEXT_BIRTHDAY = 1;
-    private static final int MAX_NEXT_BIRTHDAY = 10;
-    //2020 was selected because it is the most recent leap year, and thus will accept Feb 29th birthdays.
-    private static final int DEFAULT_YEAR = 2020;
+    //The min and max number that can be specified with the nextbirthday command.
+    private static final Range<Integer> NEXT_BDAY_RANGE = Range.between(1, 10);
 
     private static final DateTimeFormatter MONTH_DAY_FORMATTER =
             DateTimeFormatter.ofPattern("MM-dd");
+
+    public static final String MONTH_DATE_FORMAT = "{0,date,::MMMM}";
 
     @Autowired
     private CalendarService calendarService;
@@ -46,57 +48,59 @@ public class CalendarCommands {
     @Command
     public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
-        if(n < MIN_NEXT_BIRTHDAY) {
+        if(NEXT_BDAY_RANGE.isAfter(n)) {
             return Mono.fromSupplier(() ->
-                    translateService.getFormattedString(TranslateHelper.LOW, MIN_NEXT_BIRTHDAY));
-        } else if(n > MAX_NEXT_BIRTHDAY) {
+                    translateService.getFormattedString(TranslateHelper.LOW, NEXT_BDAY_RANGE.getMinimum()));
+        } else if(NEXT_BDAY_RANGE.isBefore(n)) {
             return Mono.fromSupplier(() ->
-                    translateService.getFormattedString(TranslateHelper.HIGH, MAX_NEXT_BIRTHDAY));
+                    translateService.getFormattedString(TranslateHelper.HIGH, NEXT_BDAY_RANGE.getMaximum()));
         }
         return calendarService.getNextNBirthdays(n)
                 .collectList()
                 .map(birthdays -> {
                         String birthdayList = birthdays.stream()
-                                .map(this::getBirthdayText)
+                                .map(this::getOwnerDateDurationText)
                                 .collect(Collectors.joining("\n"));
                         return translateService.getFormattedString("nextbirthday.list", birthdays.size(), birthdayList);
                 });
     }
 
-    @Command
-    public Mono<String> todaysbirthdays() {
-        return calendarService.getTodaysBirthday()
+    @Command({"daysbirthdays", "dayhbirthdays", "dayssbirthday", "daybirthday"})
+    public Mono<String> daysbirthdays(@Param(0) String dayMonthStr) {
+        return Mono.justOrEmpty(dayMonthStr)
+                .map(this::validateAndConvertToLocalDate)
+                .switchIfEmpty(Mono.fromSupplier(LocalDate::now))
+                .flatMapMany(calendarService::getDaysBirthday)
                 .collectList()
                 .map(birthdays -> {
-                        String birthdayList = birthdays.stream()
-                                .map(this::getBirthdayText)
-                                .collect(Collectors.joining("\n"));
-                        return translateService.getFormattedString("todaysbirthdays.list", birthdays.size(), birthdayList);
+                    String birthdayList = birthdays.stream()
+                            .map(this::getOwnersText)
+                            .collect(Collectors.joining("\n"));
+                    LocalDate birthdayDay = validateAndConvertToLocalDate(dayMonthStr);
+                    LocalDate now = LocalDate.now();
+                    if(dayMonthStr == null || now.equals(birthdayDay)) {
+                        return translateService.getFormattedString("daysbirthdays.today.list", birthdays.size(), birthdayList);
+                    } else {
+                        Duration duration = Duration.between(now.atStartOfDay(), birthdayDay.atStartOfDay());
+                        return translateService.getFormattedString("daysbirthdays.otherDay.list", birthdays.size(), TranslateHelper.toDate(birthdayDay), duration.toDays(), birthdayList);
+                    }
                 });
     }
 
-    private List<String> getLocalizedMonths() {
-        return Arrays.stream(Month.values())
-                .map(month -> Date.from(Year.now().atMonth(month).atDay(1).atStartOfDay().atZone(ZoneOffset.systemDefault()).toInstant()))
-                .map(monthAsDate -> translateService.getFormattedString("{0,date,::MMMM}", monthAsDate))
-                .collect(Collectors.toList());
-    }
-
-    @Command
+    @Command({"monthsbirthdays", "monthbirthdays", "monthsbirthday", "monthbirthday"})
     public Mono<String> monthsbirthdays(@Param(0) String monthStr) {
-        LocalDate now = LocalDate.now();
         return Mono.justOrEmpty(monthStr)
-            .map(this::validateAndConvertMonth)
-            .switchIfEmpty(Mono.fromSupplier(() -> LocalDate.now().getMonth()))
+            .map(this::validateAndConvertToYearMonth)
+            .switchIfEmpty(Mono.fromSupplier(YearMonth::now))
             .flatMapMany(calendarService::getMonthsBirthday)
             .collectList()
             .map(birthdays -> {
                 String birthdayText = birthdays.stream()
-                        .map(this::getBirthdayText)
+                        .map(this::getOwnerDateDurationText)
                         .collect(Collectors.joining("\n"));
-                Month birthdayMonth = validateAndConvertMonth(monthStr);
+                YearMonth birthdayMonth = validateAndConvertToYearMonth(monthStr);
                 Month thisMonth = YearMonth.now().getMonth();
-                if(monthStr == null || birthdayMonth == thisMonth) {
+                if(monthStr == null || birthdayMonth.getMonth() == thisMonth) {
                     return translateService.getFormattedString("monthsbirthdays.thisMonth.list", birthdays.size(), birthdayText);
                 } else {
                     return translateService.getFormattedString("monthsbirthdays.otherMonth.list", birthdays.size(), StringUtils.capitalize(monthStr), birthdayText);
@@ -104,15 +108,45 @@ public class CalendarCommands {
             });
     }
 
-    private Month validateAndConvertMonth(String s) {
+    //Expected input: a full month name.
+    //Output: A YearMonth, describing this year at the input month.
+    private YearMonth validateAndConvertToYearMonth(String s) {
+        if(s == null){return null;}
         List<Month> months = EnumUtils.getEnumList(Month.class);
         List<String> localizedMonths = getLocalizedMonths();
         return IntStream.range(0, months.size())
                 .filter(i -> localizedMonths.get(i).equalsIgnoreCase(s))
                 .mapToObj(months::get)
                 .findFirst()
+                .map(month -> Year.now().atMonth(month))
                 .orElseThrow(() ->
                         new CommandValidationException(translateService.getFormattedString(TranslateHelper.MONTH, String.join(", ", localizedMonths))));
+    }
+
+    //Expected input: mm/dd
+    //Output: A MonthDay, describing the input month and day.
+    private MonthDay validateAndConvertToMonthDay(String s) {
+        if(s == null){return null;}
+        try {
+            return MonthDay.parse(s, MONTH_DAY_FORMATTER);
+        } catch(DateTimeParseException ex) {
+            throw new CommandValidationException(translateService.getString("validation.illegalDate"));
+        }
+    }
+
+    //Expected input: mm/dd
+    //Output: A LocalDate, describing the input month and day, with the year being the next time it happens.
+    private LocalDate validateAndConvertToLocalDate(String s) {
+        if(s == null){return null;}
+        MonthDay monthDay = validateAndConvertToMonthDay(s);
+        return normalize(monthDay, LocalDate.now());
+    }
+
+    private List<String> getLocalizedMonths() {
+        return Arrays.stream(Month.values())
+                .map(TranslateHelper::toDate)
+                .map(monthAsDate -> translateService.getFormattedString(MONTH_DATE_FORMAT, monthAsDate))
+                .collect(Collectors.toList());
     }
 
     @Command
@@ -126,7 +160,7 @@ public class CalendarCommands {
                         return calendarService.searchBirthday(userParam);
                     }
                 })
-                .map(bday -> translateService.getFormattedString("birthday.success", bday.getName(), bday.getDate(), Duration.between(LocalDateTime.now(), bday.getDate().atStartOfDay()).toMillis()))
+                .map(this::getOwnersBirthdayDateDurationText)
                 .switchIfEmpty(Mono.fromSupplier(() -> {
                     if(user == null) {
                         return translateService.getString("birthday.failure.self");
@@ -148,7 +182,7 @@ public class CalendarCommands {
                                 "addbirthday.validation.alreadyExists",
                                 TranslateHelper.toDate(bday.getDate())))))
                 .then(Mono.just(date))
-                .map(this::validateAndConvertDate)
+                .map(this::validateAndConvertToMonthDay)
                 .map(bday -> new Birthday(
                         sender.getId().asString(),
                         StringUtils.capitalize(sender.getUsername()),
@@ -168,8 +202,8 @@ public class CalendarCommands {
         Mono<User> userMono = Mono.just(userId)
                 .map(id -> DiscordUtils.getIdFromMention(id).map(Snowflake::of).orElse(Snowflake.of(id)))
                 .flatMap(snowflake -> bot.getUserById(snowflake));
-        Mono<LocalDate> birthdayMono = Mono.just(date)
-                .map(this::validateAndConvertDate);
+        Mono<MonthDay> birthdayMono = Mono.just(date)
+                .map(this::validateAndConvertToMonthDay);
 
         return Mono.zip(userMono, birthdayMono)
                 .map(userDate -> new Birthday(
@@ -180,18 +214,9 @@ public class CalendarCommands {
                 .map(birthday -> translateService.getFormattedString("setbirthday.success", birthday.getName()));
     }
 
-    private LocalDate validateAndConvertDate(String date) {
-        try {
-            MonthDay dateOfBirth = MonthDay.parse(date, MONTH_DAY_FORMATTER);
-            return dateOfBirth.atYear(DEFAULT_YEAR);
-        } catch (DateTimeParseException ex) {
-            throw new CommandValidationException(translateService.getString("validation.illegalDate"));
-        }
-    }
-
-    private String getBirthdayText(Birthday nextBirthday) {
+    private String getOwnerDateDurationText(Birthday nextBirthday) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate normalizedDate = normalize(nextBirthday, now.toLocalDate());
+        LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
                 nextBirthday.getName(),
@@ -199,12 +224,39 @@ public class CalendarCommands {
                 duration.toDays() + 1);
     }
 
+    private String getOwnersBirthdayDateDurationText(Birthday nextBirthday) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
+        Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
+        return translateService.getFormattedString("birthday.success",
+                nextBirthday.getName(),
+                TranslateHelper.toDate(normalizedDate),
+                duration.toDays() + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
+    }
+
+    private String getOwnersText(Birthday nextBirthday) {
+        return translateService.getFormattedString("birthday.owner",
+                nextBirthday.getName());
+    }
+
     //Dates before now need to be advanced to the next year (we only ever deal with future + present dates).
-    private LocalDate normalize(Birthday birthday, LocalDate now) {
-        if(birthday.getDate().isBefore(now)){
-            return birthday.getDate().plusYears(1);
+    private LocalDate normalize(MonthDay birthday, LocalDate now) {
+        MonthDay nowAsMonthDay = MonthDay.of(now.getMonth(), now.getDayOfMonth());
+        if(birthday.compareTo(nowAsMonthDay) < 0) {
+            //Birthday occured earlier in the year, so the year is next one
+            return convertToLocalDate(birthday, Year.now().plusYears(1));
         } else {
-            return birthday.getDate();
+            //Birthday hasn't occured yet this year, or is occuring today, so the year is this one
+            return convertToLocalDate(birthday, Year.now());
+        }
+    }
+
+    private LocalDate convertToLocalDate(MonthDay birthday, Year year) {
+        if(birthday.isValidYear(year.getValue())){
+            return birthday.atYear(year.getValue());
+        } else {
+            //Lear years get their birthday on March 1st. Don't @ me.
+            return year.atMonthDay(MonthDay.of(Month.MARCH, 1));
         }
     }
 }

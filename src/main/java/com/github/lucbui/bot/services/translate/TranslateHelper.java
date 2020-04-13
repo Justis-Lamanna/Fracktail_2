@@ -1,7 +1,8 @@
 package com.github.lucbui.bot.services.translate;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
+import org.apache.commons.lang3.time.DateUtils;
+
+import java.time.*;
 import java.util.Date;
 
 public class TranslateHelper {
@@ -15,7 +16,23 @@ public class TranslateHelper {
         return cmd + ".help";
     }
 
+    public static Date toDate(Month month) {
+        return toDate(Year.now().atMonth(month).atDay(1));
+    }
+
+    public static Date toDate(MonthDay monthDay) {
+        return toDate(Year.now().atMonthDay(monthDay));
+    }
+
     public static Date toDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        return toDate(localDate.atStartOfDay());
+    }
+
+    public static Date toDate(LocalDateTime localDateTime) {
+        return toDate(localDateTime.atZone(ZoneId.systemDefault()));
+    }
+
+    public static Date toDate(ZonedDateTime zonedDateTime) {
+        return Date.from(zonedDateTime.toInstant());
     }
 }
