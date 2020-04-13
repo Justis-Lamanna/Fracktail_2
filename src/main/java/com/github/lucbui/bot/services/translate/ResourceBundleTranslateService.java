@@ -36,14 +36,6 @@ public class ResourceBundleTranslateService implements TranslateService {
     public String getFormattedString(String key, Locale locale, Object... args) {
         String preFormat = getString(key, locale);
         MessageFormat format = new MessageFormat(preFormat, getLocaleOrDefault(locale));
-        //This is a workaround, because nobody has a good java library for localizing durations > 1 day???
-        for(int idx = 0; idx < args.length; idx++) {
-            if(args[idx] instanceof Duration) {
-                Duration d = (Duration) args[idx];
-                args[idx] = RelativeDateTimeFormatter.getInstance(ULocale.ENGLISH)
-                        .format(d.toDays(), RelativeDateTimeFormatter.RelativeDateTimeUnit.DAY);
-            }
-        }
         return format.format(args);
     }
 }
