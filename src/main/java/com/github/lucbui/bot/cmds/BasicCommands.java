@@ -3,13 +3,15 @@ package com.github.lucbui.bot.cmds;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
-import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.DiscordClient;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.Optional;
 
 @Component
@@ -17,6 +19,9 @@ import java.util.Optional;
 public class BasicCommands {
     @Autowired
     private TranslateService translateService;
+
+    @Autowired
+    private DiscordClient bot;
 
     @Command
     @Timeout(value = 1, unit = ChronoUnit.MINUTES)
@@ -40,16 +45,25 @@ public class BasicCommands {
     }
 
     @Command
-    public Mono<Void> whodat(MessageCreateEvent event, @Param(0) String userId) {
+    public Mono<String> whodat(@Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
-            return DiscordUtils.respond(event.getMessage(),
-                    translateService.getString("whodat.validation.illegalParams"));
+            return Mono.fromSupplier(() -> translateService.getString("whodat.validation.illegalParams"));
         }
-        return event.getClient().getUserById(Snowflake.of(userId))
+        return bot.getUserById(Snowflake.of(userId))
                 .map(Optional::of).onErrorReturn(Optional.empty())
-                .flatMap(possibleUser -> DiscordUtils.respond(event.getMessage(), possibleUser
+                .map(possibleUser -> possibleUser
                         .map(user -> translateService.getFormattedString("whodat.success", user.getUsername()))
-                        .orElse(translateService.getString("whodat.failure"))));
+                        .orElse(translateService.getString("whodat.failure")));
+    }
+
+    @Command
+    @Timeout(value = 30)
+    public Mono<String> timestampify(@BasicSender User sender, @Param(0) String snowflake) {
+        return Mono.justOrEmpty(snowflake)
+                .defaultIfEmpty(sender.getId().asString())
+                .map(Snowflake::of)
+                .map(f -> translateService.getFormattedString("timestampify.success", Date.from(f.getTimestamp())))
+                .onErrorResume(ex -> Mono.just(translateService.getString("timestampify.validation.invalidSnowflake")));
     }
 
     @Command

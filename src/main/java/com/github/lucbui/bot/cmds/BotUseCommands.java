@@ -10,7 +10,6 @@ import com.github.lucbui.magic.command.store.CommandList;
 import com.github.lucbui.magic.util.DiscordUtils;
 import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,6 @@ import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 @Component
@@ -45,19 +43,18 @@ public class BotUseCommands {
     }
 
     @Command
-    public Mono<Void> help(MessageCreateEvent evt, @Param(0) String cmd) {
+    public Mono<String> help(MessageCreateEvent evt, @Param(0) String cmd) {
         String cmdToSearch = (cmd == null) ? "help" : cmd;
         BotCommand command = commandList.getCommand(cmdToSearch);
         return Mono.justOrEmpty(command)
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
                 .map(Optional::of).defaultIfEmpty(Optional.empty())
-                .flatMap(c -> DiscordUtils.respond(evt.getMessage(),
-                        c.map(BotCommand::getHelpText).map(translateService::getString)
-                            .orElse(translateService.getFormattedString("help.validation.unknownCommand", cmd))));
+                .map(c -> c.map(BotCommand::getHelpText).map(translateService::getString)
+                            .orElse(translateService.getFormattedString("help.validation.unknownCommand", cmd)));
     }
 
     @Command
-    public Mono<Void> commands(MessageCreateEvent evt) {
+    public Mono<String> commands(MessageCreateEvent evt) {
         return Flux.fromIterable(commandList.getAllCommands())
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
                 .flatMap(c -> Mono.just(c.getNames()[0]))
@@ -65,7 +62,7 @@ public class BotUseCommands {
                 .sort()
                 .map(c -> "!" + c)
                 .collect(Collectors.joining(", "))
-                .flatMap(text -> DiscordUtils.respond(evt.getMessage(), translateService.getFormattedString("commands.text", text)));
+                .map(text -> translateService.getFormattedString("commands.text", text));
     }
 
     @Command
