@@ -5,6 +5,11 @@ logging:
 calendar:
   tokenPath: /home/pi/tokens
 
+discord:
+  presence:
+    type: DO_NOT_DISTURB
+    playing: ''
+
 spring:
   datasource:
     url: 'jdbc:sqlite:/home/pi/fracktail/sql/fracktail.db'

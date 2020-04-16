@@ -7,6 +7,9 @@ calendar:
   tokenPath: tokens
 
 discord:
+  presence:
+    type: DO_NOT_DISTURB
+    playing: 'in Debug Mode!'
   commands:
     prefix: '!'
     caseInsensitive: true
