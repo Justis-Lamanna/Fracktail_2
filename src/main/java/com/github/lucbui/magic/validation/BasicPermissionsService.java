@@ -1,6 +1,8 @@
 package com.github.lucbui.magic.validation;
 
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 
@@ -21,20 +23,22 @@ public class BasicPermissionsService implements PermissionsService {
     }
 
     @Override
-    public Set<String> getPermissions(Snowflake guildId, Snowflake userId) {
+    public Flux<String> getPermissions(Snowflake guildId, Snowflake userId) {
         if(userId == null){
-            return Collections.emptySet();
+            return Flux.empty();
         }
-        return new HashSet<>(permissions.computeIfAbsent(userId, key -> new HashSet<>()));
+        return Flux.fromIterable(new HashSet<>(permissions.computeIfAbsent(userId, key -> new HashSet<>())));
     }
 
     @Override
-    public void addPermission(Snowflake guildId, Snowflake userId, String permission) {
+    public Mono<Void> addPermission(Snowflake guildId, Snowflake userId, String permission) {
         permissions.computeIfAbsent(userId, key -> new HashSet<>()).add(permission);
+        return Mono.empty();
     }
 
     @Override
-    public void removePermission(Snowflake guildId, Snowflake userId, String permission) {
+    public Mono<Void> removePermission(Snowflake guildId, Snowflake userId, String permission) {
         permissions.computeIfAbsent(userId, key -> new HashSet<>()).remove(permission);
+        return Mono.empty();
     }
 }

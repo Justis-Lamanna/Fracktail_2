@@ -12,6 +12,7 @@ discord:
     caseInsensitive: true
     timeout: '5s'
 
-database:
-  driverClassName: org.sqlite.JDBC
-  url: 'jdbc:sqlite::memory:'
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: 'jdbc:sqlite::memory:'

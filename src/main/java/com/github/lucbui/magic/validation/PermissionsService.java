@@ -1,6 +1,8 @@
 package com.github.lucbui.magic.validation;
 
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Set;
 
@@ -17,7 +19,7 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @return The set of permissions the user has.
      */
-    Set<String> getPermissions(Snowflake guildId, Snowflake userId);
+    Flux<String> getPermissions(Snowflake guildId, Snowflake userId);
 
     /**
      * Add a permission for a user.
@@ -25,7 +27,7 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @param permission The permission to add.
      */
-    void addPermission(Snowflake guildId, Snowflake userId, String permission);
+    Mono<Void> addPermission(Snowflake guildId, Snowflake userId, String permission);
 
     /**
      * Remove a permission for a user.
@@ -33,5 +35,5 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @param permission The permission to remove.
      */
-    void removePermission(Snowflake guildId, Snowflake userId, String permission);
+    Mono<Void> removePermission(Snowflake guildId, Snowflake userId, String permission);
 }

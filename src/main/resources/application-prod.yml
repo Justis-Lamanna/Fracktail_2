@@ -5,6 +5,7 @@ logging:
 calendar:
   tokenPath: /home/pi/tokens
 
-database:
-  driverClassName: org.sqlite.JDBC
-  url: jdbc:sqlite:/home/pi/fracktail/sql/fracktail.db
+spring:
+  datasource:
+    url: 'jdbc:sqlite:/home/pi/fracktail/sql/fracktail.db'
+
