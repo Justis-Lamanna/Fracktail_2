@@ -13,7 +13,7 @@ public class ResourceBundleTranslateService implements TranslateService {
     }
 
     private ResourceBundle getBundleForCache(Locale locale) {
-        return ResourceBundle.getBundle("fracktail", getLocaleOrDefault(locale));
+        return ResourceBundle.getBundle("i18n/fracktail", getLocaleOrDefault(locale));
     }
 
     @Override

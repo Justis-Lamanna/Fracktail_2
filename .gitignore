@@ -35,3 +35,4 @@ build/
 /javadocs
 build.properties
 fracktail.log
+*.db

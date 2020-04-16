@@ -72,12 +72,26 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Internalization -->
+		<!-- Localization -->
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
 			<artifactId>icu4j</artifactId>
 			<version>66.1</version>
 		</dependency>
+
+		<!-- SQLite -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.25.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+			<version>2.2.6.RELEASE</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
