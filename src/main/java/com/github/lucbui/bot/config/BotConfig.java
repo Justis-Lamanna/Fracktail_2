@@ -14,6 +14,7 @@ import discord4j.core.object.util.Snowflake;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -29,8 +30,7 @@ import java.util.Set;
 @Configuration
 public class BotConfig {
     @Bean
-    @ConditionalOnMissingBean
-    public PermissionsService userPermissionValidator() {
+    public PermissionsService permissionsService() {
         Map<Snowflake, Set<String>> preload = new HashMap<>();
         preload.put(Snowflake.of("248612704019808258"), Collections.singleton("owner"));
         return new BasicPermissionsService(preload);

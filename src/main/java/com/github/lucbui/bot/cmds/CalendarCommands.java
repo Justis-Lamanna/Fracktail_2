@@ -193,7 +193,7 @@ public class CalendarCommands {
     }
 
     @Command
-    @Permissions("admin")
+    @Permissions("owner")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
             return Mono.fromSupplier(() -> translateService.getString("setbirthday.validation.illegalParams"));

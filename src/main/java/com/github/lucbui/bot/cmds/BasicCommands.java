@@ -30,7 +30,7 @@ public class BasicCommands {
     }
 
     @Command
-    @Permissions("admin")
+    @Permissions("owner")
     public String admin() {
         return translateService.getString("admin.text");
     }

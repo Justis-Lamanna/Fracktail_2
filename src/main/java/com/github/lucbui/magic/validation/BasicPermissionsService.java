@@ -22,6 +22,13 @@ public class BasicPermissionsService implements PermissionsService {
         permissions = new HashMap<>(preload);
     }
 
+    /**
+     * Initialize Permissions Service as empty.
+     */
+    public BasicPermissionsService() {
+        permissions = new HashMap<>();
+    }
+
     @Override
     public Flux<String> getPermissions(Snowflake guildId, Snowflake userId) {
         if(userId == null){

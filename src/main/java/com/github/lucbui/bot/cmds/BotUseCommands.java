@@ -29,7 +29,6 @@ public class BotUseCommands {
     private CommandList commandList;
 
     @Autowired
-    @Qualifier("userPermissionValidator")
     private UserPermissionValidator userPermissionValidator;
 
     @Autowired
@@ -72,7 +71,7 @@ public class BotUseCommands {
     }
 
     @Command
-    @Permissions("admin")
+    @Permissions("owner")
     public Mono<Void> sleep(MessageCreateEvent evt) {
         return DiscordUtils.respond(evt.getMessage(), translateService.getString("sleep.text"))
                 .then(evt.getClient().logout());
