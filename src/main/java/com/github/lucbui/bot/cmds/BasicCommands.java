@@ -30,6 +30,12 @@ public class BasicCommands {
     }
 
     @Command
+    @Timeout(value = 1, unit = ChronoUnit.MINUTES)
+    public String weather() {
+        return translateService.getString("weather.text");
+    }
+
+    @Command
     @Permissions("owner")
     public String admin() {
         return translateService.getString("admin.text");

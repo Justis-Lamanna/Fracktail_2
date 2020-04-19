@@ -45,7 +45,7 @@ public class CalendarCommands {
     @Autowired
     private TranslateService translateService;
 
-    @Command
+    @Command({"nextbday", "nextbirthday"})
     public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
         if(NEXT_BDAY_RANGE.isAfter(n)) {
@@ -65,7 +65,7 @@ public class CalendarCommands {
                 });
     }
 
-    @Command({"daysbirthdays", "dayhbirthdays", "dayssbirthday", "daybirthday"})
+    @Command({"daysbdays", "daysbirthdays"})
     public Mono<String> daysbirthdays(@Param(0) String dayMonthStr) {
         return Mono.justOrEmpty(dayMonthStr)
                 .map(this::validateAndConvertToLocalDate)
@@ -87,7 +87,7 @@ public class CalendarCommands {
                 });
     }
 
-    @Command({"monthsbirthdays", "monthbirthdays", "monthsbirthday", "monthbirthday"})
+    @Command({"monthsbdays", "monthsbirthdays"})
     public Mono<String> monthsbirthdays(@Param(0) String monthStr) {
         return Mono.justOrEmpty(monthStr)
             .map(this::validateAndConvertToYearMonth)
@@ -149,7 +149,7 @@ public class CalendarCommands {
                 .collect(Collectors.toList());
     }
 
-    @Command
+    @Command({"bday", "birthday"})
     public Mono<String> birthday(@Param(0) String user, @BasicSender User sender) {
         return Mono.justOrEmpty(user == null ? sender.getUsername() : user)
                 .flatMap(userParam -> {
@@ -170,7 +170,7 @@ public class CalendarCommands {
                 }));
     }
 
-    @Command
+    @Command({"addbday", "addbirthday"})
     public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
             return Mono.fromSupplier(() -> translateService.getString("addbirthday.validation.illegalParams"));
@@ -192,7 +192,7 @@ public class CalendarCommands {
                         translateService.getFormattedString("addbirthday.success", sender.getUsername())));
     }
 
-    @Command
+    @Command({"setbday", "setbirthday"})
     @Permissions("owner")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
