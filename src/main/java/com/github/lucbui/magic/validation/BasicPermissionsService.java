@@ -12,13 +12,15 @@ import java.util.*;
  * different servers.
  */
 public class BasicPermissionsService implements PermissionsService {
-    private Map<Snowflake, Set<String>> permissions;
+    public static final String BANNED = "banned";
+    public static final BotRole BANNED_ROLE = () -> BANNED;
+    private Map<Snowflake, Set<BotRole>> permissions;
 
     /**
      * Initialize Permissions Service with a preload.
      * @param preload The preload to initialize the service with.
      */
-    public BasicPermissionsService(Map<Snowflake, Set<String>> preload) {
+    public BasicPermissionsService(Map<Snowflake, Set<BotRole>> preload) {
         permissions = new HashMap<>(preload);
     }
 
@@ -30,22 +32,28 @@ public class BasicPermissionsService implements PermissionsService {
     }
 
     @Override
-    public Flux<String> getPermissions(Snowflake guildId, Snowflake userId) {
-        if(userId == null){
+    public Flux<? extends BotRole> getPermissions(Snowflake guildId, Snowflake userId) {
+        if(userId == null || !permissions.containsKey(userId)){
             return Flux.empty();
         }
-        return Flux.fromIterable(new HashSet<>(permissions.computeIfAbsent(userId, key -> new HashSet<>())));
+        return Flux.fromIterable(permissions.get(userId));
     }
 
     @Override
-    public Mono<Void> addPermission(Snowflake guildId, Snowflake userId, String permission) {
+    public Mono<Void> addPermission(Snowflake guildId, Snowflake userId, BotRole permission) {
         permissions.computeIfAbsent(userId, key -> new HashSet<>()).add(permission);
         return Mono.empty();
     }
 
     @Override
-    public Mono<Void> removePermission(Snowflake guildId, Snowflake userId, String permission) {
+    public Mono<Void> removePermission(Snowflake guildId, Snowflake userId, BotRole permission) {
         permissions.computeIfAbsent(userId, key -> new HashSet<>()).remove(permission);
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> ban(Snowflake guildId, Snowflake userId) {
+        permissions.compute(userId, (snowflake, strings) -> Collections.singleton(BANNED_ROLE));
         return Mono.empty();
     }
 }

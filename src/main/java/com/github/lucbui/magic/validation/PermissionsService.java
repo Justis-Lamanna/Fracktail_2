@@ -19,7 +19,7 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @return The set of permissions the user has.
      */
-    Flux<String> getPermissions(Snowflake guildId, Snowflake userId);
+    Flux<? extends BotRole> getPermissions(Snowflake guildId, Snowflake userId);
 
     /**
      * Add a permission for a user.
@@ -27,7 +27,7 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @param permission The permission to add.
      */
-    Mono<Void> addPermission(Snowflake guildId, Snowflake userId, String permission);
+    Mono<Void> addPermission(Snowflake guildId, Snowflake userId, BotRole permission);
 
     /**
      * Remove a permission for a user.
@@ -35,5 +35,12 @@ public interface PermissionsService {
      * @param userId The ID of the user
      * @param permission The permission to remove.
      */
-    Mono<Void> removePermission(Snowflake guildId, Snowflake userId, String permission);
+    Mono<Void> removePermission(Snowflake guildId, Snowflake userId, BotRole permission);
+
+    /**
+     * Ban a user from using this bot
+     * @param guildId The ID of the guild (server)
+     * @param userId The ID of the user
+     */
+    Mono<Void> ban(Snowflake guildId, Snowflake userId);
 }

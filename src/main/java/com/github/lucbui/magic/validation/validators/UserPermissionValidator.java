@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.validation.validators;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.validation.BotRole;
 import com.github.lucbui.magic.validation.PermissionsService;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
@@ -29,6 +30,6 @@ public class UserPermissionValidator implements CreateMessageValidator {
                 event.getGuildId().orElse(null),
                 event.getMessage().getAuthor().map(User::getId).orElse(null))
             .collect(Collectors.toSet())
-            .map(command::hasPermissions);
+            .map(permissionsUserHas -> command.hasPermissions(permissionsUserHas.stream().map(BotRole::getName).collect(Collectors.toSet())));
     }
 }

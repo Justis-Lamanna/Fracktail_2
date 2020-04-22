@@ -44,4 +44,12 @@ public class PermissionsDao {
     public int removeLocalPermission(String guildId, String userId, String permission) {
         return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = ? AND permission = permission;", userId, guildId, permission);
     }
+
+    public int removeAllPermissionsForGuild(String guildId, String userId) {
+        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = ?", userId, guildId);
+    }
+
+    public int removeAllPermissions(String userId) {
+        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ?;", userId);
+    }
 }
