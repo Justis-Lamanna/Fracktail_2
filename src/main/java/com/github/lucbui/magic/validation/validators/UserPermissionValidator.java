@@ -25,15 +25,10 @@ public class UserPermissionValidator implements CreateMessageValidator {
 
     @Override
     public Mono<Boolean> validate(MessageCreateEvent event, BotCommand command) {
-        Set<String> permissionsCommandNeeds = command.getPermissions();
-        if(permissionsCommandNeeds.isEmpty()){
-            return Mono.just(true);
-        } else {
-            return permissionsService.getPermissions(
-                    event.getGuildId().orElse(null),
-                    event.getMessage().getAuthor().map(User::getId).orElse(null))
-                .collect(Collectors.toSet())
-                .map(permissionsUserHas -> permissionsUserHas.containsAll(permissionsCommandNeeds));
-        }
+        return permissionsService.getPermissions(
+                event.getGuildId().orElse(null),
+                event.getMessage().getAuthor().map(User::getId).orElse(null))
+            .collect(Collectors.toSet())
+            .map(command::hasPermissions);
     }
 }

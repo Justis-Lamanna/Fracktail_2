@@ -1,9 +1,7 @@
 package com.github.lucbui.magic.command;
 
 import com.github.lucbui.magic.annotation.*;
-import com.github.lucbui.magic.command.func.BotCommand;
-import com.github.lucbui.magic.command.func.BotMessageBehavior;
-import com.github.lucbui.magic.command.func.ParameterExtractor;
+import com.github.lucbui.magic.command.func.*;
 import com.github.lucbui.magic.command.store.CommandList;
 import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokenizer;
@@ -188,12 +186,14 @@ public class CommandFieldCallbackFactory {
          * @param method The method to get the permissions of
          * @return The permissions the command requires
          */
-        protected Set<String> getPermissions(Method method) {
+        protected PermissionsPredicate getPermissions(Method method) {
             if (method.isAnnotationPresent(Permissions.class)) {
-                String[] permissions = method.getAnnotation(Permissions.class).value();
-                return Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet()));
+                return Arrays.stream(method.getDeclaredAnnotationsByType(Permissions.class))
+                        .map(Permissions::value)
+                        .map(permissions -> Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet())))
+                        .collect(Collectors.collectingAndThen(Collectors.toList(), ComplexPermissionsPredicate::new));
             }
-            return Collections.emptySet();
+            return PermissionsPredicate.allPermitted();
         }
 
         /**

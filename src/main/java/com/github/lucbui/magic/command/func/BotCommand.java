@@ -11,7 +11,7 @@ public class BotCommand {
     private String[] names;
     private String helpText;
     private BotMessageBehavior behavior;
-    private Set<String> permissions;
+    private PermissionsPredicate permissionsPredicate;
     private Duration timeout;
 
     /**
@@ -19,14 +19,14 @@ public class BotCommand {
      * @param names The names of the command
      * @param helpText The command's help text
      * @param behavior The command's behavior
-     * @param permissions The command's permissions, if any
+     * @param permissionsPredicate The command's permission tester, if any
      * @param timeout The timeout of the command, if any
      */
-    public BotCommand(String[] names, String helpText, BotMessageBehavior behavior, Set<String> permissions, Duration timeout) {
+    public BotCommand(String[] names, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate, Duration timeout) {
         this.names = names;
         this.helpText = helpText;
         this.behavior = behavior;
-        this.permissions = permissions;
+        this.permissionsPredicate = permissionsPredicate;
         this.timeout = timeout;
     }
 
@@ -35,14 +35,14 @@ public class BotCommand {
      * @param name The name of the command
      * @param helpText The command's help text
      * @param behavior The command's behavior
-     * @param permissions The command's permissions, if any
+     * @param permissionsPredicate The command's permissions, if any
      * @param timeout The timeout of the command, if any
      */
-    public BotCommand(String name, String helpText, BotMessageBehavior behavior, Set<String> permissions, Duration timeout) {
+    public BotCommand(String name, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate, Duration timeout) {
         this.names = new String[]{name};
         this.helpText = helpText;
         this.behavior = behavior;
-        this.permissions = permissions;
+        this.permissionsPredicate = permissionsPredicate;
         this.timeout = timeout;
     }
 
@@ -56,7 +56,7 @@ public class BotCommand {
         this.names = new String[]{name};
         this.helpText = helpText;
         this.behavior = behavior;
-        this.permissions = Collections.emptySet();
+        this.permissionsPredicate = (perms) -> true;
         this.timeout = null;
     }
 
@@ -85,11 +85,12 @@ public class BotCommand {
     }
 
     /**
-     * Get the permissions of the command
-     * @return The permissions of the command
+     * Check if a user with the input permissions can use this command
+     * @param userPermissions The permissions the user has
+     * @return True if the command can be used
      */
-    public Set<String> getPermissions() {
-        return permissions;
+    public boolean hasPermissions(Set<String> userPermissions) {
+        return permissionsPredicate.validatePermissions(userPermissions);
     }
 
     /**

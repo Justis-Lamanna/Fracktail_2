@@ -14,7 +14,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 
-@Component
 @Commands
 public class BasicCommands {
     @Autowired
@@ -53,7 +52,7 @@ public class BasicCommands {
     @Command
     public Mono<String> whodat(@Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
-            return Mono.fromSupplier(() -> translateService.getString("whodat.validation.illegalParams"));
+            return translateService.getStringMono("whodat.validation.illegalParams");
         }
         return bot.getUserById(Snowflake.of(userId))
                 .map(Optional::of).onErrorReturn(Optional.empty())

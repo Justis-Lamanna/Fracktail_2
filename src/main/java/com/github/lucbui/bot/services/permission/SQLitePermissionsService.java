@@ -1,6 +1,7 @@
 package com.github.lucbui.bot.services.permission;
 
 import com.github.lucbui.bot.dao.PermissionsDao;
+import com.github.lucbui.magic.annotation.Commands;
 import com.github.lucbui.magic.validation.PermissionsService;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.util;
 
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
@@ -49,6 +50,11 @@ public class DiscordUtils {
         return "<@!" + id.asString() + ">";
     }
 
+    /**
+     * Test if a String can be converted into a Snowflake.
+     * @param test The string to test
+     * @return True, if the text can be converted safely into a Boolean.
+     */
     public static boolean isValidSnowflake(String test) {
         if(test == null){
             return false;
@@ -59,5 +65,14 @@ public class DiscordUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static Optional<Snowflake> toSnowflakeFromMentionOrLiteral(String mentionOrLiteral) {
+        String id = getIdFromMention(mentionOrLiteral).orElse(mentionOrLiteral);
+        return isValidSnowflake(id) ? Optional.of(Snowflake.of(id)) : Optional.empty();
+    }
+
+    public static boolean isDM(MessageCreateEvent event) {
+        return !event.getMessage().getAuthor().isPresent();
     }
 }

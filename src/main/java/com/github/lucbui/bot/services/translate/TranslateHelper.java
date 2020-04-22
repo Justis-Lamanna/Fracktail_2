@@ -11,6 +11,7 @@ public class TranslateHelper {
     public static final String HIGH = VALIDATION_PREFIX + ".high";
     public static final String RANGE = VALIDATION_PREFIX + ".range";
     public static final String MONTH = VALIDATION_PREFIX + ".month";
+    public static final String UNKNOWN_USER_OR_GUILD = VALIDATION_PREFIX + ".unknownUserOrGuild";
 
     public static String helpKey(String cmd) {
         return cmd + ".help";

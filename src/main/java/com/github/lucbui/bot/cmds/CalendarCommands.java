@@ -14,8 +14,6 @@ import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.convert.DurationFormat;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.*;
@@ -25,7 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@Component
 @Commands
 public class CalendarCommands {
     //The min and max number that can be specified with the nextbirthday command.
@@ -49,11 +46,9 @@ public class CalendarCommands {
     public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
         if(NEXT_BDAY_RANGE.isAfter(n)) {
-            return Mono.fromSupplier(() ->
-                    translateService.getFormattedString(TranslateHelper.LOW, NEXT_BDAY_RANGE.getMinimum()));
+            return translateService.getFormattedStringMono(TranslateHelper.LOW, NEXT_BDAY_RANGE.getMinimum());
         } else if(NEXT_BDAY_RANGE.isBefore(n)) {
-            return Mono.fromSupplier(() ->
-                    translateService.getFormattedString(TranslateHelper.HIGH, NEXT_BDAY_RANGE.getMaximum()));
+            return translateService.getFormattedStringMono(TranslateHelper.HIGH, NEXT_BDAY_RANGE.getMaximum());
         }
         return calendarService.getNextNBirthdays(n)
                 .collectList()
@@ -173,7 +168,7 @@ public class CalendarCommands {
     @Command({"addbday", "addbirthday"})
     public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
-            return Mono.fromSupplier(() -> translateService.getString("addbirthday.validation.illegalParams"));
+            return translateService.getStringMono("addbirthday.validation.illegalParams");
         }
 
         return calendarService.searchBirthdayById(sender.getId())
@@ -196,7 +191,7 @@ public class CalendarCommands {
     @Permissions("owner")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
-            return Mono.fromSupplier(() -> translateService.getString("setbirthday.validation.illegalParams"));
+            return translateService.getStringMono("setbirthday.validation.illegalParams");
         }
 
         Mono<User> userMono = Mono.just(userId)
@@ -252,11 +247,6 @@ public class CalendarCommands {
     }
 
     private LocalDate convertToLocalDate(MonthDay birthday, Year year) {
-        if(birthday.isValidYear(year.getValue())){
-            return birthday.atYear(year.getValue());
-        } else {
-            //Lear years get their birthday on March 1st. Don't @ me.
-            return year.atMonthDay(MonthDay.of(Month.MARCH, 1));
-        }
+        return year.atMonthDay(birthday);
     }
 }
