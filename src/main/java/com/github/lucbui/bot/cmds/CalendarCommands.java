@@ -168,7 +168,7 @@ public class CalendarCommands {
     @Command({"addbday", "addbirthday"})
     public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
-            return translateService.getStringMono("addbirthday.validation.illegalParams");
+            return translateService.getStringMono(TranslateHelper.usageKey("addbday"));
         }
 
         return calendarService.searchBirthdayById(sender.getId())
@@ -191,7 +191,7 @@ public class CalendarCommands {
     @Permissions("owner")
     public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
-            return translateService.getStringMono("setbirthday.validation.illegalParams");
+            return translateService.getStringMono(TranslateHelper.usageKey("setbday"));
         }
 
         Mono<User> userMono = Mono.just(userId)

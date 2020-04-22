@@ -54,20 +54,20 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> addpermission(MessageCreateEvent evt, @Param(0) String userId, @Param(1) String guildIdOrPermission, @Param(2) String permissionOrNull) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("addpermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addpermission")));
         Snowflake guildSnowflake;
         BotRole permission;
         if(permissionOrNull == null) {
             //!addpermission user permission. Guild is implied to be the current one.
             permission = FracktailRole.getRoleByName(guildIdOrPermission)
-                    .orElseThrow(() -> translateService.getStringException("addpermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addpermission")));
             guildSnowflake = evt.getGuildId().orElseThrow(() -> translateService.getStringException("addpermission.validation.dm"));
         } else {
             //!addpermission user guild permission.
             permission = FracktailRole.getRoleByName(permissionOrNull)
-                    .orElseThrow(() -> translateService.getStringException("addpermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addpermission")));
             guildSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(guildIdOrPermission)
-                    .orElseThrow(() -> translateService.getStringException("addpermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addpermission")));
         }
         return Mono.zip(bot.getUserById(userSnowflake), bot.getGuildById(guildSnowflake))
                 .zipWhen(userGuild ->
@@ -85,19 +85,19 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> removepermission(MessageCreateEvent evt, @Param(0) String userId, @Param(1) String guildIdOrPermission, @Param(2) String permissionOrNull) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("removepermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removepermission")));
         Snowflake guildSnowflake;
         BotRole permission;
         if(permissionOrNull == null) {
             //Guild is implied to be the current one. Fail if this is a DM.
             permission = FracktailRole.getRoleByName(guildIdOrPermission)
-                    .orElseThrow(() -> translateService.getStringException("removepermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removepermission")));
             guildSnowflake = evt.getGuildId().orElseThrow(() -> translateService.getStringException("removepermission.validation.dm"));
         } else {
             permission = FracktailRole.getRoleByName(permissionOrNull)
-                    .orElseThrow(() -> translateService.getStringException("removepermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removepermission")));
             guildSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                    .orElseThrow(() -> translateService.getStringException("removepermission.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removepermission")));
         }
         return Mono.zip(bot.getUserById(userSnowflake), bot.getGuildById(guildSnowflake))
                 .zipWhen(userGuild ->
@@ -114,9 +114,9 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> addglobalpermission(@Param(0) String userId, @Param(1) String permission) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("addglobalpermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addglobalpermission")));
         BotRole role = FracktailRole.getRoleByName(permission)
-                .orElseThrow(() -> translateService.getStringException("addglobalpermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addglobalpermission")));
         return bot.getUserById(userSnowflake)
                 .zipWhen(user -> permissionsService.addPermission(null, user.getId(), role).thenReturn(role))
                 .map(userPermissions -> translateService.getFormattedString("addglobalpermission.text.global",
@@ -129,9 +129,9 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> removeglobalpermission(@Param(0) String userId, @Param(1) String permission) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("removeglobalpermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removeglobalpermission")));
         BotRole role = FracktailRole.getRoleByName(permission)
-                .orElseThrow(() -> translateService.getStringException("removeglobalpermission.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removeglobalpermission")));
         return bot.getUserById(userSnowflake)
                 .zipWhen(user -> permissionsService.removePermission(null, user.getId(), role).thenReturn(role))
                 .map(userPermissions -> translateService.getFormattedString("removeglobalpermission.text.global",
@@ -145,13 +145,13 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> ban(MessageCreateEvent evt, @Param(0) String userId, @Param(1) String guildIdOrNull) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("ban.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("ban")));
         Snowflake guildSnowflake;
         if(guildIdOrNull == null) {
             guildSnowflake = evt.getGuildId().orElseThrow(() -> translateService.getStringException("ban.validation.dm"));
         } else {
             guildSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(guildIdOrNull)
-                    .orElseThrow(() -> translateService.getStringException("ban.validation.illegalParams"));
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("ban")));
         }
 
         return Mono.zip(bot.getGuildById(guildSnowflake), bot.getUserById(userSnowflake))
@@ -163,7 +163,7 @@ public class PermissionsCommands {
     @Permissions("owner")
     public Mono<String> globalban(MessageCreateEvent evt, @Param(0) String userId) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
-                .orElseThrow(() -> translateService.getStringException("globalban.validation.illegalParams"));
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("globalban")));
 
         return bot.getUserById(userSnowflake)
                 .flatMap(user -> permissionsService.ban(null, user.getId()).thenReturn(user))

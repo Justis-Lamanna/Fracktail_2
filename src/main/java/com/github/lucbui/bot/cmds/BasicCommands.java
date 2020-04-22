@@ -1,5 +1,6 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -52,7 +53,7 @@ public class BasicCommands {
     @Command
     public Mono<String> whodat(@Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
-            return translateService.getStringMono("whodat.validation.illegalParams");
+            return translateService.getStringMono(TranslateHelper.usageKey("whodat"));
         }
         return bot.getUserById(Snowflake.of(userId))
                 .map(Optional::of).onErrorReturn(Optional.empty())
