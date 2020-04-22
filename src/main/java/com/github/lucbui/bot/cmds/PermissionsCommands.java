@@ -139,4 +139,34 @@ public class PermissionsCommands {
                         userPermissions.getT2().getName()))
                 .onErrorResume(ex -> translateService.getStringMono(TranslateHelper.UNKNOWN_USER_OR_GUILD));
     }
+
+    @Command
+    @Permissions("admin")
+    @Permissions("owner")
+    public Mono<String> ban(MessageCreateEvent evt, @Param(0) String userId, @Param(1) String guildIdOrNull) {
+        Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
+                .orElseThrow(() -> translateService.getStringException("ban.validation.illegalParams"));
+        Snowflake guildSnowflake;
+        if(guildIdOrNull == null) {
+            guildSnowflake = evt.getGuildId().orElseThrow(() -> translateService.getStringException("ban.validation.dm"));
+        } else {
+            guildSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(guildIdOrNull)
+                    .orElseThrow(() -> translateService.getStringException("ban.validation.illegalParams"));
+        }
+
+        return Mono.zip(bot.getGuildById(guildSnowflake), bot.getUserById(userSnowflake))
+                .flatMap(guildUser -> permissionsService.ban(guildUser.getT1().getId(), guildUser.getT2().getId()).thenReturn(guildUser))
+                .flatMap(guildUser -> translateService.getFormattedStringMono("ban.text", guildUser.getT1().getName(), guildUser.getT2().getUsername()));
+    }
+
+    @Command
+    @Permissions("owner")
+    public Mono<String> globalban(MessageCreateEvent evt, @Param(0) String userId) {
+        Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
+                .orElseThrow(() -> translateService.getStringException("globalban.validation.illegalParams"));
+
+        return bot.getUserById(userSnowflake)
+                .flatMap(user -> permissionsService.ban(null, user.getId()).thenReturn(user))
+                .flatMap(user -> translateService.getFormattedStringMono("globalban.text", user.getUsername()));
+    }
 }

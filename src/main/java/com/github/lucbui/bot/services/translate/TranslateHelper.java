@@ -1,7 +1,5 @@
 package com.github.lucbui.bot.services.translate;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import java.time.*;
 import java.util.Date;
 
@@ -15,6 +13,10 @@ public class TranslateHelper {
 
     public static String helpKey(String cmd) {
         return cmd + ".help";
+    }
+
+    public static String usageKey(String cmd) {
+        return cmd + ".usage";
     }
 
     public static Date toDate(Month month) {

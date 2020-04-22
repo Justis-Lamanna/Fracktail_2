@@ -24,6 +24,11 @@ public enum FracktailRole implements BotRole {
         return name;
     }
 
+    @Override
+    public boolean isBannedRole() {
+        return this == BAN;
+    }
+
     public static Optional<FracktailRole> getRoleByName(String name) {
         return Arrays.stream(FracktailRole.values())
                 .filter(r -> r.getName().equalsIgnoreCase(name))

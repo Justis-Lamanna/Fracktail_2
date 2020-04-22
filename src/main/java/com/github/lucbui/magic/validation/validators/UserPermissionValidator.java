@@ -30,6 +30,11 @@ public class UserPermissionValidator implements CreateMessageValidator {
                 event.getGuildId().orElse(null),
                 event.getMessage().getAuthor().map(User::getId).orElse(null))
             .collect(Collectors.toSet())
-            .map(permissionsUserHas -> command.hasPermissions(permissionsUserHas.stream().map(BotRole::getName).collect(Collectors.toSet())));
+            .map(permissionsUserHas -> {
+                if(permissionsUserHas.stream().anyMatch(BotRole::isBannedRole)){
+                    return false;
+                }
+                return command.hasPermissions(permissionsUserHas.stream().map(BotRole::getName).collect(Collectors.toSet()));
+            });
     }
 }
