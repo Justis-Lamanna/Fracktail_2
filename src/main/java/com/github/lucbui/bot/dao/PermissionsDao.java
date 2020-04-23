@@ -24,9 +24,9 @@ public class PermissionsDao {
         return jdbcTemplate.queryForList(
                 "SELECT permission " +
                         "FROM permissions " +
-                        "WHERE guild_snowflake IN (?,'GLOBAL') " +
+                        "WHERE (guild_snowflake = 'GLOBAL' OR guild_snowflake = ?) " +
                         "AND user_snowflake = ?",
-                new Object[]{userId, guildId}, String.class);
+                new Object[]{guildId, userId}, String.class);
     }
 
     public int addGlobalPermission(String userId, String permission) {
@@ -38,11 +38,11 @@ public class PermissionsDao {
     }
 
     public int removeGlobalPermission(String userId, String permission) {
-        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = GLOBAL AND permission = permission;", userId, permission);
+        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = GLOBAL AND permission = ?;", userId, permission);
     }
 
     public int removeLocalPermission(String guildId, String userId, String permission) {
-        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = ? AND permission = permission;", userId, guildId, permission);
+        return jdbcTemplate.update("DELETE FROM permissions WHERE user_snowflake = ? AND guild_snowflake = ? AND permission = ?;", userId, guildId, permission);
     }
 
     public int removeAllPermissionsForGuild(String guildId, String userId) {

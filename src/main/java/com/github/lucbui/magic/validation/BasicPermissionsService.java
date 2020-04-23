@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.validation;
 
+import discord4j.core.object.util.PermissionSet;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -13,7 +14,18 @@ import java.util.*;
  */
 public class BasicPermissionsService implements PermissionsService {
     public static final String BANNED = "banned";
-    public static final BotRole BANNED_ROLE = () -> BANNED;
+    public static final BotRole BANNED_ROLE = new BotRole() {
+        @Override
+        public String getName() {
+            return BANNED;
+        }
+
+        @Override
+        public boolean isBannedRole() {
+            return true;
+        }
+    };
+
     private Map<Snowflake, Set<BotRole>> permissions;
 
     /**
@@ -41,19 +53,21 @@ public class BasicPermissionsService implements PermissionsService {
 
     @Override
     public Mono<Void> addPermission(Snowflake guildId, Snowflake userId, BotRole permission) {
-        permissions.computeIfAbsent(userId, key -> new HashSet<>()).add(permission);
-        return Mono.empty();
+        return Mono.fromRunnable(() -> permissions.computeIfAbsent(userId, key -> new HashSet<>()).add(permission));
     }
 
     @Override
     public Mono<Void> removePermission(Snowflake guildId, Snowflake userId, BotRole permission) {
-        permissions.computeIfAbsent(userId, key -> new HashSet<>()).remove(permission);
-        return Mono.empty();
+        return Mono.fromRunnable(() -> permissions.computeIfAbsent(userId, key -> new HashSet<>()).remove(permission));
     }
 
     @Override
     public Mono<Void> ban(Snowflake guildId, Snowflake userId) {
-        permissions.compute(userId, (snowflake, strings) -> Collections.singleton(BANNED_ROLE));
-        return Mono.empty();
+        return Mono.fromRunnable(() -> permissions.put(userId, new HashSet<>(Collections.singleton(BANNED_ROLE))));
+    }
+
+    @Override
+    public Mono<Void> unban(Snowflake guildId, Snowflake userId) {
+        return Mono.fromRunnable(() -> permissions.put(guildId, new HashSet<>()));
     }
 }

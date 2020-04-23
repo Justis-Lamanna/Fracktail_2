@@ -1,10 +1,9 @@
 package com.github.lucbui.magic.validation;
 
+import discord4j.core.object.util.PermissionSet;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.Set;
 
 /**
  * A service which determines a user's permissions.
@@ -43,4 +42,11 @@ public interface PermissionsService {
      * @param userId The ID of the user
      */
     Mono<Void> ban(Snowflake guildId, Snowflake userId);
+
+    /**
+     * Unban a user from using this bot
+     * @param guildId The ID of the guild (server)
+     * @param userId The ID of the user
+     */
+    Mono<Void> unban(Snowflake guildId, Snowflake userId);
 }

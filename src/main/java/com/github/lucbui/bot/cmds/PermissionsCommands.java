@@ -169,4 +169,34 @@ public class PermissionsCommands {
                 .flatMap(user -> permissionsService.ban(null, user.getId()).thenReturn(user))
                 .flatMap(user -> translateService.getFormattedStringMono("globalban.text", user.getUsername()));
     }
+
+    @Command
+    @Permissions("admin")
+    @Permissions("owner")
+    public Mono<String> unban(MessageCreateEvent evt, @Param(0) String userId, @Param(1) String guildIdOrNull) {
+        Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("unban")));
+        Snowflake guildSnowflake;
+        if(guildIdOrNull == null) {
+            guildSnowflake = evt.getGuildId().orElseThrow(() -> translateService.getStringException("unban.validation.dm"));
+        } else {
+            guildSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(guildIdOrNull)
+                    .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("unban")));
+        }
+
+        return Mono.zip(bot.getGuildById(guildSnowflake), bot.getUserById(userSnowflake))
+                .flatMap(guildUser -> permissionsService.unban(guildUser.getT1().getId(), guildUser.getT2().getId()).thenReturn(guildUser))
+                .flatMap(guildUser -> translateService.getFormattedStringMono("unban.text", guildUser.getT1().getName(), guildUser.getT2().getUsername()));
+    }
+
+    @Command
+    @Permissions("owner")
+    public Mono<String> globalunban(MessageCreateEvent evt, @Param(0) String userId) {
+        Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
+                .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("globalunban")));
+
+        return bot.getUserById(userSnowflake)
+                .flatMap(user -> permissionsService.unban(null, user.getId()).thenReturn(user))
+                .flatMap(user -> translateService.getFormattedStringMono("globalunban.text", user.getUsername()));
+    }
 }
