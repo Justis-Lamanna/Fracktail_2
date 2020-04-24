@@ -67,7 +67,7 @@ public class SpeciesHolidayScheduler {
     }
 
     private Trigger createTriggerForHoliday(Holiday holiday) {
-        String cron = String.format("0 0 %d %d *", holiday.getHolidayDay().getDayOfMonth(), holiday.getHolidayDay().getMonthValue());
+        String cron = String.format("30 0 0 %d %d *", holiday.getHolidayDay().getDayOfMonth(), holiday.getHolidayDay().getMonthValue());
         return new CronTrigger(cron);
     }
 
