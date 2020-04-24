@@ -51,6 +51,15 @@ public class DiscordUtils {
     }
 
     /**
+     * Get mention text from an ID
+     * @param id The ID to use
+     * @return The formatted mention text
+     */
+    public static String getRoleMentionFromId(Snowflake id) {
+        return "<@&" + id.asString() + ">";
+    }
+
+    /**
      * Test if a String can be converted into a Snowflake.
      * @param test The string to test
      * @return True, if the text can be converted safely into a Boolean.
