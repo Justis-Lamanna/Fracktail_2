@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.time.MonthDay;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -52,9 +51,8 @@ public class SpeciesHolidayScheduler {
 
     @PostConstruct
     private void assignHolidays() {
-        for(Holiday holiday : HOLIDAYS) {
-            taskScheduler.schedule(createRunnableForHoliday(holiday), createTriggerForHoliday(holiday));
-        }
+        HOLIDAYS.forEach(holiday ->
+                taskScheduler.schedule(createRunnableForHoliday(holiday), createTriggerForHoliday(holiday)));
     }
 
     private Runnable createRunnableForHoliday(Holiday holiday) {

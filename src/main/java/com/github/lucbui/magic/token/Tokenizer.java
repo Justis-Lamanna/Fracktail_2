@@ -1,5 +1,8 @@
 package com.github.lucbui.magic.token;
 
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import reactor.core.publisher.Mono;
+
 /**
  * An algorithm which tokenizes a message
  */
@@ -17,4 +20,16 @@ public interface Tokenizer {
      * @return True, if the message can be tokenized
      */
     boolean isValid(String message);
+
+    /**
+     * Tokenize the MessageCreateEvent to a Mono of Tokens.
+     * If the Mono is empty, then this tokenizer does not apply.
+     * @param event The event to tokenize
+     * @return A mono containing the tokens
+     */
+    default Mono<Tokens> tokenizeToMono(MessageCreateEvent event) {
+        return Mono.justOrEmpty(event.getMessage().getContent())
+                .filter(this::isValid)
+                .map(this::tokenize);
+    }
 }

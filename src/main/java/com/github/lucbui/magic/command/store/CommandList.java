@@ -1,11 +1,9 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A list of usable bot commands
@@ -19,6 +17,31 @@ public class CommandList {
      */
     public CommandList(CommandStoreMapFactory commandStoreMapFactory) {
         this.commandMap = commandStoreMapFactory.getMap();
+    }
+
+    /**
+     * Create a case-insensitive CommandList
+     * @return A CommandList with case-insensitive commands
+     */
+    public static CommandList caseInsensitive() {
+        return new CommandList(LinkedCaseInsensitiveMap::new);
+    }
+
+    /**
+     * Create a case-sensitive CommandList
+     * @return A CommandList with case-sensitive commands
+     */
+    public static CommandList caseSensitive() {
+        return new CommandList(HashMap::new);
+    }
+
+    /**
+     * Create a conditionally case-sensitive or -insensitive CommandList
+     * @param caseInsensitive True for case-insensitive list
+     * @return A CommandList that's case-insensitive or case-sensitive, depending on input
+     */
+    public static CommandList withCase(boolean caseInsensitive) {
+        return caseInsensitive? caseInsensitive() : caseSensitive();
     }
 
     /**

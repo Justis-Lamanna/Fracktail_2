@@ -2,6 +2,7 @@ package com.github.lucbui.magic.config;
 
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandFieldCallbackFactory;
+import com.github.lucbui.magic.command.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
@@ -19,20 +20,14 @@ import java.util.HashMap;
 public class AutoConfig {
     @Bean
     @ConditionalOnMissingBean
-    public CommandFieldCallbackFactory commandFieldCallbackFactory(CommandList commandList, Tokenizer tokenizer) {
-        return new CommandFieldCallbackFactory(commandList, tokenizer);
+    public CommandList commandList(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive) {
+        return CommandList.withCase(caseInsensitive);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandList commandList(CommandStoreMapFactory commandStoreMapFactory) {
-        return new CommandList(commandStoreMapFactory);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CommandAnnotationProcessor commandAnnotationProcessor(CommandFieldCallbackFactory commandFieldCallbackFactory) {
-        return new CommandAnnotationProcessor(commandFieldCallbackFactory);
+    public CommandAnnotationProcessor commandAnnotationProcessor(CommandList commandList, Tokenizer tokenizer) {
+        return new CommandProcessorBuilder(tokenizer).withCommandList(commandList).build();
     }
 
     @Bean
@@ -46,19 +41,6 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public CreateMessageValidator createMessageValidator() {
         return (event, command) -> Mono.just(true);
-    }
-
-    @Bean
-    @ConditionalOnProperty("discord.commands.caseInsensitive")
-    @ConditionalOnMissingBean
-    public CommandStoreMapFactory commandStoreMapFactory(@Value("${discord.commands.caseInsensitive}") boolean caseInsensitive) {
-        return new CommandStoreSelectableMapFactory(caseInsensitive);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CommandStoreMapFactory commandStoreMapFactory() {
-        return HashMap::new;
     }
 
     @Bean
