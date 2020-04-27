@@ -1,0 +1,12 @@
+calendar:
+  tokenPath: tokens
+
+discord:
+  presence:
+    type: DO_NOT_DISTURB
+    playing: 'in Debug Mode!'
+
+spring:
+  datasource:
+    url: 'jdbc:sqlite::memory:'
+    initialization-mode: always

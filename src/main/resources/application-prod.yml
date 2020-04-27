@@ -1,3 +1,8 @@
+spring:
+  datasource:
+    url: 'jdbc:sqlite:/home/pi/fracktail/sql/fracktail.db'
+    initialization-mode: always
+
 logging:
   level:
     com.github.lucbui: INFO
@@ -8,9 +13,5 @@ calendar:
 discord:
   presence:
     type: DO_NOT_DISTURB
-    playing: '   '
-
-spring:
-  datasource:
-    url: 'jdbc:sqlite:/home/pi/fracktail/sql/fracktail.db'
+    playing: ''
 

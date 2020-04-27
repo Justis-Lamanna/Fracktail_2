@@ -1,21 +1,16 @@
+spring:
+  profiles:
+    active: local
+
 logging:
   level:
     com.github.lucbui: DEBUG
 
 calendar:
   id: hlclne2tbhr27ijqbkadigkjqk@group.calendar.google.com
-  tokenPath: tokens
 
 discord:
-  presence:
-    type: DO_NOT_DISTURB
-    playing: 'in Debug Mode!'
   commands:
     prefix: '!'
     caseInsensitive: true
     timeout: '5s'
-
-spring:
-  datasource:
-    url: 'jdbc:sqlite::memory:'
-    initialization-mode: always

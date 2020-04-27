@@ -3,7 +3,7 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <property name="HOME_LOG" value="/home/pi/fracktail/logs/app.log"/>
 
-    <springProfile name="default">
+    <springProfile name="local">
         <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
         <root level="INFO">
