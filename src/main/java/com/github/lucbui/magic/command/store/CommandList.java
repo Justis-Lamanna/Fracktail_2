@@ -4,6 +4,7 @@ import com.github.lucbui.magic.command.func.BotCommand;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * A list of usable bot commands
@@ -15,8 +16,8 @@ public class CommandList {
      * Create a CommandList
      * @param commandStoreMapFactory A factory which is used to create the internal map
      */
-    public CommandList(CommandStoreMapFactory commandStoreMapFactory) {
-        this.commandMap = commandStoreMapFactory.getMap();
+    public CommandList(Supplier<Map<String, BotCommand>> commandStoreMapFactory) {
+        this.commandMap = commandStoreMapFactory.get();
     }
 
     /**

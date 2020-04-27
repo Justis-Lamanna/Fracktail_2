@@ -1,6 +1,9 @@
 package com.github.lucbui.bot.config;
 
 import com.github.lucbui.magic.command.store.CommandHandler;
+import com.github.lucbui.magic.command.store.CommandHandlerBuilder;
+import com.github.lucbui.magic.command.store.CommandList;
+import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.validation.BasicPermissionsService;
 import com.github.lucbui.magic.validation.PermissionsService;
 import com.github.lucbui.magic.validation.validators.*;
@@ -30,24 +33,21 @@ import java.util.Set;
 @Configuration
 public class BotConfig {
     @Bean
-    public UserPermissionValidator userPermissionValidator(PermissionsService permissionsService) {
-        return new UserPermissionValidator(permissionsService);
-    }
-
-    @Bean
-    public CreateMessageValidator createMessageValidator(@Value("${discord.commands.timeout:30s}") Duration timeout,
-                                                         UserPermissionValidator userPermissionValidator) {
-        return new ChainCreateMessageValidator(
-                new NotBotUserMessageValidator(),
-                new CooldownCommandValidator(timeout),
-                userPermissionValidator);
+    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList,
+                                         @Value("${discord.commands.timeout:30s}") Duration timeout,
+                                         UserPermissionValidator userPermissionValidator) {
+        return new CommandHandlerBuilder(tokenizer, commandList)
+                .withValidator(new NotBotUserMessageValidator())
+                .withValidator(new CooldownCommandValidator(timeout))
+                .withValidator(userPermissionValidator)
+                .build();
     }
 
     @Bean
     public DiscordClient bot(CommandHandler commandHandler,
                              @Value("${discord.token}") String token,
-                             @Value("${discord.presence.type}") Status status,
-                             @Value("${discord.presence.playing}") String playing) {
+                             @Value("${discord.presence.type:ONLINE}") Status status,
+                             @Value("${discord.presence.playing:   }") String playing) {
         DiscordClient bot = new DiscordClientBuilder(token)
                 .setInitialPresence(getPresence(status, playing))
                 .build();

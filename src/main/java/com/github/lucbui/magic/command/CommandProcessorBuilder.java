@@ -16,8 +16,9 @@ public class CommandProcessorBuilder {
     private List<BotCommandPostProcessor> botCommandPostProcessors = new ArrayList<>();
     private List<ParameterExtractor<MessageCreateEvent>> parameterExtractors = new ArrayList<>();
 
-    public CommandProcessorBuilder(Tokenizer tokenizer) {
+    public CommandProcessorBuilder(Tokenizer tokenizer, CommandList commandList) {
         this.tokenizer = tokenizer;
+        this.commandList = commandList;
     }
 
     public CommandProcessorBuilder withCommandList(CommandList commandList) {
@@ -35,24 +36,21 @@ public class CommandProcessorBuilder {
         return this;
     }
 
+    public CommandProcessorBuilder withDefaultParameterExtractors() {
+        this.parameterExtractors.add(new MessageCreateEventParameterExtractor());
+        this.parameterExtractors.add(new MessageAnnotationParameterExtractor(tokenizer));
+        this.parameterExtractors.add(new ParamsAnnotationParameterExtractor(tokenizer));
+        this.parameterExtractors.add(new ParamAnnotationParameterExtractor(tokenizer));
+        this.parameterExtractors.add(new UserParameterExtractor());
+        return this;
+    }
+
     public CommandProcessorBuilder withParameterExtractor(ParameterExtractor<MessageCreateEvent> parameterExtractor) {
         this.parameterExtractors.add(parameterExtractor);
         return this;
     }
 
-    public CommandProcessorBuilder withParameterExtractor(Function<CommandProcessorBuilder, ParameterExtractor<MessageCreateEvent>> parameterExtractorFunc) {
-        this.parameterExtractors.add(parameterExtractorFunc.apply(this));
-        return this;
-    }
-
     public CommandAnnotationProcessor build() {
-        if(this.parameterExtractors.isEmpty()) {
-            this.parameterExtractors.add(new MessageCreateEventParameterExtractor());
-            this.parameterExtractors.add(new MessageAnnotationParameterExtractor(tokenizer));
-            this.parameterExtractors.add(new ParamsAnnotationParameterExtractor(tokenizer));
-            this.parameterExtractors.add(new ParamAnnotationParameterExtractor(tokenizer));
-            this.parameterExtractors.add(new UserParameterExtractor());
-        }
         return new CommandAnnotationProcessor(new CommandFieldCallbackFactory(commandList, tokenizer, botCommandPostProcessors, parameterExtractors));
     }
 }
