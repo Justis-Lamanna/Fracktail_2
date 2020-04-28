@@ -2,12 +2,15 @@ package com.github.lucbui.magic.config;
 
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandProcessorBuilder;
+import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.func.postprocessor.TimeoutPostProcessor;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.validation.PermissionsService;
+import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import com.github.lucbui.magic.validation.validators.LocalCooldownCommandValidator;
+import com.github.lucbui.magic.validation.validators.NotBotUserMessageValidator;
 import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -15,8 +18,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import java.time.Duration;
+import java.util.List;
 
 @Configuration
 public class AutoConfig {
@@ -36,23 +41,33 @@ public class AutoConfig {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean({Tokenizer.class, CommandList.class})
-    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandList commandList) {
+    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandList commandList, List<BotCommandPostProcessor> processors) {
         return new CommandProcessorBuilder(tokenizer, commandList)
                 .withDefaultParameterExtractors()
+                .withBotCommandPostProcessors(processors)
                 .build();
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean({Tokenizer.class, CommandList.class})
-    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList) {
-        return new CommandHandlerBuilder(tokenizer, commandList).build();
+    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList, List<CreateMessageValidator> validators) {
+        return new CommandHandlerBuilder(tokenizer, commandList)
+                .withValidators(validators)
+                .build();
     }
 
     @Bean
     @ConditionalOnBean(PermissionsService.class)
+    @Order(-50)
     public UserPermissionValidator userPermissionValidator(PermissionsService permissionsService) {
         return new UserPermissionValidator(permissionsService);
+    }
+
+    @Bean
+    @Order(-100)
+    public NotBotUserMessageValidator notBotUserMessageValidator() {
+        return new NotBotUserMessageValidator();
     }
 
     /*
@@ -67,6 +82,7 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+    @Order(-99)
     public LocalCooldownCommandValidator cooldownCommandValidator(CommandTimeoutStore commandTimeoutStore) {
         return new LocalCooldownCommandValidator(commandTimeoutStore);
     }

@@ -36,6 +36,11 @@ public class CommandHandlerBuilder {
         return this;
     }
 
+    public CommandHandlerBuilder withValidators(List<CreateMessageValidator> validators) {
+        this.validators.addAll(validators);
+        return this;
+    }
+
     public CommandHandler build() {
         CreateMessageValidator validator;
         if(validators.isEmpty()) {

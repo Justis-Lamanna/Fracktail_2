@@ -36,6 +36,11 @@ public class CommandProcessorBuilder {
         return this;
     }
 
+    public CommandProcessorBuilder withBotCommandPostProcessors(List<BotCommandPostProcessor> botCommandPostProcessors) {
+        this.botCommandPostProcessors.addAll(botCommandPostProcessors);
+        return this;
+    }
+
     public CommandProcessorBuilder withDefaultParameterExtractors() {
         this.parameterExtractors.add(new MessageCreateEventParameterExtractor());
         this.parameterExtractors.add(new MessageAnnotationParameterExtractor(tokenizer));
