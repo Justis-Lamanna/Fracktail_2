@@ -80,7 +80,7 @@ public class CommandFieldCallbackFactory {
          * @return The created command
          */
         protected BotCommand createBotCommand(Method method) {
-            BotCommand botCommand = new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method));
+            BotCommand botCommand = new BotCommand(getNames(method), getHelpText(method), getBehavior(method));
             botCommandPostProcessors.forEach(bcpp -> bcpp.process(method, botCommand));
             return botCommand;
         }
@@ -144,22 +144,6 @@ public class CommandFieldCallbackFactory {
                             throw new BotException("Error invoking reflected method", e);
                         }
                     });
-        }
-
-        /**
-         * Get the permissions of a command from the method
-         *
-         * @param method The method to get the permissions of
-         * @return The permissions the command requires
-         */
-        protected PermissionsPredicate getPermissions(Method method) {
-            if (method.isAnnotationPresent(Permissions.class)) {
-                return Arrays.stream(method.getDeclaredAnnotationsByType(Permissions.class))
-                        .map(Permissions::value)
-                        .map(permissions -> Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet())))
-                        .collect(Collectors.collectingAndThen(Collectors.toList(), ComplexPermissionsPredicate::new));
-            }
-            return PermissionsPredicate.allPermitted();
         }
 
         private List<Function<MessageCreateEvent, Mono<Object>>> getExtractorsFor(Method method) {

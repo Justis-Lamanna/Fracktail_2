@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.validation.validators;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.command.store.CommandPermissionsStore;
 import com.github.lucbui.magic.validation.BotRole;
 import com.github.lucbui.magic.validation.PermissionsService;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -15,13 +16,16 @@ import java.util.stream.Collectors;
  */
 public class UserPermissionValidator implements CreateMessageValidator {
     private final PermissionsService permissionsService;
+    private final CommandPermissionsStore commandPermissionsStore;
 
     /**
      * Initialize a UserPermissionValidator
      * @param permissionsService The PermissionsService to use when validating.
+     * @param commandPermissionsStore
      */
-    public UserPermissionValidator(PermissionsService permissionsService){
+    public UserPermissionValidator(PermissionsService permissionsService, CommandPermissionsStore commandPermissionsStore){
         this.permissionsService = permissionsService;
+        this.commandPermissionsStore = commandPermissionsStore;
     }
 
     @Override
@@ -34,7 +38,8 @@ public class UserPermissionValidator implements CreateMessageValidator {
                 if(permissionsUserHas.stream().anyMatch(BotRole::isBannedRole)){
                     return false;
                 }
-                return command.hasPermissions(permissionsUserHas.stream().map(BotRole::getName).collect(Collectors.toSet()));
+                return commandPermissionsStore.hasPermissionsForCommand(command,
+                        permissionsUserHas.stream().map(BotRole::getName).collect(Collectors.toSet()));
             });
     }
 }

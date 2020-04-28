@@ -24,8 +24,10 @@ public class TimeoutPostProcessor implements BotCommandPostProcessor {
         if(method.isAnnotationPresent(Timeout.class)) {
             Timeout timeout = method.getAnnotation(Timeout.class);
             Duration timeoutDuration = Duration.of(timeout.value(), timeout.unit());
-            commandTimeoutStore.setTimeoutForCommand(botCommand, timeoutDuration);
-            LOGGER.info("Set timeout for {} to {}", botCommand.getPrimaryName(), timeoutDuration);
+            if(!timeoutDuration.isZero()) {
+                commandTimeoutStore.setTimeoutForCommand(botCommand, timeoutDuration);
+                LOGGER.debug("Set timeout for {} to {}", botCommand.getPrimaryName(), timeoutDuration);
+            }
         }
     }
 }

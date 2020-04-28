@@ -12,6 +12,8 @@ calendar:
 discord:
   timeout:
     enabled: true
+  permissions:
+    enabled: true
   commands:
     prefix: '!'
     caseInsensitive: true

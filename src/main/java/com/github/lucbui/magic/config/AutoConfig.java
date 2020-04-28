@@ -3,6 +3,8 @@ package com.github.lucbui.magic.config;
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
+import com.github.lucbui.magic.command.func.PermissionsPredicate;
+import com.github.lucbui.magic.command.func.postprocessor.PermissionsPostProcessor;
 import com.github.lucbui.magic.command.func.postprocessor.TimeoutPostProcessor;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
@@ -25,7 +27,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 public class AutoConfig {
@@ -69,7 +73,6 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean({Tokenizer.class, CommandList.class})
     public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandList commandList, List<BotCommandPostProcessor> processors) {
         return new CommandProcessorBuilder(tokenizer, commandList)
                 .withDefaultParameterExtractors()
@@ -79,7 +82,6 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean({Tokenizer.class, CommandList.class})
     public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList, List<CreateMessageValidator> validators) {
         return new CommandHandlerBuilder(tokenizer, commandList)
                 .withValidators(validators)
@@ -87,16 +89,42 @@ public class AutoConfig {
     }
 
     @Bean
-    @ConditionalOnBean(PermissionsService.class)
-    @Order(-50)
-    public UserPermissionValidator userPermissionValidator(PermissionsService permissionsService) {
-        return new UserPermissionValidator(permissionsService);
+    @Order(-100)
+    @ConditionalOnMissingBean
+    public NotBotUserMessageValidator notBotUserMessageValidator() {
+        return new NotBotUserMessageValidator();
+    }
+
+    /*
+    Permissions-related functionality. Can be disabled via discord.permissions.enabled:false
+     */
+
+    @Bean
+    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
+    @ConditionalOnMissingBean
+    public CommandPermissionsStore commandPermissionsStore(@Value("${discord.permissions.global:}") String[] defaultPermissions) {
+        if(defaultPermissions.length == 0) {
+            return new DefaultCommandPermissionsStore(PermissionsPredicate.allPermitted());
+        } else {
+            return new DefaultCommandPermissionsStore(PermissionsPredicate.anyOf(defaultPermissions));
+        }
     }
 
     @Bean
-    @Order(-100)
-    public NotBotUserMessageValidator notBotUserMessageValidator() {
-        return new NotBotUserMessageValidator();
+    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
+    @ConditionalOnBean({PermissionsService.class, CommandPermissionsStore.class})
+    @ConditionalOnMissingBean
+    @Order(-50)
+    public UserPermissionValidator userPermissionValidator(PermissionsService permissionsService, CommandPermissionsStore commandPermissionsStore) {
+        return new UserPermissionValidator(permissionsService, commandPermissionsStore);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
+    @ConditionalOnBean(CommandPermissionsStore.class)
+    @ConditionalOnMissingBean
+    public PermissionsPostProcessor permissionsPostProcessor(CommandPermissionsStore commandPermissionsStore) {
+        return new PermissionsPostProcessor(commandPermissionsStore);
     }
 
     /*
@@ -105,12 +133,14 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+    @ConditionalOnMissingBean
     public CommandTimeoutStore commandTimeoutStore(@Value("${discord.timeout.global:0s}") Duration globalTimeout) {
         return new DefaultCommandTimeoutStore(globalTimeout);
     }
 
     @Bean
     @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+    @ConditionalOnMissingBean
     @Order(-99)
     public LocalCooldownCommandValidator cooldownCommandValidator(CommandTimeoutStore commandTimeoutStore) {
         return new LocalCooldownCommandValidator(commandTimeoutStore);
@@ -119,6 +149,7 @@ public class AutoConfig {
     @Bean
     @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
     @ConditionalOnBean(CommandTimeoutStore.class)
+    @ConditionalOnMissingBean
     public TimeoutPostProcessor timeoutPostProcessor(CommandTimeoutStore store) {
         return new TimeoutPostProcessor(store);
     }
