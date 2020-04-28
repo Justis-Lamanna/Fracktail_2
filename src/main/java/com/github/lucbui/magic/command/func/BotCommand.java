@@ -12,7 +12,6 @@ public class BotCommand {
     private String helpText;
     private BotMessageBehavior behavior;
     private PermissionsPredicate permissionsPredicate;
-    private Duration timeout;
 
     /**
      * Create a Bot command
@@ -20,14 +19,12 @@ public class BotCommand {
      * @param helpText The command's help text
      * @param behavior The command's behavior
      * @param permissionsPredicate The command's permission tester, if any
-     * @param timeout The timeout of the command, if any
      */
-    public BotCommand(String[] names, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate, Duration timeout) {
+    public BotCommand(String[] names, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate) {
         this.names = names;
         this.helpText = helpText;
         this.behavior = behavior;
         this.permissionsPredicate = permissionsPredicate;
-        this.timeout = timeout;
     }
 
     /**
@@ -36,14 +33,12 @@ public class BotCommand {
      * @param helpText The command's help text
      * @param behavior The command's behavior
      * @param permissionsPredicate The command's permissions, if any
-     * @param timeout The timeout of the command, if any
      */
-    public BotCommand(String name, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate, Duration timeout) {
+    public BotCommand(String name, String helpText, BotMessageBehavior behavior, PermissionsPredicate permissionsPredicate) {
         this.names = new String[]{name};
         this.helpText = helpText;
         this.behavior = behavior;
         this.permissionsPredicate = permissionsPredicate;
-        this.timeout = timeout;
     }
 
     /**
@@ -57,7 +52,6 @@ public class BotCommand {
         this.helpText = helpText;
         this.behavior = behavior;
         this.permissionsPredicate = (perms) -> true;
-        this.timeout = null;
     }
 
     /**
@@ -66,6 +60,14 @@ public class BotCommand {
      */
     public String[] getNames() {
         return names;
+    }
+
+    /**
+     * Get the primary name of the command
+     * @return The names of the command
+     */
+    public String getPrimaryName() {
+        return names[0];
     }
 
     /**
@@ -91,13 +93,5 @@ public class BotCommand {
      */
     public boolean hasPermissions(Set<String> userPermissions) {
         return permissionsPredicate.validatePermissions(userPermissions);
-    }
-
-    /**
-     * Get the timeout of the command
-     * @return The timeout of the command
-     */
-    public Duration getTimeout() {
-        return timeout;
     }
 }

@@ -10,7 +10,8 @@ calendar:
   id: hlclne2tbhr27ijqbkadigkjqk@group.calendar.google.com
 
 discord:
+  timeout:
+    enabled: true
   commands:
     prefix: '!'
     caseInsensitive: true
-    timeout: '5s'

@@ -80,7 +80,7 @@ public class CommandFieldCallbackFactory {
          * @return The created command
          */
         protected BotCommand createBotCommand(Method method) {
-            BotCommand botCommand = new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method), getTimeout(method));
+            BotCommand botCommand = new BotCommand(getNames(method), getHelpText(method), getBehavior(method), getPermissions(method));
             botCommandPostProcessors.forEach(bcpp -> bcpp.process(method, botCommand));
             return botCommand;
         }
@@ -160,22 +160,6 @@ public class CommandFieldCallbackFactory {
                         .collect(Collectors.collectingAndThen(Collectors.toList(), ComplexPermissionsPredicate::new));
             }
             return PermissionsPredicate.allPermitted();
-        }
-
-        /**
-         * Get the timeout of a command from the method
-         *
-         * @param method The method to get the timeout from
-         * @return The timeout of the command
-         */
-        protected Duration getTimeout(Method method) {
-            if (method.isAnnotationPresent(Timeout.class)) {
-                Timeout timeout = method.getAnnotation(Timeout.class);
-                if (timeout.value() > 0) {
-                    return Duration.of(timeout.value(), timeout.unit());
-                }
-            }
-            return null;
         }
 
         private List<Function<MessageCreateEvent, Mono<Object>>> getExtractorsFor(Method method) {
