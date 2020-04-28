@@ -12,6 +12,10 @@ import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import com.github.lucbui.magic.validation.validators.LocalCooldownCommandValidator;
 import com.github.lucbui.magic.validation.validators.NotBotUserMessageValidator;
 import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
+import discord4j.core.object.presence.Activity;
+import discord4j.core.object.presence.Presence;
+import discord4j.core.object.presence.Status;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -25,6 +29,31 @@ import java.util.List;
 
 @Configuration
 public class AutoConfig {
+    @Bean
+    @ConditionalOnMissingBean
+    public Presence presence(@Value("${discord.presence.type:ONLINE}") Status status,
+                             @Value("${discord.presence.playing:}") String playing,
+                             @Value("${discord.presence.watching:}") String watching,
+                             @Value("${discord.presence.listening:}") String listening) {
+        Activity activity;
+        if(StringUtils.isNotEmpty(playing)) {
+            activity = Activity.playing(playing);
+        } else if(StringUtils.isNotEmpty(watching)) {
+            activity = Activity.watching(watching);
+        } else if(StringUtils.isNotBlank(listening)) {
+            activity = Activity.listening(listening);
+        } else {
+            activity = null;
+        }
+
+        switch (status) {
+            case ONLINE: return activity == null ? Presence.online() : Presence.online(activity);
+            case IDLE: return activity == null ? Presence.idle() : Presence.idle(activity);
+            case DO_NOT_DISTURB: return activity == null ? Presence.doNotDisturb() : Presence.doNotDisturb(activity);
+            default: return Presence.invisible();
+        }
+    }
+
     @Bean
     @ConditionalOnMissingBean
     public CommandList commandList(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive) {

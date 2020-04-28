@@ -46,8 +46,8 @@ public class LocalCooldownCommandValidator extends BasicMessageValidator {
                 .get(botCommand);
     }
 
-    protected Instant setLastUseInstant(Snowflake guildId, BotCommand botCommand, Instant timeOfUse) {
-        return lastUserCommands.computeIfAbsent(guildId, id -> Collections.synchronizedMap(new HashMap<>()))
+    protected void setLastUseInstant(Snowflake guildId, BotCommand botCommand, Instant timeOfUse) {
+        lastUserCommands.computeIfAbsent(guildId, id -> Collections.synchronizedMap(new HashMap<>()))
                 .put(botCommand, timeOfUse);
     }
 }
