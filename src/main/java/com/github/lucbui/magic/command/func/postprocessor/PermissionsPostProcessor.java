@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.func.postprocessor;
 
 import com.github.lucbui.magic.annotation.Permissions;
+import com.github.lucbui.magic.annotation.PermissionsGroup;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.func.ComplexPermissionsPredicate;
@@ -25,7 +26,7 @@ public class PermissionsPostProcessor implements BotCommandPostProcessor {
 
     @Override
     public void process(Method method, BotCommand botCommand) {
-        if(method.isAnnotationPresent(Permissions.class)) {
+        if(method.isAnnotationPresent(Permissions.class) || method.isAnnotationPresent(PermissionsGroup.class)) {
             ComplexPermissionsPredicate predicate = Arrays.stream(method.getDeclaredAnnotationsByType(Permissions.class))
                 .map(Permissions::value)
                 .map(permissions -> Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet())))
