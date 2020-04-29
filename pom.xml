@@ -14,6 +14,12 @@
 	<name>fracktail</name>
 	<description>Code for Fracktail: A Discord Bot</description>
 
+	<properties>
+		<!--For safety, these are provided through command line, rather than here where y'all can see it.-->
+		<user/>
+		<host/>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
