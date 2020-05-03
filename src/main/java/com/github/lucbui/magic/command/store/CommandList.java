@@ -1,27 +1,24 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
-import com.github.lucbui.magic.command.func.BotMessageBehavior;
-import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokens;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.springframework.util.LinkedCaseInsensitiveMap;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * A list of usable bot commands
  */
 public class CommandList {
-    private final Map<String, BotCommand> commandMap;
+    private final Map<String, List<BotCommand>> commandMap;
 
     /**
      * Create a CommandList
      * @param commandStoreMapFactory A factory which is used to create the internal map
      */
-    public CommandList(Supplier<Map<String, BotCommand>> commandStoreMapFactory) {
+    public CommandList(Supplier<Map<String, List<BotCommand>>> commandStoreMapFactory) {
         this.commandMap = commandStoreMapFactory.get();
     }
 
@@ -61,38 +58,32 @@ public class CommandList {
     }
 
     /**
-     * Get a command by name
-     * @param name The name of the command
-     * @return The corresponding command, or null if none.
-     * @deprecated This won't work anymore soon.
-     */
-    @Deprecated
-    public BotCommand getCommand(String name) {
-        return commandMap.get(name);
-    }
-
-    /**
-     * Get a command by name
+     * Get a command by token
      * @param tokens The tokens for this command
      * @return The corresponding command, or null if none.
      */
-    public BotCommand getCommand(Tokens tokens) {
-        return commandMap.get(tokens.getCommand());
+    public Optional<BotCommand> getCommand(Tokens tokens) {
+        return commandMap.get(tokens.getCommand())
+                .stream()
+                .filter(bc -> bc.testTokens(tokens))
+                .findFirst();
     }
 
-    /**
-     * Get all commands on the list
-     * @return All commands, in no particular order
-     */
-    public List<BotCommand> getAllCommands() {
-        return new ArrayList<>(commandMap.values());
+    public boolean isCommand(String commandName) {
+        return commandMap.containsKey(commandName);
+    }
+
+    public List<BotCommand> getCommandsForName(String commandName) {
+        return commandMap.get(commandName);
     }
 
     private void addCommandToMap(String name, BotCommand command) {
-        if(commandMap.containsKey(name)) {
-            throw new BotException("I can't program");
-        } else {
-            commandMap.put(name, command);
-        }
+        commandMap.computeIfAbsent(name, n -> new ArrayList<>()).add(command);
+    }
+
+    public List<BotCommand> getAllCommands() {
+        return commandMap.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 }

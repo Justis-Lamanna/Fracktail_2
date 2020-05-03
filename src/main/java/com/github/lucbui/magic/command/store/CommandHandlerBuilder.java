@@ -2,23 +2,26 @@ package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.token.Tokenizer;
+import com.github.lucbui.magic.token.Tokens;
 import com.github.lucbui.magic.validation.validators.ChainCreateMessageValidator;
 import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class CommandHandlerBuilder {
     private Tokenizer tokenizer;
     private CommandList commandList;
     private List<CreateMessageValidator> validators;
+    private Function<Tokens, Mono<BotCommand>> noCommandFoundHandler;
 
     public CommandHandlerBuilder(Tokenizer tokenizer, CommandList commandList) {
         this.tokenizer = tokenizer;
         this.commandList = commandList;
         this.validators = new ArrayList<>();
+        this.noCommandFoundHandler = tokens -> Mono.empty();
     }
 
     public CommandHandlerBuilder withTokenizer(Tokenizer tokenizer) {
@@ -41,6 +44,11 @@ public class CommandHandlerBuilder {
         return this;
     }
 
+    public CommandHandlerBuilder withNoCommandFoundHandler(Function<Tokens, Mono<BotCommand>> noCommandFoundHandler) {
+        this.noCommandFoundHandler = noCommandFoundHandler;
+        return this;
+    }
+
     public CommandHandler build() {
         CreateMessageValidator validator;
         if(validators.isEmpty()) {
@@ -50,6 +58,6 @@ public class CommandHandlerBuilder {
         } else {
             validator = new ChainCreateMessageValidator(validators);
         }
-        return new DefaultCommandHandler(tokenizer, validator, commandList);
+        return new DefaultCommandHandler(tokenizer, validator, commandList, noCommandFoundHandler);
     }
 }

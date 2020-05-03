@@ -11,15 +11,12 @@ import com.github.lucbui.magic.util.DiscordUtils;
 import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Commands
@@ -43,19 +40,19 @@ public class BotUseCommands {
     @Command
     public Mono<String> help(MessageCreateEvent evt, @Param(0) String cmd) {
         String cmdToSearch = (cmd == null) ? "help" : cmd;
-        BotCommand command = commandList.getCommand(cmdToSearch);
-        return Mono.justOrEmpty(command)
-                .filterWhen(c -> userPermissionValidator.validate(evt, c))
-                .map(Optional::of).defaultIfEmpty(Optional.empty())
-                .map(c -> c.map(BotCommand::getHelpText).map(translateService::getString)
-                            .orElse(translateService.getFormattedString("help.validation.unknownCommand", cmd)));
+        return Flux.fromIterable(commandList.getCommandsForName(cmdToSearch))
+                .filterWhen(bc -> userPermissionValidator.validate(evt, bc))
+                .collectList()
+                .flatMap(commands -> commands.isEmpty() ?
+                        translateService.getFormattedStringMono("help.validation.unknownCommand", cmd) :
+                        translateService.getStringMono(commands.get(0).getName() + ".help"));
     }
 
     @Command
     public Mono<String> commands(MessageCreateEvent evt) {
         return Flux.fromIterable(commandList.getAllCommands())
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
-                .flatMap(c -> Mono.just(c.getName()))
+                .map(BotCommand::getName)
                 .distinct()
                 .sort()
                 .map(c -> "!" + c)
