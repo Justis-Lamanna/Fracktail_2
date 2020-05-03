@@ -17,6 +17,7 @@ public class ParametersPostProcessor implements BotCommandPostProcessor {
             CommandParams paramDefinition = method.getAnnotation(CommandParams.class);
             int numberOfParams = paramDefinition.value();
             ParamsComparison comparison = paramDefinition.comparison();
+            botCommand.setTokensPredicate(getTokensPredicate(numberOfParams, comparison));
         }
     }
 

@@ -48,7 +48,7 @@ public class DefaultCommandHandler implements CommandHandler {
         }
 
         return Mono.justOrEmpty(getTokens(event))
-                .flatMap(tokens -> Mono.justOrEmpty(commandList.getCommand(tokens.getCommand())))
+                .flatMap(tokens -> Mono.justOrEmpty(commandList.getCommand(tokens)))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getName(),

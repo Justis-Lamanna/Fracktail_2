@@ -12,6 +12,7 @@ public class BotCommand {
     private String[] aliases;
     private String helpText;
     private BotMessageBehavior behavior;
+    private Predicate<Tokens> tokensPredicate;
 
     /**
      * Create a Bot command
@@ -22,6 +23,7 @@ public class BotCommand {
         this.name = name;
         this.behavior = behavior;
         this.aliases = new String[0];
+        this.tokensPredicate = null;
     }
 
     public String getName() {
@@ -54,5 +56,13 @@ public class BotCommand {
 
     public void setBehavior(BotMessageBehavior behavior) {
         this.behavior = behavior;
+    }
+
+    public void setTokensPredicate(Predicate<Tokens> tokensPredicate) {
+        this.tokensPredicate = tokensPredicate;
+    }
+
+    public boolean testTokens(Tokens tokens) {
+        return tokensPredicate == null || tokensPredicate.test(tokens);
     }
 }
