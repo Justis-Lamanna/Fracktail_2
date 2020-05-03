@@ -1,66 +1,58 @@
 package com.github.lucbui.magic.command.func;
 
+import com.github.lucbui.magic.token.Tokens;
+
+import java.util.function.Predicate;
+
 /**
  * Encapsulates a bot command
  */
 public class BotCommand {
-    private String[] names;
+    private String name;
+    private String[] aliases;
     private String helpText;
     private BotMessageBehavior behavior;
 
     /**
      * Create a Bot command
-     * @param names The names of the command
-     * @param helpText The command's help text
+     * @param name The primary of the command
      * @param behavior The command's behavior
      */
-    public BotCommand(String[] names, String helpText, BotMessageBehavior behavior) {
-        this.names = names;
-        this.helpText = helpText;
+    public BotCommand(String name, BotMessageBehavior behavior) {
+        this.name = name;
         this.behavior = behavior;
+        this.aliases = new String[0];
     }
 
-    /**
-     * Create a Bot command
-     * @param name The name of the command
-     * @param helpText The command's help text
-     * @param behavior The command's behavior
-     */
-    public BotCommand(String name, String helpText, BotMessageBehavior behavior) {
-        this.names = new String[]{name};
-        this.helpText = helpText;
-        this.behavior = behavior;
+    public String getName() {
+        return name;
     }
 
-    /**
-     * Get the names of the command
-     * @return The names of the command
-     */
-    public String[] getNames() {
-        return names;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    /**
-     * Get the primary name of the command
-     * @return The names of the command
-     */
-    public String getPrimaryName() {
-        return names[0];
+    public String[] getAliases() {
+        return aliases;
     }
 
-    /**
-     * Get the help text of the command
-     * @return The help text of the command
-     */
+    public void setAliases(String[] aliases) {
+        this.aliases = aliases;
+    }
+
     public String getHelpText() {
         return helpText;
     }
 
-    /**
-     * Get the behavior of the command
-     * @return The behavior of the command
-     */
+    public void setHelpText(String helpText) {
+        this.helpText = helpText;
+    }
+
     public BotMessageBehavior getBehavior() {
         return behavior;
+    }
+
+    public void setBehavior(BotMessageBehavior behavior) {
+        this.behavior = behavior;
     }
 }

@@ -12,11 +12,17 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface Command {
     /**
-     * One or more command names.
-     * If no names are specified, the name of the method is used instead.
-     * @return A list of names for this command.
+     * The name of the command.
+     * If none are specified, the method name is used instead.
+     * @return The command primary name.
      */
-    String[] value() default {};
+    String value() default "";
+
+    /**
+     * One or more command aliases.
+     * @return A list of aliases for this command.
+     */
+    String[] aliases() default {};
 
     /**
      * Help text

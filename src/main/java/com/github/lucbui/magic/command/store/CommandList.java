@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.token.Tokens;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.util.*;
@@ -50,17 +51,9 @@ public class CommandList {
      * @param command The command to add
      */
     public void addCommand(BotCommand command) {
-        Arrays.stream(command.getNames())
-                .forEach(name -> commandMap.put(name, command));
-    }
-
-    /**
-     * Remove commands by name
-     * @param names The names of the commands to delete.
-     */
-    public void removeCommand(String... names) {
-        Arrays.stream(names)
-                .forEach(commandMap::remove);
+        addCommandToMap(command.getName(), command);
+        Arrays.stream(command.getAliases())
+                .forEach(name -> addCommandToMap(name, command));
     }
 
     /**
@@ -78,5 +71,9 @@ public class CommandList {
      */
     public List<BotCommand> getAllCommands() {
         return new ArrayList<>(commandMap.values());
+    }
+
+    private void addCommandToMap(String name, BotCommand command) {
+        commandMap.put(name, command);
     }
 }

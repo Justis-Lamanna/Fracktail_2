@@ -55,7 +55,7 @@ public class BotUseCommands {
     public Mono<String> commands(MessageCreateEvent evt) {
         return Flux.fromIterable(commandList.getAllCommands())
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
-                .flatMap(c -> Mono.just(c.getNames()[0]))
+                .flatMap(c -> Mono.just(c.getName()))
                 .distinct()
                 .sort()
                 .map(c -> "!" + c)

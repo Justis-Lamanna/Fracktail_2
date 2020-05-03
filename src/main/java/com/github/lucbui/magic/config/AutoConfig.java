@@ -4,8 +4,7 @@ import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.func.PermissionsPredicate;
-import com.github.lucbui.magic.command.func.postprocessor.PermissionsPostProcessor;
-import com.github.lucbui.magic.command.func.postprocessor.TimeoutPostProcessor;
+import com.github.lucbui.magic.command.func.postprocessor.*;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
@@ -93,6 +92,24 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public NotBotUserMessageValidator notBotUserMessageValidator() {
         return new NotBotUserMessageValidator();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public AliasesPostProcessor aliasesPostProcessor() {
+        return new AliasesPostProcessor();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public HelpPostProcessor helpPostProcessor() {
+        return new HelpPostProcessor();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ParametersPostProcessor parametersPostProcessor() {
+        return new ParametersPostProcessor();
     }
 
     /*

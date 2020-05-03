@@ -51,7 +51,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 .flatMap(tokens -> Mono.justOrEmpty(commandList.getCommand(tokens.getCommand())))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
-                        cmd.getNames()[0],
+                        cmd.getName(),
                         event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
                 .flatMap(cmd -> cmd.getBehavior().execute(event))
                 .onErrorResume(CommandValidationException.class, ex -> DiscordUtils.respond(event.getMessage(), ex.getMessage()))

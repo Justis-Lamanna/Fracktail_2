@@ -21,6 +21,7 @@ import java.lang.reflect.Parameter;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -80,7 +81,7 @@ public class CommandFieldCallbackFactory {
          * @return The created command
          */
         protected BotCommand createBotCommand(Method method) {
-            BotCommand botCommand = new BotCommand(getNames(method), getHelpText(method), getBehavior(method));
+            BotCommand botCommand = new BotCommand(getName(method), getBehavior(method));
             botCommandPostProcessors.forEach(bcpp -> bcpp.process(method, botCommand));
             return botCommand;
         }
@@ -100,27 +101,13 @@ public class CommandFieldCallbackFactory {
          * @param method The method to get the command names from
          * @return The command names
          */
-        protected String[] getNames(Method method) {
+        protected String getName(Method method) {
             Command cmdAnnotation = method.getAnnotation(Command.class);
-            if (cmdAnnotation.value().length == 0) {
-                return new String[]{method.getName()};
+            if (StringUtils.isEmpty(cmdAnnotation.value())) {
+                return method.getName();
             } else {
                 return cmdAnnotation.value();
             }
-        }
-
-        /**
-         * Get the help text from the method
-         *
-         * @param method The method to get the help text of
-         * @return The help text
-         */
-        protected String getHelpText(Method method) {
-            Command cmdAnnotation = method.getAnnotation(Command.class);
-            if(StringUtils.isEmpty(cmdAnnotation.help())){
-                return getNames(method)[0] + ".help";
-            }
-            return cmdAnnotation.help();
         }
 
         /**
