@@ -86,4 +86,12 @@ public class CommandList {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
+
+    public String getNormalizedName(String nameOrAlias) {
+        List<BotCommand> commands = commandMap.get(nameOrAlias);
+        if(!commands.isEmpty()) {
+            return commands.get(0).getName();
+        }
+        return null;
+    }
 }

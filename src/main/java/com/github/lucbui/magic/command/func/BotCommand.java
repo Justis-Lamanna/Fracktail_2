@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 public class BotCommand {
     private String name;
     private String[] aliases;
-    private String helpText;
     private BotMessageBehavior behavior;
     private Predicate<Tokens> tokensPredicate;
 
@@ -40,14 +39,6 @@ public class BotCommand {
 
     public void setAliases(String[] aliases) {
         this.aliases = aliases;
-    }
-
-    public String getHelpText() {
-        return helpText;
-    }
-
-    public void setHelpText(String helpText) {
-        this.helpText = helpText;
     }
 
     public BotMessageBehavior getBehavior() {

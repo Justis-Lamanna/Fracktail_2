@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.command.func.NoCommandFoundHandler;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
 import com.github.lucbui.magic.validation.validators.ChainCreateMessageValidator;
@@ -15,13 +16,13 @@ public class CommandHandlerBuilder {
     private Tokenizer tokenizer;
     private CommandList commandList;
     private List<CreateMessageValidator> validators;
-    private Function<Tokens, Mono<BotCommand>> noCommandFoundHandler;
+    private NoCommandFoundHandler noCommandFoundHandler;
 
     public CommandHandlerBuilder(Tokenizer tokenizer, CommandList commandList) {
         this.tokenizer = tokenizer;
         this.commandList = commandList;
         this.validators = new ArrayList<>();
-        this.noCommandFoundHandler = tokens -> Mono.empty();
+        this.noCommandFoundHandler = NoCommandFoundHandler.doNothing();
     }
 
     public CommandHandlerBuilder withTokenizer(Tokenizer tokenizer) {
@@ -44,7 +45,7 @@ public class CommandHandlerBuilder {
         return this;
     }
 
-    public CommandHandlerBuilder withNoCommandFoundHandler(Function<Tokens, Mono<BotCommand>> noCommandFoundHandler) {
+    public CommandHandlerBuilder withNoCommandFoundHandler(NoCommandFoundHandler noCommandFoundHandler) {
         this.noCommandFoundHandler = noCommandFoundHandler;
         return this;
     }

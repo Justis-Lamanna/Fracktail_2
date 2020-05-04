@@ -32,7 +32,7 @@ public class PermissionsPostProcessor implements BotCommandPostProcessor {
                 .map(permissions -> Collections.unmodifiableSet(Arrays.stream(permissions).collect(Collectors.toSet())))
                 .collect(Collectors.collectingAndThen(Collectors.toList(), ComplexPermissionsPredicate::new));
             commandPermissionsStore.setPermissionsForCommand(botCommand, predicate);
-            LOGGER.debug("Assigned permissions for {}", botCommand.getPrimaryName());
+            LOGGER.debug("Assigned permissions for {}", botCommand.getName());
         }
     }
 }

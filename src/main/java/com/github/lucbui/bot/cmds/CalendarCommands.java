@@ -42,8 +42,9 @@ public class CalendarCommands {
     @Autowired
     private TranslateService translateService;
 
-    @Command({"nextbday", "nextbirthday"})
-    public Mono<String> nextbirthday(@Param(0) OptionalInt in) {
+    @Command(aliases = "nextbirthday")
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
+    public Mono<String> nextbday(@Param(0) OptionalInt in) {
         int n = in.orElse(1);
         if(NEXT_BDAY_RANGE.isAfter(n)) {
             return translateService.getFormattedStringMono(TranslateHelper.LOW, NEXT_BDAY_RANGE.getMinimum());
@@ -60,8 +61,9 @@ public class CalendarCommands {
                 });
     }
 
-    @Command({"daysbdays", "daysbirthdays"})
-    public Mono<String> daysbirthdays(@Param(0) String dayMonthStr) {
+    @Command(aliases = "daysbirthdays")
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
+    public Mono<String> daysbdays(@Param(0) String dayMonthStr) {
         return Mono.justOrEmpty(dayMonthStr)
                 .map(this::validateAndConvertToLocalDate)
                 .switchIfEmpty(Mono.fromSupplier(LocalDate::now))
@@ -82,8 +84,9 @@ public class CalendarCommands {
                 });
     }
 
-    @Command({"monthsbdays", "monthsbirthdays"})
-    public Mono<String> monthsbirthdays(@Param(0) String monthStr) {
+    @Command(aliases = "monthsbirthdays")
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
+    public Mono<String> monthsbdays(@Param(0) String monthStr) {
         return Mono.justOrEmpty(monthStr)
             .map(this::validateAndConvertToYearMonth)
             .switchIfEmpty(Mono.fromSupplier(YearMonth::now))
@@ -144,8 +147,9 @@ public class CalendarCommands {
                 .collect(Collectors.toList());
     }
 
-    @Command({"bday", "birthday"})
-    public Mono<String> birthday(@Param(0) String user, @BasicSender User sender) {
+    @Command(aliases = "birthday")
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
+    public Mono<String> bday(@Param(0) String user, @BasicSender User sender) {
         return Mono.justOrEmpty(user == null ? sender.getUsername() : user)
                 .flatMap(userParam -> {
                     Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(userParam);
@@ -165,8 +169,9 @@ public class CalendarCommands {
                 }));
     }
 
-    @Command({"addbday", "addbirthday"})
-    public Mono<String> addbirthday(@BasicSender User sender, @Param(0) String date) {
+    @Command(aliases = "addbirthday")
+    @CommandParams(1)
+    public Mono<String> addbday(@BasicSender User sender, @Param(0) String date) {
         if(date == null) {
             return translateService.getStringMono(TranslateHelper.usageKey("addbday"));
         }
@@ -187,9 +192,10 @@ public class CalendarCommands {
                         translateService.getFormattedString("addbirthday.success", sender.getUsername())));
     }
 
-    @Command({"setbday", "setbirthday"})
+    @Command(aliases = "setbirthday")
+    @CommandParams(2)
     @Permissions("owner")
-    public Mono<String> setbirthday(@Param(0) String userId, @Param(1) String date) {
+    public Mono<String> setbday(@Param(0) String userId, @Param(1) String date) {
         if(userId == null || date == null) {
             return translateService.getStringMono(TranslateHelper.usageKey("setbday"));
         }

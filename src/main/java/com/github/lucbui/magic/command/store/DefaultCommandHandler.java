@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.func.BotCommand;
+import com.github.lucbui.magic.command.func.NoCommandFoundHandler;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
@@ -28,7 +29,7 @@ public class DefaultCommandHandler implements CommandHandler {
     private final CreateMessageValidator createMessageValidator;
     private final CommandList commandList;
 
-    private Function<Tokens, Mono<BotCommand>> noCommandFoundHandler;
+    private NoCommandFoundHandler noCommandFoundHandler;
 
     /**
      * Initialize DefaultCommandHandler
@@ -37,7 +38,7 @@ public class DefaultCommandHandler implements CommandHandler {
      * @param commandList A list of commands
      * @param noCommandFoundHandler A handler to use if a command is attempted to be used incorrectly.
      */
-    public DefaultCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandList commandList, Function<Tokens, Mono<BotCommand>> noCommandFoundHandler) {
+    public DefaultCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandList commandList, NoCommandFoundHandler noCommandFoundHandler) {
         this.tokenizer = tokenizer;
         this.createMessageValidator = createMessageValidator;
         this.commandList = commandList;
@@ -54,7 +55,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
         return tokenizer.tokenizeToMono(event)
                 .flatMap(tokens -> commandList.getCommand(tokens).map(Mono::just)
-                        .orElseGet(() -> noCommandFoundHandler.apply(tokens)))
+                        .orElseGet(() -> noCommandFoundHandler.getDefaultBotCommand(tokens)))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getName(),

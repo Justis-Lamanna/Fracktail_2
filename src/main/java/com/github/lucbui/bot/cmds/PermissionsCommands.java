@@ -112,6 +112,7 @@ public class PermissionsCommands {
 
     @Command
     @Permissions("owner")
+    @CommandParams(2)
     public Mono<String> addglobalpermission(@Param(0) String userId, @Param(1) String permission) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
                 .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("addglobalpermission")));
@@ -127,6 +128,7 @@ public class PermissionsCommands {
 
     @Command
     @Permissions("owner")
+    @CommandParams(2)
     public Mono<String> removeglobalpermission(@Param(0) String userId, @Param(1) String permission) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
                 .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("removeglobalpermission")));
@@ -161,6 +163,7 @@ public class PermissionsCommands {
 
     @Command
     @Permissions("owner")
+    @CommandParams(1)
     public Mono<String> globalban(MessageCreateEvent evt, @Param(0) String userId) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
                 .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("globalban")));
@@ -191,6 +194,7 @@ public class PermissionsCommands {
 
     @Command
     @Permissions("owner")
+    @CommandParams(1)
     public Mono<String> globalunban(MessageCreateEvent evt, @Param(0) String userId) {
         Snowflake userSnowflake = DiscordUtils.toSnowflakeFromMentionOrLiteral(userId)
                 .orElseThrow(() -> translateService.getStringException(TranslateHelper.usageKey("globalunban")));

@@ -1,10 +1,7 @@
 package com.github.lucbui.bot.cmds;
 
 import com.github.lucbui.bot.services.translate.TranslateService;
-import com.github.lucbui.magic.annotation.Command;
-import com.github.lucbui.magic.annotation.Commands;
-import com.github.lucbui.magic.annotation.Param;
-import com.github.lucbui.magic.annotation.Permissions;
+import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.CommandList;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -38,6 +35,7 @@ public class BotUseCommands {
     }
 
     @Command
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
     public Mono<String> help(MessageCreateEvent evt, @Param(0) String cmd) {
         String cmdToSearch = (cmd == null) ? "help" : cmd;
         return Flux.fromIterable(commandList.getCommandsForName(cmdToSearch))
@@ -49,6 +47,7 @@ public class BotUseCommands {
     }
 
     @Command
+    @CommandParams(0)
     public Mono<String> commands(MessageCreateEvent evt) {
         return Flux.fromIterable(commandList.getAllCommands())
                 .filterWhen(c -> userPermissionValidator.validate(evt, c))
@@ -61,12 +60,14 @@ public class BotUseCommands {
     }
 
     @Command
+    @CommandParams(0)
     public String uptime() {
         Duration uptime = Duration.between(startTime, Instant.now());
         return translateService.getFormattedString("uptime.text", uptime.getSeconds());
     }
 
     @Command
+    @CommandParams(0)
     @Permissions("owner")
     public Mono<Void> sleep(MessageCreateEvent evt) {
         return DiscordUtils.respond(evt.getMessage(), translateService.getString("sleep.text"))

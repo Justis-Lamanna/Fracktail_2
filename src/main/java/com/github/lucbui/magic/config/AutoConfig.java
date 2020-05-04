@@ -3,6 +3,7 @@ package com.github.lucbui.magic.config;
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
+import com.github.lucbui.magic.command.func.NoCommandFoundHandler;
 import com.github.lucbui.magic.command.func.PermissionsPredicate;
 import com.github.lucbui.magic.command.func.postprocessor.*;
 import com.github.lucbui.magic.command.store.*;
@@ -81,9 +82,16 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList, List<CreateMessageValidator> validators) {
+    public NoCommandFoundHandler noCommandFoundHandler() {
+        return NoCommandFoundHandler.doNothing();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList, List<CreateMessageValidator> validators, NoCommandFoundHandler noCommandFoundHandler) {
         return new CommandHandlerBuilder(tokenizer, commandList)
                 .withValidators(validators)
+                .withNoCommandFoundHandler(noCommandFoundHandler)
                 .build();
     }
 
@@ -98,12 +106,6 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public AliasesPostProcessor aliasesPostProcessor() {
         return new AliasesPostProcessor();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public HelpPostProcessor helpPostProcessor() {
-        return new HelpPostProcessor();
     }
 
     @Bean

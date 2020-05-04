@@ -42,6 +42,12 @@ public class ParamAnnotationParameterExtractor implements ParameterExtractor<Mes
                     .onErrorResume(NumberFormatException.class, ex -> Mono.just(OptionalInt.empty()))
                     .defaultIfEmpty(OptionalInt.empty())
                     .cast(out);
+        } else if(parameter.getType().equals(Integer.TYPE)) {
+            return evt -> tokenizer.tokenizeToMono(evt).filter(tokenTester(idx))
+                    .map(tokens -> tokens.getParam(idx))
+                    .map(Integer::parseInt)
+                    .onErrorResume(NumberFormatException.class, ex -> Mono.just(Integer.MIN_VALUE))
+                    .cast(out);
         }
         throw new IllegalArgumentException("@Param must annotate String or OptionalInt value");
     }

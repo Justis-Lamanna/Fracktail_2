@@ -51,6 +51,7 @@ public class BasicCommands {
     }
 
     @Command
+    @CommandParams(1)
     public Mono<String> whodat(@Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
             return translateService.getStringMono(TranslateHelper.usageKey("whodat"));
@@ -64,6 +65,7 @@ public class BasicCommands {
 
     @Command
     @Timeout(value = 30)
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
     public Mono<String> timestampify(@BasicSender User sender, @Param(0) String snowflake) {
         return Mono.justOrEmpty(snowflake)
                 .defaultIfEmpty(sender.getId().asString())

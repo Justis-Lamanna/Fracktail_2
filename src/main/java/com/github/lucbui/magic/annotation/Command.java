@@ -23,11 +23,4 @@ public @interface Command {
      * @return A list of aliases for this command.
      */
     String[] aliases() default {};
-
-    /**
-     * Help text
-     * This text should explain how the command should be used.
-     * @return Help text which explains usage of this command
-     */
-    String help() default "";
 }
