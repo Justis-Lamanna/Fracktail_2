@@ -2,6 +2,7 @@ package com.github.lucbui.magic.command.func.postprocessor;
 
 import com.github.lucbui.magic.annotation.CommandParams;
 import com.github.lucbui.magic.annotation.ParamsComparison;
+import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.exception.BotException;
@@ -12,7 +13,7 @@ import java.util.function.Predicate;
 
 public class ParametersPostProcessor implements BotCommandPostProcessor {
     @Override
-    public void process(Method method, BotCommand botCommand) {
+    public void process(Method method, BotCommand botCommand, CommandCreateContext ctx) {
         if(method.isAnnotationPresent(CommandParams.class)) {
             CommandParams paramDefinition = method.getAnnotation(CommandParams.class);
             int numberOfParams = paramDefinition.value();

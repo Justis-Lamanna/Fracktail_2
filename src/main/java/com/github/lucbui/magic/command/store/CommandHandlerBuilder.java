@@ -14,11 +14,11 @@ import java.util.function.Function;
 
 public class CommandHandlerBuilder {
     private Tokenizer tokenizer;
-    private CommandList commandList;
+    private CommandStore commandList;
     private List<CreateMessageValidator> validators;
     private NoCommandFoundHandler noCommandFoundHandler;
 
-    public CommandHandlerBuilder(Tokenizer tokenizer, CommandList commandList) {
+    public CommandHandlerBuilder(Tokenizer tokenizer, CommandStore commandList) {
         this.tokenizer = tokenizer;
         this.commandList = commandList;
         this.validators = new ArrayList<>();
@@ -30,7 +30,7 @@ public class CommandHandlerBuilder {
         return this;
     }
 
-    public CommandHandlerBuilder withCommandList(CommandList commandList) {
+    public CommandHandlerBuilder withCommandList(CommandStore commandList) {
         this.commandList = commandList;
         return this;
     }

@@ -1,9 +1,10 @@
 package com.github.lucbui.magic.command;
 
 import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.func.*;
 import com.github.lucbui.magic.command.func.extract.ParameterExtractor;
-import com.github.lucbui.magic.command.store.CommandList;
+import com.github.lucbui.magic.command.store.CommandStore;
 import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -29,12 +32,12 @@ import java.util.stream.Stream;
  * A factory which creates a CommandFieldCallback for each processed bean
  */
 public class CommandFieldCallbackFactory {
-    private final CommandList commands;
+    private final CommandStore commands;
     private final Tokenizer tokenizer;
     private final List<BotCommandPostProcessor> botCommandPostProcessors;
     private final List<ParameterExtractor<MessageCreateEvent>> parameterExtractors;
 
-    public CommandFieldCallbackFactory(CommandList commands,
+    public CommandFieldCallbackFactory(CommandStore commands,
                                        Tokenizer tokenizer,
                                        List<BotCommandPostProcessor> botCommandPostProcessors,
                                        List<ParameterExtractor<MessageCreateEvent>> parameterExtractors) {
@@ -71,7 +74,8 @@ public class CommandFieldCallbackFactory {
             LOGGER.debug("Found command in method " + method.getName());
             ReflectionUtils.makeAccessible(method);
             validateMethod(method);
-            commands.addCommand(createBotCommand(method));
+            Tuple2<BotCommand, CommandCreateContext> created = createBotCommand(method);
+            commands.addCommand(created.getT1(), created.getT2());
         }
 
         /**
@@ -80,10 +84,11 @@ public class CommandFieldCallbackFactory {
          * @param method The Method to make a command
          * @return The created command
          */
-        protected BotCommand createBotCommand(Method method) {
+        protected Tuple2<BotCommand, CommandCreateContext> createBotCommand(Method method) {
             BotCommand botCommand = new BotCommand(getName(method), getBehavior(method));
-            botCommandPostProcessors.forEach(bcpp -> bcpp.process(method, botCommand));
-            return botCommand;
+            CommandCreateContext ctx = new CommandCreateContext();
+            botCommandPostProcessors.forEach(bcpp -> bcpp.process(method, botCommand, ctx));
+            return Tuples.of(botCommand, ctx);
         }
 
         /**

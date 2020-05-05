@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.func.postprocessor;
 
 import com.github.lucbui.magic.annotation.Timeout;
+import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.store.CommandTimeoutStore;
@@ -20,7 +21,7 @@ public class TimeoutPostProcessor implements BotCommandPostProcessor {
     }
 
     @Override
-    public void process(Method method, BotCommand botCommand) {
+    public void process(Method method, BotCommand botCommand, CommandCreateContext ctx) {
         if(method.isAnnotationPresent(Timeout.class)) {
             Timeout timeout = method.getAnnotation(Timeout.class);
             Duration timeoutDuration = Duration.of(timeout.value(), timeout.unit());

@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.command.store;
 
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.func.NoCommandFoundHandler;
 import com.github.lucbui.magic.exception.CommandValidationException;
@@ -27,7 +28,7 @@ public class DefaultCommandHandler implements CommandHandler {
 
     private final Tokenizer tokenizer;
     private final CreateMessageValidator createMessageValidator;
-    private final CommandList commandList;
+    private final CommandStore commandStore;
 
     private NoCommandFoundHandler noCommandFoundHandler;
 
@@ -35,13 +36,13 @@ public class DefaultCommandHandler implements CommandHandler {
      * Initialize DefaultCommandHandler
      * @param tokenizer The tokenizer to use
      * @param createMessageValidator A validator which validates a command should be handled
-     * @param commandList A list of commands
+     * @param commandStore A list of commands
      * @param noCommandFoundHandler A handler to use if a command is attempted to be used incorrectly.
      */
-    public DefaultCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandList commandList, NoCommandFoundHandler noCommandFoundHandler) {
+    public DefaultCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandStore commandStore, NoCommandFoundHandler noCommandFoundHandler) {
         this.tokenizer = tokenizer;
         this.createMessageValidator = createMessageValidator;
-        this.commandList = commandList;
+        this.commandStore = commandStore;
         this.noCommandFoundHandler = noCommandFoundHandler;
     }
 
@@ -54,8 +55,7 @@ public class DefaultCommandHandler implements CommandHandler {
         }
 
         return tokenizer.tokenizeToMono(event)
-                .flatMap(tokens -> commandList.getCommand(tokens).map(Mono::just)
-                        .orElseGet(() -> noCommandFoundHandler.getDefaultBotCommand(tokens)))
+                .flatMap(tokens -> commandStore.getCommand(tokens, CommandUseContext.from(event)))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getName(),

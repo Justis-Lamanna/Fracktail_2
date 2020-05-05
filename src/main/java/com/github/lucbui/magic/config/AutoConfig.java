@@ -13,11 +13,11 @@ import com.github.lucbui.magic.validation.PermissionsService;
 import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import com.github.lucbui.magic.validation.validators.LocalCooldownCommandValidator;
 import com.github.lucbui.magic.validation.validators.NotBotUserMessageValidator;
-import com.github.lucbui.magic.validation.validators.UserPermissionValidator;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import discord4j.core.object.presence.Status;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -60,8 +60,14 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandList commandList(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive) {
-        return CommandList.withCase(caseInsensitive);
+    public CommandStore permissionsPostProcessor(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive,
+                                                 @Value("${discord.permissions.enabled:false}") boolean permissionsEnabled,
+                                                 @Autowired(required = false) PermissionsService permissionsService) {
+        CommandStore store = CommandList.withCase(caseInsensitive);
+        if(permissionsEnabled && permissionsService != null) {
+            store = new PermissionsBackedCommandStore(store, permissionsService);
+        }
+        return store;
     }
 
     @Bean
@@ -88,8 +94,8 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandHandler commandHandler(Tokenizer tokenizer, CommandList commandList, List<CreateMessageValidator> validators, NoCommandFoundHandler noCommandFoundHandler) {
-        return new CommandHandlerBuilder(tokenizer, commandList)
+    public CommandHandler commandHandler(Tokenizer tokenizer, CommandStore commandStore, List<CreateMessageValidator> validators, NoCommandFoundHandler noCommandFoundHandler) {
+        return new CommandHandlerBuilder(tokenizer, commandStore)
                 .withValidators(validators)
                 .withNoCommandFoundHandler(noCommandFoundHandler)
                 .build();
@@ -112,38 +118,6 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public ParametersPostProcessor parametersPostProcessor() {
         return new ParametersPostProcessor();
-    }
-
-    /*
-    Permissions-related functionality. Can be disabled via discord.permissions.enabled:false
-     */
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
-    @ConditionalOnMissingBean
-    public CommandPermissionsStore commandPermissionsStore(@Value("${discord.permissions.global:}") String[] defaultPermissions) {
-        if(defaultPermissions.length == 0) {
-            return new DefaultCommandPermissionsStore(PermissionsPredicate.allPermitted());
-        } else {
-            return new DefaultCommandPermissionsStore(PermissionsPredicate.anyOf(defaultPermissions));
-        }
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
-    @ConditionalOnBean({PermissionsService.class, CommandPermissionsStore.class})
-    @ConditionalOnMissingBean
-    @Order(-50)
-    public UserPermissionValidator userPermissionValidator(PermissionsService permissionsService, CommandPermissionsStore commandPermissionsStore) {
-        return new UserPermissionValidator(permissionsService, commandPermissionsStore);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
-    @ConditionalOnBean(CommandPermissionsStore.class)
-    @ConditionalOnMissingBean
-    public PermissionsPostProcessor permissionsPostProcessor(CommandPermissionsStore commandPermissionsStore) {
-        return new PermissionsPostProcessor(commandPermissionsStore);
     }
 
     /*
