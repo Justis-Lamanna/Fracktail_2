@@ -1,10 +1,12 @@
 package com.github.lucbui.magic.command.store;
 
+import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.func.BotMessageBehavior;
 import com.github.lucbui.magic.token.Tokens;
 import org.springframework.util.LinkedCaseInsensitiveMap;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -55,7 +57,7 @@ public class CommandList implements CommandStore {
      * @param command The command to add
      */
     @Override
-    public void addCommand(BotCommand command) {
+    public void addCommand(BotCommand command, CommandCreateContext ctx) {
         addCommandToMap(command.getName(), command);
         Arrays.stream(command.getAliases())
                 .forEach(name -> addCommandToMap(name, command));
@@ -71,5 +73,11 @@ public class CommandList implements CommandStore {
                 .stream()
                 .filter(bc -> bc.testTokens(tokens))
                 .findFirst());
+    }
+
+    @Override
+    public Flux<BotCommand> getAllCommands(CommandUseContext ctx) {
+        return Flux.fromIterable(commandMap.values())
+                .flatMap(Flux::fromIterable);
     }
 }

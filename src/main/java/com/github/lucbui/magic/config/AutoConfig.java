@@ -3,8 +3,6 @@ package com.github.lucbui.magic.config;
 import com.github.lucbui.magic.command.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
-import com.github.lucbui.magic.command.func.NoCommandFoundHandler;
-import com.github.lucbui.magic.command.func.PermissionsPredicate;
 import com.github.lucbui.magic.command.func.postprocessor.*;
 import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
@@ -27,9 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 public class AutoConfig {
@@ -88,16 +84,9 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public NoCommandFoundHandler noCommandFoundHandler() {
-        return NoCommandFoundHandler.doNothing();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CommandHandler commandHandler(Tokenizer tokenizer, CommandStore commandStore, List<CreateMessageValidator> validators, NoCommandFoundHandler noCommandFoundHandler) {
+    public CommandHandler commandHandler(Tokenizer tokenizer, CommandStore commandStore, List<CreateMessageValidator> validators) {
         return new CommandHandlerBuilder(tokenizer, commandStore)
                 .withValidators(validators)
-                .withNoCommandFoundHandler(noCommandFoundHandler)
                 .build();
     }
 
@@ -118,6 +107,13 @@ public class AutoConfig {
     @ConditionalOnMissingBean
     public ParametersPostProcessor parametersPostProcessor() {
         return new ParametersPostProcessor();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
+    @ConditionalOnMissingBean
+    public PermissionsPostProcessor permissionsPostProcessor() {
+        return new PermissionsPostProcessor();
     }
 
     /*

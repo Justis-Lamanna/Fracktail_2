@@ -9,6 +9,7 @@ import com.github.lucbui.magic.token.Tokens;
 import com.github.lucbui.magic.validation.BotRole;
 import com.github.lucbui.magic.validation.PermissionsService;
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
@@ -36,6 +37,26 @@ public class PermissionsBackedCommandStore implements CommandStore {
                 .collect(Collectors.toSet());
 
         return commandStore.getCommand(tokens, ctx)
+                .zipWith(userPermissionsMono)
+                .filter(tuple -> {
+                    BotCommand cmd = tuple.getT1();
+                    Set<String> userPermissions = tuple.getT2();
+                    if(permissionsStore.containsKey(cmd)){
+                        return permissionsStore.get(cmd).validatePermissions(userPermissions);
+                    } else {
+                        return true;
+                    }
+                })
+                .map(Tuple2::getT1);
+    }
+
+    @Override
+    public Flux<BotCommand> getAllCommands(CommandUseContext ctx) {
+        Mono<Set<String>> userPermissionsMono = permissionsService.getPermissions(Snowflake.of(ctx.getChannelId()), Snowflake.of(ctx.getUserId()))
+                .map(BotRole::getName)
+                .collect(Collectors.toSet());
+
+        return commandStore.getAllCommands(ctx)
                 .zipWith(userPermissionsMono)
                 .filter(tuple -> {
                     BotCommand cmd = tuple.getT1();

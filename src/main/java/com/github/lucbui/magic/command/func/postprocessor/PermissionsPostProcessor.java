@@ -17,9 +17,6 @@ import java.util.stream.Collectors;
 public class PermissionsPostProcessor implements BotCommandPostProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(PermissionsPostProcessor.class);
 
-    public PermissionsPostProcessor() {
-    }
-
     @Override
     public void process(Method method, BotCommand botCommand, CommandCreateContext ctx) {
         if(method.isAnnotationPresent(Permissions.class) || method.isAnnotationPresent(PermissionsGroup.class)) {
