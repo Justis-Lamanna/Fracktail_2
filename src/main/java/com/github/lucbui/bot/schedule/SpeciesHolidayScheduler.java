@@ -4,8 +4,6 @@ import com.github.lucbui.bot.services.channel.BasicBotChannelService;
 import com.github.lucbui.bot.services.channel.BotChannelService;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
-import com.github.lucbui.magic.schedule.cron.Month;
-import discord4j.core.DiscordClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;

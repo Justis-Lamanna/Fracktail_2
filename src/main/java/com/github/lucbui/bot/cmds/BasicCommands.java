@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
@@ -48,6 +49,13 @@ public class BasicCommands {
                 "<:rafo5:596138380211781641><:rafo6:596138491469889536><:rafo7:596138588584804373><:rafo8:596138610193858581>\n" +
                 "<:rafo9:596138646130917376><:rafo10:596138678108291082><:rafo11:596138697607348257><:rafo12:596138718817943552>\n" +
                 "<:rafo13:596138741052211210><:rafo14:596138758160515073><:rafo15:596138771779682315><:rafo16:596138788984586268>";
+    }
+
+    @Command
+    @Permissions("owner")
+    public Mono<String> timer() {
+        return Mono.delay(Duration.of(5, ChronoUnit.SECONDS))
+                .thenReturn("OK, Done");
     }
 
     @Command

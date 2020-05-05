@@ -32,7 +32,7 @@ public class PermissionsBackedCommandStore implements CommandStore {
 
     @Override
     public Mono<BotCommand> getCommand(Tokens tokens, CommandUseContext ctx) {
-        Mono<Set<String>> userPermissionsMono = permissionsService.getPermissions(Snowflake.of(ctx.getChannelId()), Snowflake.of(ctx.getUserId()))
+        Mono<Set<String>> userPermissionsMono = permissionsService.getPermissions(fromString(ctx.getChannelId()), fromString(ctx.getUserId()))
                 .map(BotRole::getName)
                 .collect(Collectors.toSet());
 
@@ -50,14 +50,18 @@ public class PermissionsBackedCommandStore implements CommandStore {
                 .map(Tuple2::getT1);
     }
 
+    private Snowflake fromString(String s) {
+        return s == null ? null : Snowflake.of(s);
+    }
+
     @Override
     public Flux<BotCommand> getAllCommands(CommandUseContext ctx) {
-        Mono<Set<String>> userPermissionsMono = permissionsService.getPermissions(Snowflake.of(ctx.getChannelId()), Snowflake.of(ctx.getUserId()))
+        Mono<Set<String>> userPermissionsMono = permissionsService.getPermissions(fromString(ctx.getChannelId()), fromString(ctx.getUserId()))
                 .map(BotRole::getName)
                 .collect(Collectors.toSet());
 
         return commandStore.getAllCommands(ctx)
-                .zipWith(userPermissionsMono)
+                .zipWith(userPermissionsMono.repeat())
                 .filter(tuple -> {
                     BotCommand cmd = tuple.getT1();
                     Set<String> userPermissions = tuple.getT2();
@@ -72,7 +76,8 @@ public class PermissionsBackedCommandStore implements CommandStore {
 
     @Override
     public void addCommand(BotCommand botCommand, CommandCreateContext commandCreateContext) {
-        permissionsStore.put(botCommand, commandCreateContext.get("permissions", PermissionsPredicate.class));
+        PermissionsPredicate predicate = commandCreateContext.get("permissions", PermissionsPredicate.class);
+        permissionsStore.put(botCommand, predicate == null ? PermissionsPredicate.allPermitted() : predicate);
         commandStore.addCommand(botCommand, commandCreateContext);
     }
 }

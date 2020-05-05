@@ -51,7 +51,7 @@ public class DefaultCommandHandler implements CommandHandler {
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getName(),
                         event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
-                .flatMap(cmd -> cmd.getBehavior().execute(event))
+                .flatMap(cmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(cmd.getBehavior().execute(event))).then())
                 .onErrorResume(CommandValidationException.class, ex -> DiscordUtils.respond(event.getMessage(), ex.getMessage()))
                 .onErrorResume(ex -> {
                     LOGGER.error("Error handling message", ex);

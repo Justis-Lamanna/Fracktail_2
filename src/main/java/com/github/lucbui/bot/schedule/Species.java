@@ -1,6 +1,5 @@
 package com.github.lucbui.bot.schedule;
 
-import com.github.lucbui.magic.schedule.cron.Month;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.object.util.Snowflake;
 

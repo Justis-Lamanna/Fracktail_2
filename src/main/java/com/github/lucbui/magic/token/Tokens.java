@@ -23,7 +23,7 @@ public class Tokens {
         this.prefix = prefix;
         this.command = command;
         this.paramString = paramString;
-        this.params = params;
+        this.params = (params == null ? new String[0] : params);
     }
 
     /**

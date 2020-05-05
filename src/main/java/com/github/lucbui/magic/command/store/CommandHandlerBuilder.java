@@ -12,13 +12,11 @@ public class CommandHandlerBuilder {
     private Tokenizer tokenizer;
     private CommandStore commandList;
     private List<CreateMessageValidator> validators;
-    private NoCommandFoundHandler noCommandFoundHandler;
 
     public CommandHandlerBuilder(Tokenizer tokenizer, CommandStore commandList) {
         this.tokenizer = tokenizer;
         this.commandList = commandList;
         this.validators = new ArrayList<>();
-        this.noCommandFoundHandler = NoCommandFoundHandler.doNothing();
     }
 
     public CommandHandlerBuilder withTokenizer(Tokenizer tokenizer) {
@@ -41,11 +39,6 @@ public class CommandHandlerBuilder {
         return this;
     }
 
-    public CommandHandlerBuilder withNoCommandFoundHandler(NoCommandFoundHandler noCommandFoundHandler) {
-        this.noCommandFoundHandler = noCommandFoundHandler;
-        return this;
-    }
-
     public CommandHandler build() {
         CreateMessageValidator validator;
         if(validators.isEmpty()) {
@@ -55,6 +48,6 @@ public class CommandHandlerBuilder {
         } else {
             validator = new ChainCreateMessageValidator(validators);
         }
-        return new DefaultCommandHandler(tokenizer, validator, commandList, noCommandFoundHandler);
+        return new DefaultCommandHandler(tokenizer, validator, commandList);
     }
 }

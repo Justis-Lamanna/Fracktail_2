@@ -56,7 +56,7 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandStore permissionsPostProcessor(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive,
+    public CommandStore commandStore(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive,
                                                  @Value("${discord.permissions.enabled:false}") boolean permissionsEnabled,
                                                  @Autowired(required = false) PermissionsService permissionsService) {
         CommandStore store = CommandList.withCase(caseInsensitive);
@@ -75,8 +75,8 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandList commandList, List<BotCommandPostProcessor> processors) {
-        return new CommandProcessorBuilder(tokenizer, commandList)
+    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandStore commandStore, List<BotCommandPostProcessor> processors) {
+        return new CommandProcessorBuilder(tokenizer, commandStore)
                 .withDefaultParameterExtractors()
                 .withBotCommandPostProcessors(processors)
                 .build();
