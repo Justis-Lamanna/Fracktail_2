@@ -33,10 +33,9 @@ public class BotUseCommands {
 
     @Command
     @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    public Mono<String> help(MessageCreateEvent evt, @Param(0) String cmd) {
-        String cmdToSearch = (cmd == null) ? "help" : cmd;
+    public Mono<String> help(MessageCreateEvent evt, @Param(0) @Default("help") String cmd) {
         return commandStore.getAllCommands(CommandUseContext.from(evt))
-                .filter(bc -> StringUtils.equalsIgnoreCase(cmdToSearch, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmdToSearch, bc.getAliases()))
+                .filter(bc -> StringUtils.equalsIgnoreCase(cmd, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmd, bc.getAliases()))
                 .next()
                 .flatMap(bc -> translateService.getStringMono(bc.getName() + ".help"))
                 .switchIfEmpty( translateService.getFormattedStringMono("help.validation.unknownCommand", cmd));

@@ -44,8 +44,7 @@ public class CalendarCommands {
 
     @Command(aliases = "nextbirthday")
     @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    public Mono<String> nextbday(@Param(0) OptionalInt in) {
-        int n = in.orElse(1);
+    public Mono<String> nextbday(@Param(0) @Default("1") int n) {
         if(NEXT_BDAY_RANGE.isAfter(n)) {
             return translateService.getFormattedStringMono(TranslateHelper.LOW, NEXT_BDAY_RANGE.getMinimum());
         } else if(NEXT_BDAY_RANGE.isBefore(n)) {
