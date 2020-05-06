@@ -69,8 +69,11 @@ public class CommandList implements CommandStore {
 
     @Override
     public Mono<BotCommand> getCommand(Tokens tokens, CommandUseContext ctx) {
-        return Mono.justOrEmpty(commandMap.get(tokens.getCommand())
-                .stream()
+        List<BotCommand> commands = commandMap.get(tokens.getCommand());
+        if(commands == null){
+            return Mono.empty();
+        }
+        return Mono.justOrEmpty(commands.stream()
                 .filter(bc -> bc.testTokens(tokens))
                 .findFirst());
     }
