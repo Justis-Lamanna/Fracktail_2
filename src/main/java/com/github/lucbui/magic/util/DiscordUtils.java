@@ -1,7 +1,10 @@
 package com.github.lucbui.magic.util;
 
+import com.github.lucbui.magic.exception.BotException;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.reaction.Reaction;
+import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
@@ -83,5 +86,25 @@ public class DiscordUtils {
 
     public static boolean isDM(MessageCreateEvent event) {
         return !event.getMessage().getAuthor().isPresent();
+    }
+
+    public static String getEmojiString(Reaction reaction) {
+        Optional<ReactionEmoji.Unicode> asUnicode = reaction.getEmoji().asUnicodeEmoji();
+        Optional<ReactionEmoji.Custom> asCustom = reaction.getEmoji().asCustomEmoji();
+        if(asCustom.isPresent()) {
+            return getCustomEmojiString(asCustom.get());
+        } else if(asUnicode.isPresent()) {
+            return asUnicode.get().getRaw();
+        } else {
+            throw new BotException("Encountered react that was neither custom nor unicode");
+        }
+    }
+
+    public static String getCustomEmojiString(ReactionEmoji.Custom emoji) {
+        if(emoji.isAnimated()) {
+            return "<a:" + emoji.getName() + ":" + emoji.getId().asString() + ">";
+        } else {
+            return "<" + emoji.getName() + ":" + emoji.getId().asString() + ">";
+        }
     }
 }

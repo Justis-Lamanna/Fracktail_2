@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.function.Function;
 
 public class ParamsAnnotationParameterExtractor implements ParameterExtractor<MessageCreateEvent> {
@@ -24,11 +25,25 @@ public class ParamsAnnotationParameterExtractor implements ParameterExtractor<Me
 
     @Override
     public <OUT> Function<MessageCreateEvent, Mono<OUT>> getExtractorFor(Parameter parameter, Class<OUT> out) {
-        if(parameter.getType().equals(String.class)) {
-            return evt -> tokenizer.tokenizeToMono(evt).map(Tokens::getParamString).cast(out);
-        } else if(parameter.getType().equals(String[].class)) {
-            return evt -> tokenizer.tokenizeToMono(evt).map(Tokens::getParams).cast(out);
+        if(parameter.getType().equals(String[].class)) {
+            return evt -> tokenizer.tokenizeToMono(evt)
+                    .map(Tokens::getParams)
+                    .map(arr -> subs(arr, parameter.getAnnotation(Params.class)))
+                    .cast(out);
         }
-        throw new IllegalArgumentException("@Params must annotate String or String[] value");
+        throw new IllegalArgumentException("@Params must annotate String[] value");
+    }
+
+    private String[] subs(String[] arr, Params annotation) {
+        if(annotation.start() == 0 && annotation.end() < 0){
+            return arr;
+        }
+        int start = annotation.start();
+        int end = Math.min(annotation.end() < 0 ? arr.length : annotation.end(), arr.length);
+        if(start < arr.length) {
+            return Arrays.copyOfRange(arr, start, end);
+        } else {
+            return new String[0];
+        }
     }
 }

@@ -2,6 +2,9 @@ package com.github.lucbui.magic.token;
 
 import com.github.lucbui.magic.exception.BotException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -20,6 +23,8 @@ public class PrefixTokenizer implements Tokenizer {
     }
 
     private static final Pattern SPACE = Pattern.compile("\\s+");
+    private static final Pattern SPACE_NOT_QUOTES = Pattern.compile("([^\"]\\S*|\".+?(?<!\\\\)\")\\s*");
+    private static final Pattern DOUBLE_QUOTES_NO_BACKSLASH = Pattern.compile("(?<!\\\\)\"");
 
     @Override
     public Tokens tokenize(String message) {
@@ -27,10 +32,20 @@ public class PrefixTokenizer implements Tokenizer {
             String[] commandAndParams = SPACE.split(message, 2);
             String commandNoPrefix = commandAndParams[0].substring(prefix.length());
             String paramString = commandAndParams.length < 2 ? null : commandAndParams[1];
-            String[] params = paramString == null ? null : SPACE.split(paramString);
+            String[] params = paramString == null ? null : parse(paramString);
             return new Tokens(message, prefix, commandNoPrefix, paramString, params);
         }
         throw new BotException("Attempted to tokenize invalid message");
+    }
+
+    private String[] parse(String paramString) {
+        List<String> matches = new ArrayList<>();
+        Matcher m = SPACE_NOT_QUOTES.matcher(paramString);
+        while(m.find()) {
+            String match = DOUBLE_QUOTES_NO_BACKSLASH.matcher(m.group(1)).replaceAll("");
+            matches.add(match);
+        }
+        return matches.toArray(new String[0]);
     }
 
     @Override

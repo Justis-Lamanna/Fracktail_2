@@ -38,4 +38,8 @@ public class TranslateHelper {
     public static Date toDate(ZonedDateTime zonedDateTime) {
         return Date.from(zonedDateTime.toInstant());
     }
+
+    public static Date toDate(Instant instant) {
+        return Date.from(instant);
+    }
 }
