@@ -52,23 +52,14 @@ public class BasicCommands {
     }
 
     @Command
-    @Permissions("owner")
-    public Mono<String> timer() {
-        return Mono.delay(Duration.of(5, ChronoUnit.SECONDS))
-                .thenReturn("OK, Done");
-    }
-
-    @Command
     @CommandParams(1)
     public Mono<String> whodat(@Param(0) String userId) {
         if(!DiscordUtils.isValidSnowflake(userId)) {
             return translateService.getStringMono(TranslateHelper.usageKey("whodat"));
         }
         return bot.getUserById(Snowflake.of(userId))
-                .map(Optional::of).onErrorReturn(Optional.empty())
-                .map(possibleUser -> possibleUser
-                        .map(user -> translateService.getFormattedString("whodat.success", user.getUsername()))
-                        .orElse(translateService.getString("whodat.failure")));
+                .map(user -> translateService.getFormattedString("whodat.success", user.getUsername()))
+                .onErrorReturn(translateService.getString("whodat.failure"));
     }
 
     @Command

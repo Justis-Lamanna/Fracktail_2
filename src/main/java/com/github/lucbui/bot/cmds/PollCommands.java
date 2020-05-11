@@ -56,20 +56,21 @@ public class PollCommands {
         if(choices.length < 2) {
             throw translateService.getStringException("startpoll.usage");
         }
-        Poll poll;
-        try {
-            poll = createPoll(question, duration, choices);
-        } catch (RuntimeException ex) {
-            return Mono.error(ex);
-        }
 
         return Mono.justOrEmpty(event.getGuildId())
                 .flatMap(snowflake -> event.getMessage().getChannel())
-                .flatMap(mc -> mc.createMessage(translateService.getFormattedString("job.poll.start",
-                        poll.getMessage(),
-                        createChoicesList(poll.getChoices()),
-                        TranslateHelper.toDate(poll.getExpiryTime()))))
-                .doOnNext(msg -> registerPoll(msg.getChannelId(), msg.getId(), event.getMember().map(Member::getId).orElseThrow(() -> new BotException("Huh!")), poll))
+                .zipWith(Mono.fromSupplier(() -> createPoll(question, duration, choices)))
+                .flatMap(tuple -> tuple.getT1().createMessage(translateService.getFormattedString("job.poll.start",
+                        tuple.getT2().getMessage(),
+                        createChoicesList(tuple.getT2().getChoices()),
+                        TranslateHelper.toDate( tuple.getT2().getExpiryTime())))
+                        .zipWith(Mono.just(tuple.getT2()))
+                )
+                .doOnNext(tuple -> registerPoll(
+                        tuple.getT1().getChannelId(),
+                        tuple.getT1().getId(),
+                        event.getMember().map(Member::getId).orElseThrow(() -> new BotException("Huh!")),
+                        tuple.getT2()))
                 .then();
     }
 
@@ -100,9 +101,8 @@ public class PollCommands {
                     .flatMap(choice -> bot.getMessageById(channelId, id)
                             .map(msg -> getCountForChoice(choice, msg.getReactions()))
                             .map(count -> Tuples.of(choice, count)))
-                    .sort(Collections.reverseOrder(Comparator.comparingInt(Tuple2::getT2)))
-                    .collectList()
-                    .doOnNext(list -> LOGGER.debug("Poll results: {}", list))
+                    .collectSortedList(Collections.reverseOrder(Comparator.comparingInt(Tuple2::getT2)))
+                    .doOnNext(results -> LOGGER.debug("Poll results: {}", results))
                     .doOnNext(results -> bot.getUserById(reporter)
                             .doOnNext(user -> LOGGER.debug("Sending results to {}", user.getUsername()))
                             .flatMap(User::getPrivateChannel)
