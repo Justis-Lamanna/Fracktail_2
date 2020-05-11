@@ -57,6 +57,9 @@ public class BasicCommands {
         if(!DiscordUtils.isValidSnowflake(userId)) {
             return translateService.getStringMono(TranslateHelper.usageKey("whodat"));
         }
+        if(bot.getSelfId().map(selfId -> selfId.asString().equals(userId)).orElse(false)) {
+            return translateService.getStringMono("whodat.me");
+        }
         return bot.getUserById(Snowflake.of(userId))
                 .map(user -> translateService.getFormattedString("whodat.success", user.getUsername()))
                 .onErrorReturn(translateService.getString("whodat.failure"));

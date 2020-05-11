@@ -1,5 +1,6 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandUseContext;
@@ -45,7 +46,11 @@ public class BotUseCommands {
         return commandStore.getAllCommands(CommandUseContext.from(evt))
                 .filter(bc -> StringUtils.equalsIgnoreCase(cmd, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmd, bc.getAliases()))
                 .next()
-                .flatMap(bc -> translateService.getStringMono(bc.getName() + ".help"))
+                .flatMap(bc -> {
+                    String help = translateService.getString(TranslateHelper.helpKey(bc.getName()));
+                    String usage = translateService.getString(TranslateHelper.usageKey(bc.getName()));
+                    return Mono.just(help + "\n" + usage);
+                })
                 .switchIfEmpty( translateService.getFormattedStringMono("help.validation.unknownCommand", cmd));
     }
 

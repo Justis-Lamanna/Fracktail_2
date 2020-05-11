@@ -18,6 +18,17 @@ import java.util.stream.Collectors;
  */
 public class CommandList implements CommandStore {
     private final Map<String, List<BotCommand>> commandMap;
+    private final CommandListFallback fallback;
+
+    /**
+     * Create a CommandList
+     * @param commandStoreMapFactory A factory which is used to create the internal map
+     * @param fallback A fallback, to use when no command is found
+     */
+    public CommandList(Supplier<Map<String, List<BotCommand>>> commandStoreMapFactory, CommandListFallback fallback) {
+        this.commandMap = commandStoreMapFactory.get();
+        this.fallback = fallback;
+    }
 
     /**
      * Create a CommandList
@@ -25,6 +36,7 @@ public class CommandList implements CommandStore {
      */
     public CommandList(Supplier<Map<String, List<BotCommand>>> commandStoreMapFactory) {
         this.commandMap = commandStoreMapFactory.get();
+        this.fallback = CommandListFallback.doNothing();
     }
 
     /**
@@ -36,6 +48,14 @@ public class CommandList implements CommandStore {
     }
 
     /**
+     * Create a case-insensitive CommandList
+     * @return A CommandList with case-insensitive commands
+     */
+    public static CommandList caseInsensitive(CommandListFallback fallback) {
+        return new CommandList(LinkedCaseInsensitiveMap::new, fallback);
+    }
+
+    /**
      * Create a case-sensitive CommandList
      * @return A CommandList with case-sensitive commands
      */
@@ -44,12 +64,11 @@ public class CommandList implements CommandStore {
     }
 
     /**
-     * Create a conditionally case-sensitive or -insensitive CommandList
-     * @param caseInsensitive True for case-insensitive list
-     * @return A CommandList that's case-insensitive or case-sensitive, depending on input
+     * Create a case-sensitive CommandList
+     * @return A CommandList with case-sensitive commands
      */
-    public static CommandList withCase(boolean caseInsensitive) {
-        return caseInsensitive? caseInsensitive() : caseSensitive();
+    public static CommandList caseSensitive(CommandListFallback fallback) {
+        return new CommandList(HashMap::new, fallback);
     }
 
     /**
@@ -71,11 +90,12 @@ public class CommandList implements CommandStore {
     public Mono<BotCommand> getCommand(Tokens tokens, CommandUseContext ctx) {
         List<BotCommand> commands = commandMap.get(tokens.getCommand());
         if(commands == null){
-            return Mono.empty();
+            return this.fallback.noCommandFound(tokens, ctx);
         }
         return Mono.justOrEmpty(commands.stream()
                 .filter(bc -> bc.testTokens(tokens))
-                .findFirst());
+                .findFirst())
+                .switchIfEmpty(this.fallback.commandUsedWrong(tokens, ctx, commands));
     }
 
     @Override

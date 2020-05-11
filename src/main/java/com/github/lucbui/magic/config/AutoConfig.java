@@ -56,10 +56,17 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
+    public CommandListFallback commandListFallback() {
+        return CommandListFallback.doNothing();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public CommandStore commandStore(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive,
-                                                 @Value("${discord.permissions.enabled:false}") boolean permissionsEnabled,
-                                                 @Autowired(required = false) PermissionsService permissionsService) {
-        CommandStore store = CommandList.withCase(caseInsensitive);
+                                     @Value("${discord.permissions.enabled:false}") boolean permissionsEnabled,
+                                     @Autowired(required = false) PermissionsService permissionsService,
+                                     CommandListFallback commandListFallback) {
+        CommandStore store = caseInsensitive ? CommandList.caseInsensitive(commandListFallback) : CommandList.caseSensitive(commandListFallback);
         if(permissionsEnabled && permissionsService != null) {
             store = new PermissionsBackedCommandStore(store, permissionsService);
         }
