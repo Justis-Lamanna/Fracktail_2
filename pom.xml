@@ -20,6 +20,13 @@
 		<host/>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>spring-plugins</id>
+			<url>https://repo.spring.io/plugins-release/</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -102,6 +109,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 			<version>2.2.6.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.profesorfalken</groupId>
+			<artifactId>jSensors</artifactId>
+			<version>2.2.1</version>
 		</dependency>
 
 	</dependencies>
