@@ -19,9 +19,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.time.Duration;
@@ -142,10 +140,10 @@ public class BotUseCommands {
 
                         Components components = JSensors.get.components();
 
-                        doIt(components.disks, embed,
-                                doIt(components.gpus, embed,
-                                        doIt(components.mobos, embed,
-                                                doIt(components.cpus, embed, 19))));
+                        addComponentStatsToEmbed(components.disks, embed,
+                                addComponentStatsToEmbed(components.gpus, embed,
+                                        addComponentStatsToEmbed(components.mobos, embed,
+                                                addComponentStatsToEmbed(components.cpus, embed, 19))));
 
                         embed.setTimestamp(Instant.now());
                     });
@@ -162,7 +160,7 @@ public class BotUseCommands {
                 );
     }
 
-    private int doIt(List<? extends Component> components, EmbedCreateSpec spec, int remainingFieldCount) {
+    private int addComponentStatsToEmbed(List<? extends Component> components, EmbedCreateSpec spec, int remainingFieldCount) {
         int fieldCount = getFieldCount(components);
         if(CollectionUtils.isNotEmpty(components) && fieldCount < remainingFieldCount) {
             addFields(components, spec);
