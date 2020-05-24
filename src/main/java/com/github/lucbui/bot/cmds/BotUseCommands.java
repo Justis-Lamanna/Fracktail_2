@@ -6,12 +6,15 @@ import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.CommandStore;
+import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.util.DiscordUtils;
 import com.profesorfalken.jsensors.JSensors;
 import com.profesorfalken.jsensors.model.components.Component;
 import com.profesorfalken.jsensors.model.components.Components;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.User;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.http.client.ClientException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -78,6 +82,21 @@ public class BotUseCommands {
     public String uptime() {
         Duration uptime = Duration.between(startTime, Instant.now());
         return translateService.getFormattedString("uptime.text", uptime.getSeconds());
+    }
+
+    @Command
+    @CommandParams(1)
+    public Mono<String> msg(MessageCreateEvent evt, @Param(0) String snowflake) {
+        String sender = evt.getMessage().getAuthor().map(User::getUsername)
+                .orElseThrow(() -> new BotException("Sender somehow had no author"));
+
+        return Mono.justOrEmpty(DiscordUtils.toSnowflakeFromMentionOrLiteral(snowflake))
+                .flatMap(s -> evt.getClient().getUserById(s))
+                .zipWhen(User::getPrivateChannel)
+                .flatMap(tuple -> tuple.getT2().createMessage(translateService.getFormattedString("msg.toUser", sender)).thenReturn(tuple.getT1()))
+                .map(usr -> translateService.getFormattedString("msg.toSender", usr.getUsername()))
+                .defaultIfEmpty(translateService.getString("validation.unknownUser"))
+                .onErrorResume(DiscordUtils.ON_FORBIDDEN, e -> translateService.getStringMono("msg.validation.cantDm"));
     }
 
     @Command

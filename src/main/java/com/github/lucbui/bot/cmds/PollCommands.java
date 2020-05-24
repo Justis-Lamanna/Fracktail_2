@@ -107,6 +107,7 @@ public class PollCommands {
                             .doOnNext(user -> LOGGER.debug("Sending results to {}", user.getUsername()))
                             .flatMap(User::getPrivateChannel)
                             .flatMap(channel -> channel.createMessage(translateService.getFormattedString("job.poll.results", poll.getMessage(), createChoiceAndResultsList(results))))
+                            .onErrorResume(DiscordUtils.ON_FORBIDDEN, e -> Mono.empty())
                             .block()
                     )
                     .doOnNext(results -> bot.getChannelById(channelId)

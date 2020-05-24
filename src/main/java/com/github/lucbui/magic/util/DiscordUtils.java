@@ -6,9 +6,11 @@ import discord4j.core.object.entity.Message;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.core.object.util.Snowflake;
+import discord4j.rest.http.client.ClientException;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,6 +18,9 @@ import java.util.regex.Pattern;
  * Utilities for common Discord functions
  */
 public class DiscordUtils {
+    public static final Predicate<? super Throwable> ON_FORBIDDEN =
+            ex -> ex instanceof ClientException && ((ClientException)ex).getStatus().code() == 403;
+
     private static final Pattern MENTION_PATTERN = Pattern.compile("<@!([0-9]+)>");
 
     /**
