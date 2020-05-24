@@ -4,15 +4,11 @@ import com.github.lucbui.bot.model.location.City;
 import com.github.lucbui.bot.services.location.LocationService;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
-import com.github.lucbui.openweathermap.client.OpenWeatherMapClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
-//@Commands
+@Commands
 public class WeatherCommands {
-    @Autowired
-    private OpenWeatherMapClient client;
-
     @Autowired
     private LocationService locationService;
 
