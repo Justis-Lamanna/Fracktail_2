@@ -135,6 +135,7 @@ public class BotUseCommands {
                     spec.setEmbed(embed -> {
                         embed.setTitle(translateService.getString("stats.title"));
                         embed.setColor(new Color(183, 20, 65));
+                        embed.setUrl("https://github.com/Justis-Lamanna/Fracktail_2");
 
                         embed.addField(
                                 translateService.getString("stats.label.pid"),

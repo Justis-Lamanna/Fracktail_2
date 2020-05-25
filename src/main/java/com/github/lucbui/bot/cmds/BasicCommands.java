@@ -37,6 +37,11 @@ public class BasicCommands {
 //    }
 
     @Command
+    public String invite() {
+        return translateService.getString("invite.text");
+    }
+
+    @Command
     @Permissions("owner")
     public String admin() {
         return translateService.getString("admin.text");

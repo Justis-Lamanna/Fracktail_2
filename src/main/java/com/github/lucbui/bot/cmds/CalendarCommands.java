@@ -147,18 +147,29 @@ public class CalendarCommands {
     }
 
     @Command(aliases = "birthday")
-    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    public Mono<String> bday(@Param(0) String user, @BasicSender User sender) {
-        return Mono.justOrEmpty(user == null ? sender.getUsername() : user)
+    @CommandParams(value = 0)
+    public Mono<String> bday(@BasicSender User sender) {
+        return Mono.justOrEmpty(sender.getId())
+                .flatMap(userSnowflake -> calendarService.searchBirthdayById(userSnowflake))
+                .zipWhen(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
+                .map(tuple -> getOwnersBirthdayDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
+                .switchIfEmpty(translateService.getStringMono("birthday.failure.self"));
+    }
+
+    @Command(aliases = "birthday")
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_MORE)
+    public Mono<String> bday(@Params String user) {
+        return Mono.justOrEmpty(user)
                 .flatMap(userParam -> {
-                    Optional<String> userIdIfPresent = DiscordUtils.getIdFromMention(userParam);
+                    Optional<Snowflake> userIdIfPresent = DiscordUtils.toSnowflakeFromMentionOrLiteral(userParam);
                     if(userIdIfPresent.isPresent()) {
-                        return calendarService.searchBirthdayById(Snowflake.of(userIdIfPresent.get()));
+                        return calendarService.searchBirthdayById(userIdIfPresent.get());
                     } else {
                         return calendarService.searchBirthday(userParam);
                     }
                 })
-                .map(this::getOwnersBirthdayDateDurationText)
+                .zipWhen(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
+                .map(tuple -> getOwnersBirthdayDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
                 .switchIfEmpty(Mono.fromSupplier(() -> {
                     if(user == null) {
                         return translateService.getString("birthday.failure.self");
@@ -224,12 +235,12 @@ public class CalendarCommands {
                 duration.toDays() + 1);
     }
 
-    private String getOwnersBirthdayDateDurationText(Birthday nextBirthday) {
+    private String getOwnersBirthdayDateDurationText(Birthday nextBirthday, String name) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
         return translateService.getFormattedString("birthday.success",
-                nextBirthday.getName(),
+                name,
                 TranslateHelper.toDate(normalizedDate),
                 duration.toDays() + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
     }

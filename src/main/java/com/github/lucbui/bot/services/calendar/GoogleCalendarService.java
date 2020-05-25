@@ -120,7 +120,7 @@ public class GoogleCalendarService implements CalendarService {
     @Override
     public Mono<Void> addBirthday(Birthday birthday) {
         EventDateTime eventTime = new EventDateTime()
-            .setDate(new DateTime(DateTimeFormatter.ISO_LOCAL_DATE.format(birthday.getDate())))
+            .setDate(new DateTime(DateTimeFormatter.ISO_LOCAL_DATE.format(birthday.getDate().atYear(2016))))
             .setTimeZone(ZoneId.systemDefault().getId());
 
         Event event = new Event()

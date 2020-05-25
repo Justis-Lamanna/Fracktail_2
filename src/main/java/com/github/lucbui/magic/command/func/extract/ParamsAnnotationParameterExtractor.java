@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ParamsAnnotationParameterExtractor implements ParameterExtractor<MessageCreateEvent> {
@@ -29,6 +30,10 @@ public class ParamsAnnotationParameterExtractor implements ParameterExtractor<Me
             return evt -> tokenizer.tokenizeToMono(evt)
                     .map(Tokens::getParams)
                     .map(arr -> subs(arr, parameter.getAnnotation(Params.class)))
+                    .cast(out);
+        } else if(parameter.getType().equals(String.class)) {
+            return evt -> tokenizer.tokenizeToMono(evt)
+                    .map(t -> Objects.toString(t.getParamString(), ""))
                     .cast(out);
         }
         throw new IllegalArgumentException("@Params must annotate String[] value");

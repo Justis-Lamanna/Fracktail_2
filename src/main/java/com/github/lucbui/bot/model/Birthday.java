@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Birthday {
-    private static final Pattern BIRTHDAY_PATTERN = Pattern.compile("(\\w+)'s Birthday", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BIRTHDAY_PATTERN = Pattern.compile("(.*?)'s Birthday", Pattern.CASE_INSENSITIVE);
 
     private MonthDay date;
     private String name;
