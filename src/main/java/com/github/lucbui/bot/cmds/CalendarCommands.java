@@ -200,8 +200,8 @@ public class CalendarCommands {
     @CommandParams(0)
     public Mono<String> updatebday(@BasicSender User sender) {
         return calendarService.searchBirthdayById(sender.getId())
-                .flatMap(oldbday -> calendarService.updateBirthday(sender.getId(), sender.getUsername()).thenReturn(oldbday))
-                .map(oldbday -> translateService.getFormattedString("updatebday.success", oldbday.getName(), sender.getUsername()))
+                .zipWhen(oldbday -> calendarService.updateBirthday(sender.getId(), sender.getUsername()))
+                .map(tuple -> translateService.getFormattedString("updatebday.success", tuple.getT1().getName(), sender.getUsername()))
                 .defaultIfEmpty(translateService.getString("updatebday.failure"));
     }
 
