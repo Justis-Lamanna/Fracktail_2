@@ -21,6 +21,7 @@ public interface CalendarService {
     Mono<Birthday> searchBirthdayById(Snowflake id);
 
     Mono<Void> addBirthday(Birthday birthday);
+    Mono<Void> updateBirthday(Snowflake id, String name);
 
     default Flux<Birthday> getTodaysBirthday() {
         return getDaysBirthday(LocalDate.now());

@@ -136,6 +136,29 @@ public class GoogleCalendarService implements CalendarService {
                 .then();
     }
 
+    @Override
+    public Mono<Void> updateBirthday(Snowflake id, String name) {
+        DateTime beginningOfToday = from(LocalDate.now().atStartOfDay().minus(1, ChronoUnit.SECONDS));
+        //Cut off the search at one year from now, at which point birthdays will start to repeat.
+        DateTime oneYear = from(LocalDate.now().atStartOfDay().plus(1, ChronoUnit.YEARS));
+        return Mono.fromCallable(() ->
+                calendar.events().list(calendarId)
+                        .setMaxResults(1)
+                        .setTimeMin(beginningOfToday)
+                        .setTimeMax(oneYear)
+                        .setOrderBy("startTime")
+                        .setSingleEvents(true)
+                        .setPrivateExtendedProperty(Collections.singletonList("discord_id=" + id.asString()))
+                        .execute())
+                .flatMapIterable(Events::getItems)
+                .next()
+                .flatMap(evt -> {
+                    evt.setSummary(name + "'s Birthday");
+                    return Mono.fromCallable(() -> calendar.events().patch(calendarId, evt.getId(), evt));
+                })
+                .then();
+    }
+
     private DateTime from(LocalDateTime time) {
         return new DateTime(time.atZone(ZoneOffset.UTC).toEpochSecond() * 1000);
     }

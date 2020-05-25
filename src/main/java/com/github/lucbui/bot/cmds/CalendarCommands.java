@@ -170,13 +170,7 @@ public class CalendarCommands {
                 })
                 .zipWhen(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
                 .map(tuple -> getOwnersBirthdayDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
-                .switchIfEmpty(Mono.fromSupplier(() -> {
-                    if(user == null) {
-                        return translateService.getString("birthday.failure.self");
-                    } else {
-                        return translateService.getFormattedString("birthday.failure.other", StringUtils.capitalize(user));
-                    }
-                }));
+                .switchIfEmpty(translateService.getFormattedStringMono("birthday.failure.other", StringUtils.capitalize(user)));
     }
 
     @Command(aliases = "addbirthday")
@@ -200,6 +194,15 @@ public class CalendarCommands {
                 .flatMap(calendarService::addBirthday)
                 .then(Mono.fromSupplier(() ->
                         translateService.getFormattedString("addbirthday.success", sender.getUsername())));
+    }
+
+    @Command(aliases = "updatebirthday")
+    @CommandParams(0)
+    public Mono<String> updatebday(@BasicSender User sender) {
+        return calendarService.searchBirthdayById(sender.getId())
+                .flatMap(oldbday -> calendarService.updateBirthday(sender.getId(), sender.getUsername()).thenReturn(oldbday))
+                .map(oldbday -> translateService.getFormattedString("updatebday.success", oldbday.getName(), sender.getUsername()))
+                .defaultIfEmpty(translateService.getString("updatebday.failure"));
     }
 
     @Command(aliases = "setbirthday")
