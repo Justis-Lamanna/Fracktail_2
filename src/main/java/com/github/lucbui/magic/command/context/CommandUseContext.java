@@ -19,6 +19,10 @@ public abstract class CommandUseContext {
         return userId;
     }
 
+    public UserIdAndUsername getUserIdAndName() {
+        return new UserIdAndUsername(getUserId(), getUsername());
+    }
+
     public String getChannelId() {
         return channelId;
     }

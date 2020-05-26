@@ -7,7 +7,7 @@ import com.github.lucbui.magic.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
-@Commands
+//@Commands
 public class WeatherCommands {
     @Autowired
     private LocationService locationService;

@@ -5,6 +5,7 @@ import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.command.context.UserIdAndUsername;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
@@ -146,19 +147,19 @@ public class CalendarCommands {
                 .collect(Collectors.toList());
     }
 
-    @Command(aliases = "birthday")
+    @Command(value="bday", aliases = "birthday")
     @CommandParams(value = 0)
-    public Mono<String> bday(@BasicSender User sender) {
-        return Mono.justOrEmpty(sender.getId())
-                .flatMap(userSnowflake -> calendarService.searchBirthdayById(userSnowflake))
+    public Mono<String> bday0(@BasicSender String userId) {
+        return Mono.justOrEmpty(userId)
+                .flatMap(userSnowflake -> calendarService.searchBirthdayById(Snowflake.of(userId)))
                 .zipWhen(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
                 .map(tuple -> getOwnersBirthdayDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
                 .switchIfEmpty(translateService.getStringMono("birthday.failure.self"));
     }
 
-    @Command(aliases = "birthday")
+    @Command(value="bday", aliases = "birthday")
     @CommandParams(value = 1, comparison = ParamsComparison.OR_MORE)
-    public Mono<String> bday(@Params String user) {
+    public Mono<String> bday1toN(@Params String user) {
         return Mono.justOrEmpty(user)
                 .flatMap(userParam -> {
                     Optional<Snowflake> userIdIfPresent = DiscordUtils.toSnowflakeFromMentionOrLiteral(userParam);
@@ -175,12 +176,12 @@ public class CalendarCommands {
 
     @Command(aliases = "addbirthday")
     @CommandParams(1)
-    public Mono<String> addbday(@BasicSender User sender, @Param(0) String date) {
+    public Mono<String> addbday(@BasicSender UserIdAndUsername sender, @Param(0) String date) {
         if(date == null) {
             return translateService.getStringMono(TranslateHelper.usageKey("addbday"));
         }
 
-        return calendarService.searchBirthdayById(sender.getId())
+        return calendarService.searchBirthdayById(Snowflake.of(sender.getUserId()))
                 .flatMap(bday -> Mono.error(() ->
                         new CommandValidationException(translateService.getFormattedString(
                                 "addbirthday.validation.alreadyExists",
@@ -188,7 +189,7 @@ public class CalendarCommands {
                 .then(Mono.just(date))
                 .map(this::validateAndConvertToMonthDay)
                 .map(bday -> new Birthday(
-                        sender.getId().asString(),
+                        sender.getUserId(),
                         StringUtils.capitalize(sender.getUsername()),
                         bday))
                 .flatMap(calendarService::addBirthday)
@@ -198,9 +199,9 @@ public class CalendarCommands {
 
     @Command(aliases = "updatebirthday")
     @CommandParams(0)
-    public Mono<String> updatebday(@BasicSender User sender) {
-        return calendarService.searchBirthdayById(sender.getId())
-                .zipWhen(oldbday -> calendarService.updateBirthday(sender.getId(), sender.getUsername()))
+    public Mono<String> updatebday(@BasicSender UserIdAndUsername sender) {
+        return calendarService.searchBirthdayById(Snowflake.of(sender.getUserId()))
+                .zipWhen(oldbday -> calendarService.updateBirthday(Snowflake.of(sender.getUserId()), sender.getUsername()))
                 .map(tuple -> translateService.getFormattedString("updatebday.success", tuple.getT1().getName(), sender.getUsername()))
                 .defaultIfEmpty(translateService.getString("updatebday.failure"));
     }

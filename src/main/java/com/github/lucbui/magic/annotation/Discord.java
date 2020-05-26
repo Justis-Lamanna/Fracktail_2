@@ -5,12 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Parameter annotation to inject basic sender information
- * @see com.github.lucbui.magic.annotation.Sender
- */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface BasicSender {
-    boolean injectId() default false;
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Discord {
 }

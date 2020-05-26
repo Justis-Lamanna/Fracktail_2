@@ -36,7 +36,7 @@ import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
-@Commands
+//@Commands
 public class PollCommands {
     private static final Logger LOGGER = LoggerFactory.getLogger(PollCommands.class);
 

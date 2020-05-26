@@ -4,6 +4,7 @@ import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandUseContext;
+import com.github.lucbui.magic.command.context.DiscordCommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommand;
 import com.github.lucbui.magic.command.store.CommandStore;
 import com.github.lucbui.magic.exception.BotException;
@@ -102,17 +103,22 @@ public class BotUseCommands {
     @Command
     @CommandParams(0)
     @Permissions("owner")
-    public Mono<Void> sleep(MessageCreateEvent evt) {
-        return DiscordUtils.respond(evt.getMessage(), translateService.getString("sleep.text"))
-                .then(evt.getClient().logout());
+    public Mono<Void> sleep(CommandUseContext ctx) {
+        if(ctx instanceof DiscordCommandUseContext) {
+            return ctx.respond(translateService.getString("sleep.text"))
+                    .then(((DiscordCommandUseContext) ctx).getEvent().getClient().logout());
+        }
+        return Mono.empty();
     }
 
     @Command
     @CommandParams(0)
     @Permissions("owner")
-    public Mono<Void> logs(MessageCreateEvent evt) {
+    @Discord
+    public Mono<Void> logs(DiscordCommandUseContext ctx) {
         File file = new File("/home/pi/fracktail/logs/app.log");
         if(file.exists()) {
+            MessageCreateEvent evt = ctx.getEvent();
             return evt.getMessage().getChannel()
                     .flatMap(mc -> mc.createMessage(messageCreateSpec -> {
                         try {
@@ -124,13 +130,14 @@ public class BotUseCommands {
                     }))
                     .then();
         }
-        return DiscordUtils.respond(evt.getMessage(), "I can't get the logs on this environment.");
+        return ctx.respond("I can't get the logs on this environment.");
     }
 
     @Command
     @Permissions("owner")
-    public Mono<Void> stats(MessageCreateEvent evt) {
-        return evt.getMessage().getChannel()
+    @Discord
+    public Mono<Void> stats(DiscordCommandUseContext ctx) {
+        return ctx.getEvent().getMessage().getChannel()
                 .flatMapMany(c -> c.createMessage(spec -> {
                     spec.setEmbed(embed -> {
                         embed.setTitle(translateService.getString("stats.title"));
