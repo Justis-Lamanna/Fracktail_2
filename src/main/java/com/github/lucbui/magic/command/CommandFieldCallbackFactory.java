@@ -2,13 +2,14 @@ package com.github.lucbui.magic.command;
 
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandCreateContext;
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.*;
 import com.github.lucbui.magic.command.func.extract.ParameterExtractor;
+import com.github.lucbui.magic.command.func.invoke.*;
 import com.github.lucbui.magic.command.store.CommandStore;
 import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
-import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,12 +22,9 @@ import reactor.util.function.Tuples;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A factory which creates a CommandFieldCallback for each processed bean
@@ -35,12 +33,12 @@ public class CommandFieldCallbackFactory {
     private final CommandStore commands;
     private final Tokenizer tokenizer;
     private final List<BotCommandPostProcessor> botCommandPostProcessors;
-    private final List<ParameterExtractor<MessageCreateEvent>> parameterExtractors;
+    private final List<ParameterExtractor<CommandUseContext>> parameterExtractors;
 
     public CommandFieldCallbackFactory(CommandStore commands,
                                        Tokenizer tokenizer,
                                        List<BotCommandPostProcessor> botCommandPostProcessors,
-                                       List<ParameterExtractor<MessageCreateEvent>> parameterExtractors) {
+                                       List<ParameterExtractor<CommandUseContext>> parameterExtractors) {
         this.commands = commands;
         this.tokenizer = tokenizer;
         this.botCommandPostProcessors = botCommandPostProcessors;
@@ -122,27 +120,27 @@ public class CommandFieldCallbackFactory {
          * @return The behavior the command exhibits
          */
         protected BotMessageBehavior getBehavior(Method method) {
-            List<Function<MessageCreateEvent, Mono<Object>>> extractors = getExtractorsFor(method);
-            Invoker<MessageCreateEvent, Object[], Mono<Void>> invoker = getInvokerFor(method);
-            return event -> extractors.stream()
-                    .map(func -> func.apply(event))
+            List<Function<CommandUseContext, Mono<Object>>> extractors = getExtractorsFor(method);
+            Invoker<CommandUseContext, Object[], Mono<Void>> invoker = getInvokerFor(method);
+            return ctx -> extractors.stream()
+                    .map(func -> func.apply(ctx))
                     .map(mono -> mono.map(Optional::ofNullable).defaultIfEmpty(Optional.empty()))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), Flux::concat))
                     .collectList()
                     .flatMap(params -> {
                         try {
-                            return invoker.invoke(event, params.stream().map(opt -> opt.orElse(null)).toArray());
+                            return invoker.invoke(ctx, params.stream().map(opt -> opt.orElse(null)).toArray());
                         } catch (Exception e) {
                             throw new BotException("Error invoking reflected method", e);
                         }
                     });
         }
 
-        private List<Function<MessageCreateEvent, Mono<Object>>> getExtractorsFor(Method method) {
+        private List<Function<CommandUseContext, Mono<Object>>> getExtractorsFor(Method method) {
             return Arrays.stream(method.getParameters()).map(this::getExtractorFor).collect(Collectors.toList());
         }
 
-        private Function<MessageCreateEvent, Mono<Object>> getExtractorFor(Parameter param) {
+        private Function<CommandUseContext, Mono<Object>> getExtractorFor(Parameter param) {
             return parameterExtractors.stream()
                     .filter(extractor -> extractor.isValidFor(param))
                     .findFirst()
@@ -150,7 +148,7 @@ public class CommandFieldCallbackFactory {
                     .orElseThrow(() -> new BotException("No Parameter Extractor found for parameter " + param));
         }
 
-        private Invoker<MessageCreateEvent, Object[], Mono<Void>> getInvokerFor(Method method) {
+        private Invoker<CommandUseContext, Object[], Mono<Void>> getInvokerFor(Method method) {
             if (method.getReturnType() == null) {
                 return getNoReturnInvoker(method);
             } else if (method.getReturnType().equals(String.class)) {
@@ -164,55 +162,25 @@ public class CommandFieldCallbackFactory {
             }
         }
 
-        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getNoReturnInvoker(Method method) {
-            return (event, params) -> {
-                method.invoke(bean, params);
-                return Mono.empty();
-            };
+        protected Invoker<CommandUseContext, Object[], Mono<Void>> getNoReturnInvoker(Method method) {
+            return new NoReturnInvoker(bean, method);
         }
 
-        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getStringReturnInvoker(Method method) {
-            return (event, params) -> {
-                String response = (String) method.invoke(bean, params);
-                return response == null ? Mono.empty() : DiscordUtils.respond(event.getMessage(), response);
-            };
+        protected Invoker<CommandUseContext, Object[], Mono<Void>> getStringReturnInvoker(Method method) {
+            return new StringReturnInvoker(bean, method);
         }
 
-        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getMonoReturnInvoker(Method method) {
-            return (event, params) -> {
-                Mono<?> response = (Mono<?>) method.invoke(bean, params);
-                if (response == null) {
-                    return Mono.empty();
-                }
-                return response.flatMap(res -> {
-                    if (res instanceof String) {
-                        return DiscordUtils.respond(event.getMessage(), (String) res);
-                    } else {
-                        return Mono.empty();
-                    }
-                });
-            };
+        protected Invoker<CommandUseContext, Object[], Mono<Void>> getMonoReturnInvoker(Method method) {
+            return new MonoReturnInvoker(bean, method);
         }
 
-        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getFluxReturnInvoker(Method method) {
-            return (event, params) -> {
-                Flux<?> response = (Flux<?>) method.invoke(bean, params);
-                if (response == null) {
-                    return Mono.empty();
-                }
-                return response.filter(Objects::nonNull)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining("\n"))
-                        .flatMap(msg -> DiscordUtils.respond(event.getMessage(), msg));
-            };
+        protected Invoker<CommandUseContext, Object[], Mono<Void>> getFluxReturnInvoker(Method method) {
+            return new FluxReturnInvoker(bean, method);
         }
 
-        protected Invoker<MessageCreateEvent, Object[], Mono<Void>> getOtherReturnInvoker(Method method) {
+        protected Invoker<CommandUseContext, Object[], Mono<Void>> getOtherReturnInvoker(Method method) {
             throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
         }
     }
 
-    public interface Invoker<I1, I2, O> {
-        O invoke(I1 in1, I2 in2) throws Exception;
-    }
 }

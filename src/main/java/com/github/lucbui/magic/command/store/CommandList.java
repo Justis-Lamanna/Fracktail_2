@@ -3,7 +3,6 @@ package com.github.lucbui.magic.command.store;
 import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommand;
-import com.github.lucbui.magic.command.func.BotMessageBehavior;
 import com.github.lucbui.magic.token.Tokens;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import reactor.core.publisher.Flux;
@@ -11,7 +10,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * A list of usable bot commands

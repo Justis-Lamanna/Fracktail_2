@@ -4,20 +4,15 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Mono;
 
-public class CommandUseContext {
+public abstract class CommandUseContext {
     private String userId;
     private String channelId;
 
     public CommandUseContext(String userId, String channelId) {
         this.userId = userId;
         this.channelId = channelId;
-    }
-
-    public static CommandUseContext from(MessageCreateEvent event) {
-        return new CommandUseContext(
-                event.getMessage().getAuthor().map(User::getId).map(Snowflake::asString).orElse(null),
-                event.getGuildId().map(Snowflake::asString).orElse(null));
     }
 
     public String getUserId() {
@@ -27,4 +22,10 @@ public class CommandUseContext {
     public String getChannelId() {
         return channelId;
     }
+
+    public abstract Mono<Void> respond(String response);
+
+    public abstract String getUsername();
+
+    public abstract String getMessage();
 }

@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.store;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
+import com.github.lucbui.magic.command.context.DiscordCommandUseContext;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -18,8 +19,8 @@ import reactor.core.publisher.Mono;
  * Validating commands
  * Executing commands
  */
-public class DefaultCommandHandler implements CommandHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCommandHandler.class);
+public class DefaultDiscordCommandHandler implements CommandHandler<MessageCreateEvent> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDiscordCommandHandler.class);
 
     private final Tokenizer tokenizer;
     private final CreateMessageValidator createMessageValidator;
@@ -31,7 +32,7 @@ public class DefaultCommandHandler implements CommandHandler {
      * @param createMessageValidator A validator which validates a command should be handled
      * @param commandStore A list of commands
      */
-    public DefaultCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandStore commandStore) {
+    public DefaultDiscordCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandStore commandStore) {
         this.tokenizer = tokenizer;
         this.createMessageValidator = createMessageValidator;
         this.commandStore = commandStore;
@@ -45,13 +46,15 @@ public class DefaultCommandHandler implements CommandHandler {
                     event.getMessage().getContent().orElse("???"));
         }
 
-        return tokenizer.tokenizeToMono(event)
-                .flatMap(tokens -> commandStore.getCommand(tokens, CommandUseContext.from(event)))
+        CommandUseContext ctx = DiscordCommandUseContext.from(event);
+
+        return tokenizer.tokenizeToMono(ctx)
+                .flatMap(tokens -> commandStore.getCommand(tokens, ctx))
                 .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
                 .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
                         cmd.getName(),
                         event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
-                .flatMap(cmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(cmd.getBehavior().execute(event))).then())
+                .flatMap(cmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(cmd.getBehavior().execute(ctx))).then())
                 .onErrorResume(CommandValidationException.class, ex -> DiscordUtils.respond(event.getMessage(), ex.getMessage()))
                 .onErrorResume(ex -> {
                     LOGGER.error("Error handling message", ex);

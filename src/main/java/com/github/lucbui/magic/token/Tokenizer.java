@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.token;
 
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
@@ -27,8 +28,15 @@ public interface Tokenizer {
      * @param event The event to tokenize
      * @return A mono containing the tokens
      */
+    @Deprecated
     default Mono<Tokens> tokenizeToMono(MessageCreateEvent event) {
         return Mono.justOrEmpty(event.getMessage().getContent())
+                .filter(this::isValid)
+                .map(this::tokenize);
+    }
+
+    default Mono<Tokens> tokenizeToMono(CommandUseContext ctx) {
+        return Mono.justOrEmpty(ctx.getMessage())
                 .filter(this::isValid)
                 .map(this::tokenize);
     }

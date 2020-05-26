@@ -48,6 +48,6 @@ public class CommandHandlerBuilder {
         } else {
             validator = new ChainCreateMessageValidator(validators);
         }
-        return new DefaultCommandHandler(tokenizer, validator, commandList);
+        return new DefaultDiscordCommandHandler(tokenizer, validator, commandList);
     }
 }

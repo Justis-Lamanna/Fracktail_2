@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.command.func;
 
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
@@ -9,8 +10,8 @@ import reactor.core.publisher.Mono;
 public interface BotMessageBehavior {
     /**
      * Execute command behavior
-     * @param event The Message event
+     * @param ctx The context of the message usage
      * @return A Mono which completes when behavior completes
      */
-    Mono<Void> execute(MessageCreateEvent event);
+    Mono<Void> execute(CommandUseContext ctx);
 }

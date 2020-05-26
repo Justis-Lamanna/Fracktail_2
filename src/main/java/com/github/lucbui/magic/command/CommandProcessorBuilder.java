@@ -1,5 +1,6 @@
 package com.github.lucbui.magic.command;
 
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.func.extract.*;
 import com.github.lucbui.magic.command.store.CommandStore;
@@ -13,7 +14,7 @@ public class CommandProcessorBuilder {
     public CommandStore commandList;
     public Tokenizer tokenizer;
     private List<BotCommandPostProcessor> botCommandPostProcessors = new ArrayList<>();
-    private List<ParameterExtractor<MessageCreateEvent>> parameterExtractors = new ArrayList<>();
+    private List<ParameterExtractor<CommandUseContext>> parameterExtractors = new ArrayList<>();
 
     public CommandProcessorBuilder(Tokenizer tokenizer, CommandStore commandList) {
         this.tokenizer = tokenizer;
@@ -49,7 +50,7 @@ public class CommandProcessorBuilder {
         return this;
     }
 
-    public CommandProcessorBuilder withParameterExtractor(ParameterExtractor<MessageCreateEvent> parameterExtractor) {
+    public CommandProcessorBuilder withParameterExtractor(ParameterExtractor<CommandUseContext> parameterExtractor) {
         this.parameterExtractors.add(parameterExtractor);
         return this;
     }

@@ -30,7 +30,8 @@ public class UsageCommandListFallback implements CommandListFallback {
             return Mono.empty();
         } else {
             String officialName = otherCandidates.get(0).getName();
-            return Mono.just(new BotCommand(officialName, event -> DiscordUtils.respond(event.getMessage(), translateService.getString(TranslateHelper.usageKey(officialName)))));
+            return Mono.just(new BotCommand(officialName,
+                    context -> context.respond(translateService.getString(TranslateHelper.usageKey(officialName)))));
         }
     }
 }

@@ -6,11 +6,11 @@ import reactor.core.publisher.Mono;
 /**
  * Describes an object which can handle MessageCreateEvents
  */
-public interface CommandHandler {
+public interface CommandHandler<IN> {
     /**
      * Handle a MessageCreateEvent
      * @param event The event to handle
      * @return A Mono which completes when handling is completed.
      */
-    Mono<Void> handleMessageCreateEvent(MessageCreateEvent event);
+    Mono<Void> handleMessageCreateEvent(IN event);
 }

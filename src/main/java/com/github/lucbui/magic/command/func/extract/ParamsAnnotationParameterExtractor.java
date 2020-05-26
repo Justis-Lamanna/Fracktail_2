@@ -1,6 +1,7 @@
 package com.github.lucbui.magic.command.func.extract;
 
 import com.github.lucbui.magic.annotation.Params;
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class ParamsAnnotationParameterExtractor implements ParameterExtractor<MessageCreateEvent> {
+public class ParamsAnnotationParameterExtractor implements ParameterExtractor<CommandUseContext> {
     private Tokenizer tokenizer;
 
     public ParamsAnnotationParameterExtractor(Tokenizer tokenizer) {
@@ -25,14 +26,14 @@ public class ParamsAnnotationParameterExtractor implements ParameterExtractor<Me
     }
 
     @Override
-    public <OUT> Function<MessageCreateEvent, Mono<OUT>> getExtractorFor(Parameter parameter, Class<OUT> out) {
+    public <OUT> Function<CommandUseContext, Mono<OUT>> getExtractorFor(Parameter parameter, Class<OUT> out) {
         if(parameter.getType().equals(String[].class)) {
-            return evt -> tokenizer.tokenizeToMono(evt)
+            return ctx -> tokenizer.tokenizeToMono(ctx)
                     .map(Tokens::getParams)
                     .map(arr -> subs(arr, parameter.getAnnotation(Params.class)))
                     .cast(out);
         } else if(parameter.getType().equals(String.class)) {
-            return evt -> tokenizer.tokenizeToMono(evt)
+            return ctx -> tokenizer.tokenizeToMono(ctx)
                     .map(t -> Objects.toString(t.getParamString(), ""))
                     .cast(out);
         }

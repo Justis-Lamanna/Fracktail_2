@@ -52,8 +52,8 @@ public class BotUseCommands {
 
     @Command
     @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    public Mono<String> help(MessageCreateEvent evt, @Param(0) @Default("help") String cmd) {
-        return commandStore.getAllCommands(CommandUseContext.from(evt))
+    public Mono<String> help(CommandUseContext ctx, @Param(0) @Default("help") String cmd) {
+        return commandStore.getAllCommands(ctx)
                 .filter(bc -> StringUtils.equalsIgnoreCase(cmd, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmd, bc.getAliases()))
                 .next()
                 .flatMap(bc -> {
@@ -67,8 +67,8 @@ public class BotUseCommands {
 
     @Command
     @CommandParams(0)
-    public Mono<String> commands(MessageCreateEvent evt) {
-        return commandStore.getAllCommands(CommandUseContext.from(evt))
+    public Mono<String> commands(CommandUseContext ctx) {
+        return commandStore.getAllCommands(ctx)
                 .map(BotCommand::getName)
                 .distinct()
                 .sort()
