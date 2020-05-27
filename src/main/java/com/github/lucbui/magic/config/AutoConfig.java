@@ -1,26 +1,26 @@
 package com.github.lucbui.magic.config;
 
-import com.github.lucbui.magic.command.execution.*;
+import com.github.lucbui.magic.command.execution.CommandBank;
+import com.github.lucbui.magic.command.execution.CommandHandler;
+import com.github.lucbui.magic.command.execution.DefaultCommandBank;
+import com.github.lucbui.magic.command.execution.DefaultDiscordCommandHandler;
+import com.github.lucbui.magic.command.func.BotCommandProcessor;
 import com.github.lucbui.magic.command.func.invoke.CommandFallback;
 import com.github.lucbui.magic.command.parse.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.parse.CommandProcessorBuilder;
-import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
-import com.github.lucbui.magic.validation.PermissionsService;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import discord4j.core.object.presence.Status;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +67,7 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandBank commandBank, List<BotCommandPostProcessor> processors) {
+    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandBank commandBank, List<BotCommandProcessor> processors) {
         return new CommandProcessorBuilder(commandBank, tokenizer)
                 .withDefaultParameterExtractors()
                 .withBotCommandPostProcessors(processors)

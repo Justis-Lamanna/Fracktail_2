@@ -5,6 +5,7 @@ import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.context.UserIdAndUsername;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.util.DiscordUtils;
@@ -20,7 +21,9 @@ import reactor.core.publisher.Mono;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -149,9 +152,9 @@ public class CalendarCommands {
 
     @Command(value="bday", aliases = "birthday")
     @CommandParams(value = 0)
-    public Mono<String> bday0(@BasicSender String userId) {
-        return Mono.justOrEmpty(userId)
-                .flatMap(userSnowflake -> calendarService.searchBirthdayById(Snowflake.of(userId)))
+    public Mono<String> bday0(CommandUseContext ctx) {
+        return Mono.justOrEmpty(ctx.getUserId())
+                .flatMap(userId -> calendarService.searchBirthdayById(Snowflake.of(userId)))
                 .zipWhen(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
                 .map(tuple -> getOwnersBirthdayDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
                 .switchIfEmpty(translateService.getStringMono("birthday.failure.self"));

@@ -2,12 +2,13 @@ package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.annotation.CommandParams;
+import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.context.CommandUseContext;
-import com.github.lucbui.magic.command.execution.CommandBank;
-import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
-import com.github.lucbui.magic.command.func.BotMessageBehavior;
 import com.github.lucbui.magic.command.execution.BCommand;
+import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.execution.ComplexBotMessageBehavior;
+import com.github.lucbui.magic.command.func.BotCommandProcessor;
+import com.github.lucbui.magic.command.func.BotMessageBehavior;
 import com.github.lucbui.magic.command.func.extract.ParameterExtractor;
 import com.github.lucbui.magic.command.func.invoke.*;
 import com.github.lucbui.magic.exception.BotException;
@@ -33,12 +34,12 @@ public class CommandFromMethodParserFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandFromMethodParser.class);
 
     private final CommandBank commandBank;
-    private final List<BotCommandPostProcessor> botCommandPostProcessors;
+    private final List<BotCommandProcessor> botCommandProcessors;
     private final List<ParameterExtractor<CommandUseContext>> parameterExtractors;
 
-    public CommandFromMethodParserFactory(CommandBank commandBank, List<BotCommandPostProcessor> botCommandPostProcessors, List<ParameterExtractor<CommandUseContext>> parameterExtractors) {
+    public CommandFromMethodParserFactory(CommandBank commandBank, List<BotCommandProcessor> botCommandProcessors, List<ParameterExtractor<CommandUseContext>> parameterExtractors) {
         this.commandBank = commandBank;
-        this.botCommandPostProcessors = botCommandPostProcessors;
+        this.botCommandProcessors = botCommandProcessors;
         this.parameterExtractors = parameterExtractors;
     }
 
@@ -55,20 +56,29 @@ public class CommandFromMethodParserFactory {
 
         @Override
         public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
-            LOGGER.debug("Found command in method " + method.getName());
+            LOGGER.debug("Found command in method {}.{}", method.getDeclaringClass().getCanonicalName(), method.getName());
             ReflectionUtils.makeAccessible(method);
             validateMethod(method);
 
             String name = getName(method);
             String[] aliases = getAliases(method);
+            LOGGER.debug("+- Command names: {}, aliases: {}", name, aliases);
             ComplexBotMessageBehavior behavior = getBehavior(method);
             Optional<BCommand> oldCommandOpt = commandBank.getCommandById(name);
+            CommandCreateContext ctx = new CommandCreateContext(name, aliases, behavior);
             if(oldCommandOpt.isPresent()) {
+                botCommandProcessors.forEach(bcpp -> bcpp.beforeUpdate(method, ctx));
+                LOGGER.debug("\\- Updating command: " + name);
                 BCommand oldCommand = oldCommandOpt.get();
                 behavior.orElse(oldCommand.getBehavior());
                 oldCommand.setBehavior(behavior);
+                botCommandProcessors.forEach(bcpp -> bcpp.afterUpdate(method, oldCommand, ctx));
             } else {
-                commandBank.addCommand(new BCommand(name, aliases, behavior, createCommandPredicate(method)));
+                botCommandProcessors.forEach(bcpp -> bcpp.beforeCreate(method, ctx));
+                BCommand command = new BCommand(name, aliases, behavior, createCommandPredicate(method));
+                LOGGER.debug("\\- Creating command: " + name);
+                commandBank.addCommand(command);
+                botCommandProcessors.forEach(bcpp -> bcpp.afterCreate(method, command, ctx));
             }
         }
 
@@ -94,7 +104,7 @@ public class CommandFromMethodParserFactory {
             }
         }
 
-        private String[] getAliases(Method method) {
+        protected String[] getAliases(Method method) {
             Command cmdAnnotation = method.getAnnotation(Command.class);
             return cmdAnnotation.aliases();
         }

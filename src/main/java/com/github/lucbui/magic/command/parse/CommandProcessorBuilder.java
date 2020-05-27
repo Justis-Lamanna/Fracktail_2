@@ -2,7 +2,7 @@ package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.execution.CommandBank;
-import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
+import com.github.lucbui.magic.command.func.BotCommandProcessor;
 import com.github.lucbui.magic.command.func.extract.*;
 import com.github.lucbui.magic.token.Tokenizer;
 
@@ -12,7 +12,7 @@ import java.util.List;
 public class CommandProcessorBuilder {
     public CommandBank commandBank;
     public Tokenizer tokenizer;
-    private List<BotCommandPostProcessor> botCommandPostProcessors = new ArrayList<>();
+    private List<BotCommandProcessor> botCommandProcessors = new ArrayList<>();
     private List<ParameterExtractor<CommandUseContext>> parameterExtractors = new ArrayList<>();
 
     public CommandProcessorBuilder(CommandBank commandBank, Tokenizer tokenizer) {
@@ -20,13 +20,13 @@ public class CommandProcessorBuilder {
         this.tokenizer = tokenizer;
     }
 
-    public CommandProcessorBuilder withBotCommandPostProcessor(BotCommandPostProcessor botCommandPostProcessor) {
-        this.botCommandPostProcessors.add(botCommandPostProcessor);
+    public CommandProcessorBuilder withBotCommandPostProcessor(BotCommandProcessor botCommandProcessor) {
+        this.botCommandProcessors.add(botCommandProcessor);
         return this;
     }
 
-    public CommandProcessorBuilder withBotCommandPostProcessors(List<BotCommandPostProcessor> botCommandPostProcessors) {
-        this.botCommandPostProcessors.addAll(botCommandPostProcessors);
+    public CommandProcessorBuilder withBotCommandPostProcessors(List<BotCommandProcessor> botCommandProcessors) {
+        this.botCommandProcessors.addAll(botCommandProcessors);
         return this;
     }
 
@@ -45,6 +45,6 @@ public class CommandProcessorBuilder {
     }
 
     public CommandAnnotationProcessor build() {
-        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandPostProcessors, parameterExtractors));
+        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, parameterExtractors));
     }
 }
