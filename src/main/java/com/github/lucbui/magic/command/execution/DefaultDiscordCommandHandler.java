@@ -1,11 +1,11 @@
-package com.github.lucbui.magic.command.store;
+package com.github.lucbui.magic.command.execution;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.context.DiscordCommandUseContext;
+import com.github.lucbui.magic.command.func.invoke.CommandFallback;
 import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.util.DiscordUtils;
-import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.User;
 import org.slf4j.Logger;
@@ -23,19 +23,18 @@ public class DefaultDiscordCommandHandler implements CommandHandler<MessageCreat
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDiscordCommandHandler.class);
 
     private final Tokenizer tokenizer;
-    private final CreateMessageValidator createMessageValidator;
-    private final CommandStore commandStore;
+    private final CommandBank commandBank;
+    private final CommandFallback commandFallback;
 
     /**
      * Initialize DefaultCommandHandler
      * @param tokenizer The tokenizer to use
-     * @param createMessageValidator A validator which validates a command should be handled
-     * @param commandStore A list of commands
+     * @param commandBank A list of commands
      */
-    public DefaultDiscordCommandHandler(Tokenizer tokenizer, CreateMessageValidator createMessageValidator, CommandStore commandStore) {
+    public DefaultDiscordCommandHandler(Tokenizer tokenizer, CommandBank commandBank, CommandFallback commandFallback) {
         this.tokenizer = tokenizer;
-        this.createMessageValidator = createMessageValidator;
-        this.commandStore = commandStore;
+        this.commandBank = commandBank;
+        this.commandFallback = commandFallback;
     }
 
     @Override
@@ -49,12 +48,11 @@ public class DefaultDiscordCommandHandler implements CommandHandler<MessageCreat
         CommandUseContext ctx = DiscordCommandUseContext.from(event);
 
         return tokenizer.tokenizeToMono(ctx)
-                .flatMap(tokens -> commandStore.getCommand(tokens, ctx))
-                .filterWhen(cmd -> createMessageValidator.validate(event, cmd))
-                .doOnNext(cmd -> LOGGER.info("Executing command {} from {}",
-                        cmd.getName(),
-                        event.getMessage().getAuthor().map(User::getUsername).orElse("???")))
-                .flatMap(cmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(cmd.getBehavior().execute(ctx))).then())
+                .zipWhen(tokens -> commandBank.getCommand(tokens, ctx).map(BCommand::getBehavior).defaultIfEmpty(commandFallback.getNoCommandFound()))
+                .flatMap(tokensCmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(
+                        tokensCmd.getT2().execute(tokensCmd.getT1(), ctx)
+                                .switchIfEmpty(commandFallback.getCommandUsedIncorrectly().execute(tokensCmd.getT1(), ctx))
+                )).then())
                 .onErrorResume(CommandValidationException.class, ex -> DiscordUtils.respond(event.getMessage(), ex.getMessage()))
                 .onErrorResume(ex -> {
                     LOGGER.error("Error handling message", ex);

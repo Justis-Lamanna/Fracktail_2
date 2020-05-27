@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class FluxReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Void>> {
+public class FluxReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Boolean>> {
     private final Object objToInvokeOn;
     private final Method methodToInvoke;
 
@@ -20,7 +20,7 @@ public class FluxReturnInvoker implements Invoker<CommandUseContext, Object[], M
     }
 
     @Override
-    public Mono<Void> invoke(CommandUseContext ctx, Object[] params) throws Exception {
+    public Mono<Boolean> invoke(CommandUseContext ctx, Object[] params) throws Exception {
         Flux<?> response = (Flux<?>) methodToInvoke.invoke(objToInvokeOn, params);
         if (response == null) {
             return Mono.empty();
@@ -28,6 +28,7 @@ public class FluxReturnInvoker implements Invoker<CommandUseContext, Object[], M
         return response.filter(Objects::nonNull)
                 .map(Objects::toString)
                 .collect(Collectors.joining("\n"))
-                .flatMap(ctx::respond);
+                .flatMap(ctx::respond)
+                .thenReturn(true);
     }
 }

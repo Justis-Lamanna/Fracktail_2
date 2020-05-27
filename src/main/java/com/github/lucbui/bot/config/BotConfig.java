@@ -1,7 +1,8 @@
 package com.github.lucbui.bot.config;
 
 import com.github.lucbui.bot.services.voice.RerHandler;
-import com.github.lucbui.magic.command.store.CommandHandler;
+import com.github.lucbui.magic.command.execution.CommandHandler;
+import com.github.lucbui.magic.command.func.invoke.CommandFallback;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
@@ -20,7 +21,15 @@ public class BotConfig {
     private Logger LOGGER = LoggerFactory.getLogger(BotConfig.class);
 
     @Bean
-    public DiscordClient bot(CommandHandler commandHandler, RerHandler rerHandler, Presence presence,
+    public CommandFallback testFallback() {
+        return new CommandFallback(
+                (t, c) -> c.respond("No Command").thenReturn(true),
+                (t, c) -> c.respond("Bad Command").thenReturn(true)
+        );
+    }
+
+    @Bean
+    public DiscordClient bot(CommandHandler<MessageCreateEvent> commandHandler, RerHandler rerHandler, Presence presence,
                              @Value("${discord.token}") String token) {
         DiscordClient bot = new DiscordClientBuilder(token)
                 .setInitialPresence(presence)

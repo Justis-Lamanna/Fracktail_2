@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 
-public class StringReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Void>> {
+public class StringReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Boolean>> {
     private final Object objToInvokeOn;
     private final Method methodToInvoke;
 
@@ -17,8 +17,8 @@ public class StringReturnInvoker implements Invoker<CommandUseContext, Object[],
     }
 
     @Override
-    public Mono<Void> invoke(CommandUseContext ctx, Object[] params) throws Exception {
+    public Mono<Boolean> invoke(CommandUseContext ctx, Object[] params) throws Exception {
         String response = (String) methodToInvoke.invoke(objToInvokeOn, params);
-        return response == null ? Mono.empty() : ctx.respond(response);
+        return response == null ? Mono.empty() : ctx.respond(response).thenReturn(true);
     }
 }

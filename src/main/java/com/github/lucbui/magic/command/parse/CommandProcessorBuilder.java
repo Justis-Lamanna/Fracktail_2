@@ -1,34 +1,23 @@
-package com.github.lucbui.magic.command;
+package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
+import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
 import com.github.lucbui.magic.command.func.extract.*;
-import com.github.lucbui.magic.command.store.CommandStore;
 import com.github.lucbui.magic.token.Tokenizer;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommandProcessorBuilder {
-    public CommandStore commandList;
+    public CommandBank commandBank;
     public Tokenizer tokenizer;
     private List<BotCommandPostProcessor> botCommandPostProcessors = new ArrayList<>();
     private List<ParameterExtractor<CommandUseContext>> parameterExtractors = new ArrayList<>();
 
-    public CommandProcessorBuilder(Tokenizer tokenizer, CommandStore commandList) {
+    public CommandProcessorBuilder(CommandBank commandBank, Tokenizer tokenizer) {
+        this.commandBank = commandBank;
         this.tokenizer = tokenizer;
-        this.commandList = commandList;
-    }
-
-    public CommandProcessorBuilder withCommandList(CommandStore commandList) {
-        this.commandList = commandList;
-        return this;
-    }
-
-    public CommandProcessorBuilder withTokenizer(Tokenizer tokenizer) {
-        this.tokenizer = tokenizer;
-        return this;
     }
 
     public CommandProcessorBuilder withBotCommandPostProcessor(BotCommandPostProcessor botCommandPostProcessor) {
@@ -56,6 +45,6 @@ public class CommandProcessorBuilder {
     }
 
     public CommandAnnotationProcessor build() {
-        return new CommandAnnotationProcessor(new CommandFieldCallbackFactory(commandList, tokenizer, botCommandPostProcessors, parameterExtractors));
+        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandPostProcessors, parameterExtractors));
     }
 }

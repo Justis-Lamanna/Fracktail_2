@@ -1,30 +1,28 @@
 package com.github.lucbui.magic.config;
 
-import com.github.lucbui.magic.command.CommandAnnotationProcessor;
-import com.github.lucbui.magic.command.CommandProcessorBuilder;
+import com.github.lucbui.magic.command.execution.*;
+import com.github.lucbui.magic.command.func.invoke.CommandFallback;
+import com.github.lucbui.magic.command.parse.CommandAnnotationProcessor;
+import com.github.lucbui.magic.command.parse.CommandProcessorBuilder;
 import com.github.lucbui.magic.command.func.BotCommandPostProcessor;
-import com.github.lucbui.magic.command.func.postprocessor.*;
-import com.github.lucbui.magic.command.store.*;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.validation.PermissionsService;
-import com.github.lucbui.magic.validation.validators.CreateMessageValidator;
-import com.github.lucbui.magic.validation.validators.LocalCooldownCommandValidator;
-import com.github.lucbui.magic.validation.validators.NotBotUserMessageValidator;
+import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import discord4j.core.object.presence.Status;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
-import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 
 @Configuration
@@ -56,21 +54,8 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandListFallback commandListFallback() {
-        return CommandListFallback.doNothing();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CommandStore commandStore(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive,
-                                     @Value("${discord.permissions.enabled:false}") boolean permissionsEnabled,
-                                     @Autowired(required = false) PermissionsService permissionsService,
-                                     CommandListFallback commandListFallback) {
-        CommandStore store = caseInsensitive ? CommandList.caseInsensitive(commandListFallback) : CommandList.caseSensitive(commandListFallback);
-        if(permissionsEnabled && permissionsService != null) {
-            store = new PermissionsBackedCommandStore(store, permissionsService);
-        }
-        return store;
+    public CommandBank commandBank(@Value("${discord.commands.caseInsensitive:false}") boolean caseInsensitive) {
+        return new DefaultCommandBank(caseInsensitive ? CaseInsensitiveMap::new: HashMap::new);
     }
 
     @Bean
@@ -82,8 +67,8 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandStore commandStore, List<BotCommandPostProcessor> processors) {
-        return new CommandProcessorBuilder(tokenizer, commandStore)
+    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandBank commandBank, List<BotCommandPostProcessor> processors) {
+        return new CommandProcessorBuilder(commandBank, tokenizer)
                 .withDefaultParameterExtractors()
                 .withBotCommandPostProcessors(processors)
                 .build();
@@ -91,62 +76,40 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandHandler commandHandler(Tokenizer tokenizer, CommandStore commandStore, List<CreateMessageValidator> validators) {
-        return new CommandHandlerBuilder(tokenizer, commandStore)
-                .withValidators(validators)
-                .build();
-    }
-
-    @Bean
-    @Order(-100)
-    @ConditionalOnMissingBean
-    public NotBotUserMessageValidator notBotUserMessageValidator() {
-        return new NotBotUserMessageValidator();
+    public CommandFallback commandFallback() {
+        return CommandFallback.doNothing();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public AliasesPostProcessor aliasesPostProcessor() {
-        return new AliasesPostProcessor();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ParametersPostProcessor parametersPostProcessor() {
-        return new ParametersPostProcessor();
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.permissions", value = "enabled")
-    @ConditionalOnMissingBean
-    public PermissionsPostProcessor permissionsPostProcessor() {
-        return new PermissionsPostProcessor();
+    public CommandHandler<MessageCreateEvent> commandHandler(Tokenizer tokenizer, CommandBank commandBank, CommandFallback commandFallback) {
+        return new DefaultDiscordCommandHandler(tokenizer, commandBank, commandFallback);
     }
 
     /*
     Timeout-related functionality. Can be disabled via discord.timeout.enabled:false
      */
 
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
-    @ConditionalOnMissingBean
-    public CommandTimeoutStore commandTimeoutStore(@Value("${discord.timeout.global:0s}") Duration globalTimeout) {
-        return new DefaultCommandTimeoutStore(globalTimeout);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
-    @ConditionalOnMissingBean
-    @Order(-99)
-    public LocalCooldownCommandValidator cooldownCommandValidator(CommandTimeoutStore commandTimeoutStore) {
-        return new LocalCooldownCommandValidator(commandTimeoutStore);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
-    @ConditionalOnBean(CommandTimeoutStore.class)
-    @ConditionalOnMissingBean
-    public TimeoutPostProcessor timeoutPostProcessor(CommandTimeoutStore store) {
-        return new TimeoutPostProcessor(store);
-    }
+//    @Bean
+//    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+//    @ConditionalOnMissingBean
+//    public CommandTimeoutStore commandTimeoutStore(@Value("${discord.timeout.global:0s}") Duration globalTimeout) {
+//        return new DefaultCommandTimeoutStore(globalTimeout);
+//    }
+//
+//    @Bean
+//    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+//    @ConditionalOnMissingBean
+//    @Order(-99)
+//    public LocalCooldownCommandValidator cooldownCommandValidator(CommandTimeoutStore commandTimeoutStore) {
+//        return new LocalCooldownCommandValidator(commandTimeoutStore);
+//    }
+//
+//    @Bean
+//    @ConditionalOnProperty(prefix = "discord.timeout", value = "enabled")
+//    @ConditionalOnBean(CommandTimeoutStore.class)
+//    @ConditionalOnMissingBean
+//    public TimeoutPostProcessor timeoutPostProcessor(CommandTimeoutStore store) {
+//        return new TimeoutPostProcessor(store);
+//    }
 }

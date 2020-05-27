@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 
-public class NoReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Void>> {
+public class NoReturnInvoker implements Invoker<CommandUseContext, Object[], Mono<Boolean>> {
     private final Object objToInvokeOn;
     private final Method methodToInvoke;
 
@@ -16,8 +16,8 @@ public class NoReturnInvoker implements Invoker<CommandUseContext, Object[], Mon
     }
 
     @Override
-    public Mono<Void> invoke(CommandUseContext ctx, Object[] params) throws Exception {
+    public Mono<Boolean> invoke(CommandUseContext ctx, Object[] params) throws Exception {
         methodToInvoke.invoke(objToInvokeOn, params);
-        return Mono.empty();
+        return Mono.just(true);
     }
 }
