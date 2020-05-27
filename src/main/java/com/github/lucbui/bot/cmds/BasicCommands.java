@@ -3,6 +3,7 @@ package com.github.lucbui.bot.cmds;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.User;
@@ -73,9 +74,10 @@ public class BasicCommands {
     @Command
     @Timeout(value = 30)
     @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    public Mono<String> timestampify(@BasicSender User sender, @Param(0) String snowflake) {
+    @Discord
+    public Mono<String> timestampify(CommandUseContext ctx, @Param(0) String snowflake) {
         return Mono.justOrEmpty(snowflake)
-                .defaultIfEmpty(sender.getId().asString())
+                .defaultIfEmpty(ctx.getUserId())
                 .map(Snowflake::of)
                 .map(f -> translateService.getFormattedString("timestampify.success", Date.from(f.getTimestamp())))
                 .onErrorResume(ex -> Mono.just(translateService.getString("timestampify.validation.invalidSnowflake")));

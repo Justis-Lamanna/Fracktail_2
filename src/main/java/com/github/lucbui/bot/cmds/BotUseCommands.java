@@ -86,21 +86,6 @@ public class BotUseCommands {
     }
 
     @Command
-    @CommandParams(1)
-    public Mono<String> msg(MessageCreateEvent evt, @Param(0) String snowflake) {
-        String sender = evt.getMessage().getAuthor().map(User::getUsername)
-                .orElseThrow(() -> new BotException("Sender somehow had no author"));
-
-        return Mono.justOrEmpty(DiscordUtils.toSnowflakeFromMentionOrLiteral(snowflake))
-                .flatMap(s -> evt.getClient().getUserById(s))
-                .zipWhen(User::getPrivateChannel)
-                .flatMap(tuple -> tuple.getT2().createMessage(translateService.getFormattedString("msg.toUser", sender)).thenReturn(tuple.getT1()))
-                .map(usr -> translateService.getFormattedString("msg.toSender", usr.getUsername()))
-                .defaultIfEmpty(translateService.getString("validation.unknownUser"))
-                .onErrorResume(DiscordUtils.ON_FORBIDDEN, e -> translateService.getStringMono("msg.validation.cantDm"));
-    }
-
-    @Command
     @CommandParams(0)
     @Permissions("owner")
     public Mono<Void> sleep(CommandUseContext ctx) {
@@ -134,6 +119,7 @@ public class BotUseCommands {
     }
 
     @Command
+    @CommandParams(0)
     @Permissions("owner")
     @Discord
     public Mono<Void> stats(DiscordCommandUseContext ctx) {

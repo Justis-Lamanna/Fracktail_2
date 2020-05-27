@@ -91,7 +91,7 @@ public class CommandList implements CommandStore {
             return this.fallback.noCommandFound(tokens, ctx);
         }
         return Mono.justOrEmpty(commands.stream()
-                .filter(bc -> bc.testTokens(tokens))
+                .filter(bc -> bc.testTokens(ctx, tokens))
                 .findFirst())
                 .switchIfEmpty(this.fallback.commandUsedWrong(tokens, ctx, commands));
     }

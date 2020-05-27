@@ -1,7 +1,9 @@
 package com.github.lucbui.magic.command.func;
 
+import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.token.Tokens;
 
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -11,7 +13,7 @@ public class BotCommand {
     private String name;
     private String[] aliases;
     private BotMessageBehavior behavior;
-    private Predicate<Tokens> tokensPredicate;
+    private BiPredicate<CommandUseContext, Tokens> tokensPredicate;
 
     /**
      * Create a Bot command
@@ -49,11 +51,11 @@ public class BotCommand {
         this.behavior = behavior;
     }
 
-    public void setTokensPredicate(Predicate<Tokens> tokensPredicate) {
+    public void setTokensPredicate(BiPredicate<CommandUseContext, Tokens> tokensPredicate) {
         this.tokensPredicate = tokensPredicate;
     }
 
-    public boolean testTokens(Tokens tokens) {
-        return tokensPredicate == null || tokensPredicate.test(tokens);
+    public boolean testTokens(CommandUseContext ctx, Tokens tokens) {
+        return tokensPredicate == null || tokensPredicate.test(ctx, tokens);
     }
 }

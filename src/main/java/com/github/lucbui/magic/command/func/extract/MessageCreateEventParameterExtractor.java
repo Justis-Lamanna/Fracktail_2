@@ -18,7 +18,7 @@ public class MessageCreateEventParameterExtractor implements ParameterExtractor<
     public boolean isValidFor(Parameter parameter) {
         return parameter.getType().equals(MessageCreateEvent.class) ||
                 parameter.getType().equals(CommandUseContext.class) ||
-                parameter.isAnnotationPresent(Discord.class) && parameter.getType().equals(DiscordCommandUseContext.class);
+                (parameter.isAnnotationPresent(Discord.class) && parameter.getType().equals(DiscordCommandUseContext.class));
     }
 
     @Override
