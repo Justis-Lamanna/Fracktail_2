@@ -1,7 +1,6 @@
 package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.annotation.Command;
-import com.github.lucbui.magic.annotation.CommandParams;
 import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.execution.BCommand;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class CommandFromMethodParserFactory {
@@ -36,11 +34,22 @@ public class CommandFromMethodParserFactory {
     private final CommandBank commandBank;
     private final List<BotCommandProcessor> botCommandProcessors;
     private final List<ParameterExtractor<CommandUseContext>> parameterExtractors;
+    private final BotCommandBehaviorPredicateCreator botCommandBehaviorPredicateCreator;
+    private final BotBehaviorMerger botBehaviorMerger;
+    private final BotCommandPredicateCreator botCommandPredicateCreator;
 
-    public CommandFromMethodParserFactory(CommandBank commandBank, List<BotCommandProcessor> botCommandProcessors, List<ParameterExtractor<CommandUseContext>> parameterExtractors) {
+    public CommandFromMethodParserFactory(CommandBank commandBank,
+                                          List<BotCommandProcessor> botCommandProcessors,
+                                          List<ParameterExtractor<CommandUseContext>> parameterExtractors,
+                                          BotCommandBehaviorPredicateCreator botCommandBehaviorPredicateCreator,
+                                          BotBehaviorMerger botBehaviorMerger,
+                                          BotCommandPredicateCreator botCommandPredicateCreator) {
         this.commandBank = commandBank;
         this.botCommandProcessors = botCommandProcessors;
         this.parameterExtractors = parameterExtractors;
+        this.botCommandBehaviorPredicateCreator = botCommandBehaviorPredicateCreator;
+        this.botBehaviorMerger = botBehaviorMerger;
+        this.botCommandPredicateCreator = botCommandPredicateCreator;
     }
 
     public CommandFromMethodParser get(Object bean) {
@@ -63,19 +72,19 @@ public class CommandFromMethodParserFactory {
             String name = getName(method);
             String[] aliases = getAliases(method);
             LOGGER.debug("+- Command names: {}, aliases: {}", name, aliases);
-            ComplexBotMessageBehavior behavior = getBehavior(method);
+            BotMessageBehavior behavior = getBehavior(method);
+            BiPredicate<Tokens, CommandUseContext> predicate = botCommandBehaviorPredicateCreator.createBehaviorPredicate(method);
             Optional<BCommand> oldCommandOpt = commandBank.getCommandById(name);
             CommandCreateContext ctx = new CommandCreateContext(name, aliases, behavior);
             if(oldCommandOpt.isPresent()) {
                 botCommandProcessors.forEach(bcpp -> bcpp.beforeUpdate(method, ctx));
                 LOGGER.debug("\\- Updating command: " + name);
                 BCommand oldCommand = oldCommandOpt.get();
-                behavior.orElse(oldCommand.getBehavior());
-                oldCommand.setBehavior(behavior);
+                oldCommand.setBehavior(botBehaviorMerger.mergeBehavior(oldCommand.getBehavior(), behavior, predicate));
                 botCommandProcessors.forEach(bcpp -> bcpp.afterUpdate(method, oldCommand, ctx));
             } else {
                 botCommandProcessors.forEach(bcpp -> bcpp.beforeCreate(method, ctx));
-                BCommand command = new BCommand(name, aliases, behavior, createCommandPredicate(method));
+                BCommand command = new BCommand(name, aliases, new ComplexBotMessageBehavior(predicate, behavior), botCommandPredicateCreator.createCommandPredicate(method));
                 LOGGER.debug("\\- Creating command: " + name);
                 commandBank.addCommand(command);
                 botCommandProcessors.forEach(bcpp -> bcpp.afterCreate(method, command, ctx));
@@ -115,10 +124,10 @@ public class CommandFromMethodParserFactory {
          * @param method The method to get the behavior of
          * @return The behavior the command exhibits
          */
-        protected ComplexBotMessageBehavior getBehavior(Method method) {
+        protected BotMessageBehavior getBehavior(Method method) {
             List<Function<CommandUseContext, Mono<Object>>> extractors = getExtractorsFor(method);
             Invoker<CommandUseContext, Object[], Mono<Boolean>> invoker = getInvokerFor(method);
-            BotMessageBehavior behavior = (tokens, ctx) -> extractors.stream()
+            return (tokens, ctx) -> extractors.stream()
                     .map(func -> func.apply(ctx))
                     .map(mono -> mono.map(Optional::ofNullable).defaultIfEmpty(Optional.empty()))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), Flux::concat))
@@ -130,8 +139,6 @@ public class CommandFromMethodParserFactory {
                             throw new BotException("Error invoking reflected method", e);
                         }
                     });
-
-            return new ComplexBotMessageBehavior(createBehaviorPredicate(method), behavior);
         }
 
         private List<Function<CommandUseContext, Mono<Object>>> getExtractorsFor(Method method) {
@@ -157,27 +164,6 @@ public class CommandFromMethodParserFactory {
                 return new FluxReturnInvoker(bean, method);
             } else {
                 throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
-            }
-        }
-
-        protected Predicate<CommandUseContext> createCommandPredicate(Method method) {
-            return c -> true;
-        }
-
-        protected BiPredicate<Tokens, CommandUseContext> createBehaviorPredicate(Method method) {
-            BiPredicate<Tokens, CommandUseContext> identity = (t, c) -> true;
-            if(method.isAnnotationPresent(CommandParams.class)) {
-                identity = identity.and(getCommandParamsPredicate(method.getAnnotation(CommandParams.class)));
-            }
-            return identity;
-        }
-
-        private BiPredicate<? super Tokens, ? super CommandUseContext> getCommandParamsPredicate(CommandParams annotation) {
-            switch (annotation.comparison()) {
-                case EXACTLY: return (tokens, ctx) -> tokens.getParams().length == annotation.value();
-                case OR_LESS: return (tokens, ctx) -> tokens.getParams().length <= annotation.value();
-                case OR_MORE: return (tokens, ctx) -> tokens.getParams().length >= annotation.value();
-                default: throw new RuntimeException("What?");
             }
         }
     }

@@ -14,6 +14,9 @@ public class CommandProcessorBuilder {
     public Tokenizer tokenizer;
     private List<BotCommandProcessor> botCommandProcessors = new ArrayList<>();
     private List<ParameterExtractor<CommandUseContext>> parameterExtractors = new ArrayList<>();
+    private BotCommandBehaviorPredicateCreator botCommandBehaviorPredicateCreator = new CommandParamCountBehaviorPredicateCreator();
+    private BotCommandPredicateCreator botCommandPredicateCreator = new AlwaysTrueBotCommandPredicateCreator();
+    private BotBehaviorMerger botBehaviorMerger = new NaiveBotBehaviorMerger();
 
     public CommandProcessorBuilder(CommandBank commandBank, Tokenizer tokenizer) {
         this.commandBank = commandBank;
@@ -45,6 +48,6 @@ public class CommandProcessorBuilder {
     }
 
     public CommandAnnotationProcessor build() {
-        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, parameterExtractors));
+        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, parameterExtractors, botCommandBehaviorPredicateCreator, botBehaviorMerger, botCommandPredicateCreator));
     }
 }
