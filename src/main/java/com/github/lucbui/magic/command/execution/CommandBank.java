@@ -8,10 +8,10 @@ import reactor.core.publisher.Mono;
 import java.util.Optional;
 
 public interface CommandBank {
-    Optional<BCommand> getCommandById(String name);
-    Mono<BCommand> getCommand(Tokens tokens, CommandUseContext ctx);
-    Flux<BCommand> getAllCommands(CommandUseContext ctx);
-    Flux<BCommand> getAllCommands();
+    Optional<BotCommand> getCommandById(String name);
+    Mono<BotCommand> getCommand(Tokens tokens, CommandUseContext ctx);
+    Flux<BotCommand> getAllCommands(CommandUseContext ctx);
+    Flux<BotCommand> getAllCommands();
 
-    void addCommand(BCommand command);
+    void addCommand(BotCommand command);
 }

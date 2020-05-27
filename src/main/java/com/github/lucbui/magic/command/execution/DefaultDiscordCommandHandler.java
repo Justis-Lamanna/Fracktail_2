@@ -48,7 +48,7 @@ public class DefaultDiscordCommandHandler implements CommandHandler<MessageCreat
         CommandUseContext ctx = DiscordCommandUseContext.from(event);
 
         return tokenizer.tokenizeToMono(ctx)
-                .zipWhen(tokens -> commandBank.getCommand(tokens, ctx).map(BCommand::getBehavior).defaultIfEmpty(commandFallback.getNoCommandFound()))
+                .zipWhen(tokens -> commandBank.getCommand(tokens, ctx).map(BotCommand::getBehavior).defaultIfEmpty(commandFallback.getNoCommandFound()))
                 .flatMap(tokensCmd -> event.getMessage().getChannel().flatMapMany(mc -> mc.typeUntil(
                         tokensCmd.getT2().execute(tokensCmd.getT1(), ctx)
                                 .switchIfEmpty(commandFallback.getCommandUsedIncorrectly().execute(tokensCmd.getT1(), ctx))

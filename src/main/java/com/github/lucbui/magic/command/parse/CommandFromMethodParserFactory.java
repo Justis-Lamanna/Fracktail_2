@@ -3,7 +3,7 @@ package com.github.lucbui.magic.command.parse;
 import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.command.context.CommandCreateContext;
 import com.github.lucbui.magic.command.context.CommandUseContext;
-import com.github.lucbui.magic.command.execution.BCommand;
+import com.github.lucbui.magic.command.execution.BotCommand;
 import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.execution.ComplexBotMessageBehavior;
 import com.github.lucbui.magic.command.func.BotCommandProcessor;
@@ -74,17 +74,17 @@ public class CommandFromMethodParserFactory {
             LOGGER.debug("+- Command names: {}, aliases: {}", name, aliases);
             BotMessageBehavior behavior = getBehavior(method);
             BiPredicate<Tokens, CommandUseContext> predicate = botCommandBehaviorPredicateCreator.createBehaviorPredicate(method);
-            Optional<BCommand> oldCommandOpt = commandBank.getCommandById(name);
+            Optional<BotCommand> oldCommandOpt = commandBank.getCommandById(name);
             CommandCreateContext ctx = new CommandCreateContext(name, aliases, behavior);
             if(oldCommandOpt.isPresent()) {
                 botCommandProcessors.forEach(bcpp -> bcpp.beforeUpdate(method, ctx));
                 LOGGER.debug("\\- Updating command: " + name);
-                BCommand oldCommand = oldCommandOpt.get();
+                BotCommand oldCommand = oldCommandOpt.get();
                 oldCommand.setBehavior(botBehaviorMerger.mergeBehavior(oldCommand.getBehavior(), behavior, predicate));
                 botCommandProcessors.forEach(bcpp -> bcpp.afterUpdate(method, oldCommand, ctx));
             } else {
                 botCommandProcessors.forEach(bcpp -> bcpp.beforeCreate(method, ctx));
-                BCommand command = new BCommand(name, aliases, new ComplexBotMessageBehavior(predicate, behavior), botCommandPredicateCreator.createCommandPredicate(method));
+                BotCommand command = new BotCommand(name, aliases, new ComplexBotMessageBehavior(predicate, behavior), botCommandPredicateCreator.createCommandPredicate(method));
                 LOGGER.debug("\\- Creating command: " + name);
                 commandBank.addCommand(command);
                 botCommandProcessors.forEach(bcpp -> bcpp.afterCreate(method, command, ctx));

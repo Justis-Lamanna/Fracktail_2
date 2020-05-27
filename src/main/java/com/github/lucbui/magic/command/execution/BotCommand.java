@@ -5,20 +5,20 @@ import com.github.lucbui.magic.command.func.BotMessageBehavior;
 
 import java.util.function.Predicate;
 
-public class BCommand {
+public class BotCommand {
     private String name;
     private String[] aliases;
     private BotMessageBehavior behavior;
     private Predicate<CommandUseContext> contextPredicate;
 
-    public BCommand(String name, String[] aliases, BotMessageBehavior behavior) {
+    public BotCommand(String name, String[] aliases, BotMessageBehavior behavior) {
         this.name = name;
         this.aliases = aliases;
         this.behavior = behavior;
         this.contextPredicate = ctx -> true;
     }
 
-    public BCommand(String name, String[] aliases, BotMessageBehavior behavior, Predicate<CommandUseContext> contextPredicate) {
+    public BotCommand(String name, String[] aliases, BotMessageBehavior behavior, Predicate<CommandUseContext> contextPredicate) {
         this.name = name;
         this.aliases = aliases;
         this.behavior = behavior;
