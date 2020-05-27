@@ -1,21 +1,27 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.context.DiscordCommandUseContext;
+import com.github.lucbui.magic.command.execution.BotCommand;
+import com.github.lucbui.magic.command.execution.CommandBank;
 import com.profesorfalken.jsensors.JSensors;
 import com.profesorfalken.jsensors.model.components.Component;
 import com.profesorfalken.jsensors.model.components.Components;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.spec.EmbedCreateSpec;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.time.Duration;
@@ -23,6 +29,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Commands
 public class BotUseCommands {
@@ -32,6 +39,9 @@ public class BotUseCommands {
     @Autowired
     private TranslateService translateService;
 
+    @Autowired
+    private CommandBank commandBank;
+
     private Instant startTime;
 
     @PostConstruct
@@ -39,32 +49,32 @@ public class BotUseCommands {
         this.startTime = Instant.now();
     }
 
-//    @Command
-//    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-//    public Mono<String> help(CommandUseContext ctx, @Param(0) @Default("help") String cmd) {
-//        return commandStore.getAllCommands(ctx)
-//                .filter(bc -> StringUtils.equalsIgnoreCase(cmd, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmd, bc.getAliases()))
-//                .next()
-//                .flatMap(bc -> {
-//                    String help = translateService.getString(TranslateHelper.helpKey(bc.getName()));
-//                    String usage = translateService.getString(TranslateHelper.usageKey(bc.getName()));
-//                    return Mono.just(help + "\n" + usage);
-//                })
-//                .switchIfEmpty( translateService.getFormattedStringMono("help.validation.unknownCommand", cmd));
-//    }
-//
-//
-//    @Command
-//    @CommandParams(0)
-//    public Mono<String> commands(CommandUseContext ctx) {
-//        return commandStore.getAllCommands(ctx)
-//                .map(BotCommand::getName)
-//                .distinct()
-//                .sort()
-//                .map(cmd -> "!" + cmd)
-//                .collect(Collectors.joining(", "))
-//                .map(text -> translateService.getFormattedString("commands.text", text));
-//    }
+    @Command
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
+    public Mono<String> help(CommandUseContext ctx, @Param(0) @Default("help") String cmd) {
+        return commandBank.getAllCommands(ctx)
+                .filter(bc -> StringUtils.equalsIgnoreCase(cmd, bc.getName()) || StringUtils.equalsAnyIgnoreCase(cmd, bc.getAliases()))
+                .next()
+                .flatMap(bc -> {
+                    String help = translateService.getString(TranslateHelper.helpKey(bc.getName()));
+                    String usage = translateService.getString(TranslateHelper.usageKey(bc.getName()));
+                    return Mono.just(help + "\n" + usage);
+                })
+                .switchIfEmpty( translateService.getFormattedStringMono("help.validation.unknownCommand", cmd));
+    }
+
+
+    @Command
+    @CommandParams(0)
+    public Mono<String> commands(CommandUseContext ctx) {
+        return commandBank.getAllCommands(ctx)
+                .map(BotCommand::getName)
+                .distinct()
+                .sort()
+                .map(cmd -> "!" + cmd)
+                .collect(Collectors.joining(", "))
+                .map(text -> translateService.getFormattedString("commands.text", text));
+    }
 
     @Command
     @CommandParams(0)

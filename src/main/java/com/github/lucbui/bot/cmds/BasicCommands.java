@@ -6,16 +6,12 @@ import com.github.lucbui.magic.annotation.*;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
-import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Optional;
 
 @Commands
 public class BasicCommands {

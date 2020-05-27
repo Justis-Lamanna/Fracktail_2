@@ -2,7 +2,6 @@ package com.github.lucbui.magic.command.func;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.token.Tokens;
-import discord4j.core.event.domain.message.MessageCreateEvent;
 import reactor.core.publisher.Mono;
 
 /**
@@ -15,4 +14,8 @@ public interface BotMessageBehavior {
      * @return A Mono which completes when behavior completes
      */
     Mono<Boolean> execute(Tokens tokens, CommandUseContext ctx);
+
+    default boolean canUseInContext(CommandUseContext ctx){
+        return true;
+    }
 }

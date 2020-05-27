@@ -14,4 +14,5 @@ public interface CommandBank {
     Flux<BotCommand> getAllCommands();
 
     void addCommand(BotCommand command);
+    void updateCommand(BotCommand newCommand);
 }

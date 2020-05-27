@@ -49,6 +49,19 @@ public class DefaultCommandBank implements CommandBank {
                 .forEach(name -> addCommandToMap(name, command));
     }
 
+    @Override
+    public void updateCommand(BotCommand newCommand) {
+        BotCommand oldCommand = bank.get(newCommand.getName());
+        if(oldCommand == null) {
+            addCommand(newCommand);
+            return;
+        }
+
+        bank.put(newCommand.getName(), newCommand);
+        Arrays.stream(newCommand.getAliases())
+                .forEach(name -> bank.put(newCommand.getName(), newCommand));
+    }
+
     private void addCommandToMap(String name, BotCommand command) {
         if(bank.containsKey(name)) {
             throw new IllegalArgumentException("Attempted to overwrite command " + name);
