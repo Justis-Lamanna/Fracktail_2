@@ -9,38 +9,22 @@ public interface CommandPredicate {
     Mono<Boolean> canUseBehaviorInContext(Tokens tokens, CommandUseContext ctx);
 
     default CommandPredicate and(CommandPredicate next) {
-        CommandPredicate first = this;
-        return new CommandPredicate() {
-            @Override
-            public Mono<Boolean> canUseInContext(CommandUseContext ctx) {
-                return first.canUseInContext(ctx)
-                        .flatMap(t -> t ? next.canUseInContext(ctx) : Mono.just(false));
-            }
-
-            @Override
-            public Mono<Boolean> canUseBehaviorInContext(Tokens tokens, CommandUseContext ctx) {
-                return first.canUseBehaviorInContext(tokens, ctx)
-                        .flatMap(t -> t ? next.canUseBehaviorInContext(tokens, ctx) : Mono.just(false));
-            }
-        };
+        return new AndCommandPredicate(this, next);
     }
 
-    static CommandPredicate identity() {
-        return new CommandPredicate() {
-            @Override
-            public Mono<Boolean> canUseInContext(CommandUseContext ctx) {
-                return Mono.just(true);
-            }
+    default CommandPredicate or(CommandPredicate next) {
+        return new OrCommandPredicate(this, next);
+    }
 
-            @Override
-            public Mono<Boolean> canUseBehaviorInContext(Tokens tokens, CommandUseContext ctx) {
-                return Mono.just(true);
-            }
+    default CommandPredicate not() {
+        return new NotCommandPredicate(this);
+    }
 
-            @Override
-            public CommandPredicate and(CommandPredicate next) {
-                return next; //Identity and next is equivalent to just next.
-            }
-        };
+    static CommandPredicate trueIdentity() {
+        return TrueIdentityCommandPredicate.INSTANCE;
+    }
+
+    static CommandPredicate falseIdentity() {
+        return FalseIdentityCommandPredicate.INSTANCE;
     }
 }
