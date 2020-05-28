@@ -21,15 +21,14 @@ public class ComplexBotMessageBehavior implements BotMessageBehavior {
 
     @Override
     public Mono<Boolean> execute(Tokens tokens, CommandUseContext ctx) {
-        if(pair.predicate.canUseBehaviorInContext(tokens, ctx)){
-            return pair.function.execute(tokens, ctx);
-        }
-        return elze == null ? Mono.empty() : elze.execute(tokens, ctx);
+        return pair.predicate.canUseBehaviorInContext(tokens, ctx)
+                .flatMap(t -> t ? pair.function.execute(tokens, ctx) : (elze == null ? Mono.empty() : elze.execute(tokens, ctx)));
     }
 
     @Override
-    public boolean canUseInContext(CommandUseContext ctx) {
-        return pair.predicate.canUseInContext(ctx) && (elze == null || elze.canUseInContext(ctx));
+    public Mono<Boolean> canUseInContext(CommandUseContext ctx) {
+        return pair.predicate.canUseInContext(ctx)
+                .flatMap(t -> t ? (elze == null ? Mono.just(true) : elze.canUseInContext(ctx)) : Mono.just(false));
     }
 
     private static class PredicateFunctionPair {

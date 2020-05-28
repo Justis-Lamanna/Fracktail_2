@@ -2,6 +2,8 @@ package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.annotation.CommandParams;
+import com.github.lucbui.magic.annotation.Permissions;
+import com.github.lucbui.magic.annotation.PermissionsGroup;
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.execution.BotCommand;
 import com.github.lucbui.magic.command.execution.CommandBank;
@@ -11,6 +13,7 @@ import com.github.lucbui.magic.command.func.BotMessageBehavior;
 import com.github.lucbui.magic.command.func.extract.ParameterExtractor;
 import com.github.lucbui.magic.command.func.invoke.*;
 import com.github.lucbui.magic.command.parse.predicate.CommandPredicate;
+import com.github.lucbui.magic.command.parse.predicate.OwnerCommandPredicate;
 import com.github.lucbui.magic.command.parse.predicate.ParameterCountCommandPredicate;
 import com.github.lucbui.magic.exception.BotException;
 import org.apache.commons.lang3.StringUtils;
@@ -65,26 +68,32 @@ public class CommandFromMethodParserFactory {
             LOGGER.debug("+- Command names: {}, aliases: {}", name, aliases);
             BotMessageBehavior behavior = getBehavior(method);
             Optional<BotCommand> oldCommandOpt = commandBank.getCommandById(name);
+            CommandPredicate predicate = createCommandPredicate(method);
             if(oldCommandOpt.isPresent()) {
                 LOGGER.debug("\\- Updating command: " + name);
-                CommandPredicate predicate = createCommandPredicate(method);
                 BotMessageBehavior combined = mergeBehavior(oldCommandOpt.get(), behavior, predicate);
                 BotCommand newCommand = new BotCommand(name, aliases, combined);
                 commandBank.updateCommand(newCommand);
             } else {
                 LOGGER.debug("\\- Creating command: " + name);
-                CommandPredicate predicate = createCommandPredicate(method);
                 BotCommand newCommand = new BotCommand(name, aliases, new ComplexBotMessageBehavior(predicate, behavior));
                 commandBank.addCommand(newCommand);
             }
         }
 
         protected CommandPredicate createCommandPredicate(Method method) {
+            CommandPredicate commandPredicate = CommandPredicate.identity();
             if(method.isAnnotationPresent(CommandParams.class)) {
                 CommandParams a = method.getAnnotation(CommandParams.class);
-                return new ParameterCountCommandPredicate(a.value(), a.comparison());
+                commandPredicate = commandPredicate.and(new ParameterCountCommandPredicate(a.value(), a.comparison()));
             }
-            return CommandPredicate.identity();
+
+            if(method.isAnnotationPresent(PermissionsGroup.class) || method.isAnnotationPresent(Permissions.class)) {
+                LOGGER.debug("+- Marking command as owner-only");
+                commandPredicate = commandPredicate.and(new OwnerCommandPredicate());
+            }
+
+            return commandPredicate;
         }
 
         protected BotMessageBehavior mergeBehavior(BotCommand botCommand, BotMessageBehavior behavior, CommandPredicate predicate) {

@@ -24,17 +24,14 @@ public class DefaultCommandBank implements CommandBank {
 
     @Override
     public Mono<BotCommand> getCommand(Tokens tokens, CommandUseContext ctx) {
-        BotCommand cmd = bank.get(tokens.getCommand());
-        if(cmd != null && cmd.testContext(ctx)) {
-            return Mono.just(cmd);
-        }
-        return Mono.empty();
+        return Mono.justOrEmpty(bank.get(tokens.getCommand()))
+                .filterWhen(bc -> bc.testContext(ctx));
     }
 
     @Override
     public Flux<BotCommand> getAllCommands(CommandUseContext ctx) {
         return Flux.fromIterable(bank.values())
-                .filter(c -> c.testContext(ctx));
+                .filterWhen(c -> c.testContext(ctx));
     }
 
     @Override

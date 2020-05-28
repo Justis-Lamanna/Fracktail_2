@@ -15,7 +15,7 @@ public interface BotMessageBehavior {
      */
     Mono<Boolean> execute(Tokens tokens, CommandUseContext ctx);
 
-    default boolean canUseInContext(CommandUseContext ctx){
-        return true;
+    default Mono<Boolean> canUseInContext(CommandUseContext ctx){
+        return Mono.just(true);
     }
 }
