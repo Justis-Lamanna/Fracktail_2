@@ -1,41 +1,31 @@
 package com.github.lucbui.magic.command.func.extract;
 
 import com.github.lucbui.magic.annotation.Params;
-import com.github.lucbui.magic.command.context.CommandUseContext;
-import com.github.lucbui.magic.exception.BotException;
 import com.github.lucbui.magic.token.Tokenizer;
 import com.github.lucbui.magic.token.Tokens;
-import discord4j.core.event.domain.message.MessageCreateEvent;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.Function;
 
-public class ParamsAnnotationParameterExtractor implements ParameterExtractor<CommandUseContext> {
+public class ParamsAnnotationExtractorFactory implements ExtractorFactory {
     private Tokenizer tokenizer;
 
-    public ParamsAnnotationParameterExtractor(Tokenizer tokenizer) {
+    public ParamsAnnotationExtractorFactory(Tokenizer tokenizer) {
         this.tokenizer = tokenizer;
     }
 
     @Override
-    public boolean isValidFor(Parameter parameter) {
-        return parameter.isAnnotationPresent(Params.class);
-    }
-
-    @Override
-    public <OUT> Function<CommandUseContext, Mono<OUT>> getExtractorFor(Parameter parameter, Class<OUT> out) {
+    public Extractor getExtractorFor(Parameter parameter) {
         if(parameter.getType().equals(String[].class)) {
             return ctx -> tokenizer.tokenizeToMono(ctx)
                     .map(Tokens::getParams)
                     .map(arr -> subs(arr, parameter.getAnnotation(Params.class)))
-                    .cast(out);
+                    .cast(Object.class);
         } else if(parameter.getType().equals(String.class)) {
             return ctx -> tokenizer.tokenizeToMono(ctx)
                     .map(t -> Objects.toString(t.getParamString(), ""))
-                    .cast(out);
+                    .cast(Object.class);
         }
         throw new IllegalArgumentException("@Params must annotate String[] value");
     }

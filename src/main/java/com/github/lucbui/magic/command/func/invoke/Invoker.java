@@ -1,5 +1,8 @@
 package com.github.lucbui.magic.command.func.invoke;
 
-public interface Invoker<I1, I2, O> {
-    O invoke(I1 in1, I2 in2) throws Exception;
+import com.github.lucbui.magic.command.context.CommandUseContext;
+import reactor.core.publisher.Mono;
+
+public interface Invoker {
+    Mono<Boolean> invoke(CommandUseContext ctx, Object[] params) throws Exception;
 }

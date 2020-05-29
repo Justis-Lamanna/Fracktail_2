@@ -4,14 +4,15 @@ import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.annotation.CommandParams;
 import com.github.lucbui.magic.annotation.Permissions;
 import com.github.lucbui.magic.annotation.PermissionsGroup;
-import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.execution.BotCommand;
 import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.execution.ComplexBotMessageBehavior;
 import com.github.lucbui.magic.command.func.BotCommandProcessor;
 import com.github.lucbui.magic.command.func.BotMessageBehavior;
-import com.github.lucbui.magic.command.func.extract.ParameterExtractor;
-import com.github.lucbui.magic.command.func.invoke.*;
+import com.github.lucbui.magic.command.func.extract.Extractor;
+import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
+import com.github.lucbui.magic.command.func.invoke.Invoker;
+import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
 import com.github.lucbui.magic.command.parse.predicate.CommandPredicate;
 import com.github.lucbui.magic.command.parse.predicate.OwnerCommandPredicate;
 import com.github.lucbui.magic.command.parse.predicate.ParameterCountCommandPredicate;
@@ -21,14 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CommandFromMethodParserFactory {
@@ -36,14 +34,14 @@ public class CommandFromMethodParserFactory {
 
     private final CommandBank commandBank;
     private final List<BotCommandProcessor> botCommandProcessors;
-    private final List<ParameterExtractor<CommandUseContext>> parameterExtractors;
+    private final ExtractorFactory extractorFactory;
+    private final InvokerFactory invokerFactory;
 
-    public CommandFromMethodParserFactory(CommandBank commandBank,
-                                          List<BotCommandProcessor> botCommandProcessors,
-                                          List<ParameterExtractor<CommandUseContext>> parameterExtractors) {
+    public CommandFromMethodParserFactory(CommandBank commandBank, List<BotCommandProcessor> botCommandProcessors, ExtractorFactory extractorFactory, InvokerFactory invokerFactory) {
         this.commandBank = commandBank;
         this.botCommandProcessors = botCommandProcessors;
-        this.parameterExtractors = parameterExtractors;
+        this.extractorFactory = extractorFactory;
+        this.invokerFactory = invokerFactory;
     }
 
     public CommandFromMethodParser get(Object bean) {
@@ -136,10 +134,10 @@ public class CommandFromMethodParserFactory {
          * @return The behavior the command exhibits
          */
         protected BotMessageBehavior getBehavior(Method method) {
-            List<Function<CommandUseContext, Mono<Object>>> extractors = getExtractorsFor(method);
-            Invoker<CommandUseContext, Object[], Mono<Boolean>> invoker = getInvokerFor(method);
+            List<Extractor> extractors = getExtractorsFor(method);
+            Invoker invoker = invokerFactory.getInvokerFor(bean, method);
             return (tokens, ctx) -> extractors.stream()
-                    .map(func -> func.apply(ctx))
+                    .map(extractor -> extractor.extract(ctx))
                     .map(mono -> mono.map(Optional::ofNullable).defaultIfEmpty(Optional.empty()))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), Flux::concat))
                     .collectList()
@@ -152,30 +150,10 @@ public class CommandFromMethodParserFactory {
                     });
         }
 
-        private List<Function<CommandUseContext, Mono<Object>>> getExtractorsFor(Method method) {
-            return Arrays.stream(method.getParameters()).map(this::getExtractorFor).collect(Collectors.toList());
-        }
-
-        private Function<CommandUseContext, Mono<Object>> getExtractorFor(Parameter param) {
-            return parameterExtractors.stream()
-                    .filter(extractor -> extractor.isValidFor(param))
-                    .findFirst()
-                    .map(extractor -> extractor.getExtractorFor(param, Object.class))
-                    .orElseThrow(() -> new BotException("No Parameter Extractor found for parameter " + param));
-        }
-
-        protected Invoker<CommandUseContext, Object[], Mono<Boolean>> getInvokerFor(Method method) {
-            if (method.getReturnType() == null) {
-                return new NoReturnInvoker(bean, method);
-            } else if (method.getReturnType().equals(String.class)) {
-                return new StringReturnInvoker(bean, method);
-            } else if (method.getReturnType().equals(Mono.class)) {
-                return new MonoReturnInvoker(bean, method);
-            } else if (method.getReturnType().equals(Flux.class)) {
-                return new FluxReturnInvoker(bean, method);
-            } else {
-                throw new BotException("Return is unexpected type, expected is String, Mono, Flux, or none.");
-            }
+        private List<Extractor> getExtractorsFor(Method method) {
+            return Arrays.stream(method.getParameters())
+                    .map(extractorFactory::getExtractorFor)
+                    .collect(Collectors.toList());
         }
     }
 }

@@ -1,22 +1,22 @@
 package com.github.lucbui.magic.command.parse;
 
-import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.func.BotCommandProcessor;
-import com.github.lucbui.magic.command.func.extract.*;
+import com.github.lucbui.magic.command.func.extract.DefaultExtractorFactory;
+import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
+import com.github.lucbui.magic.command.func.invoke.DefaultInvokerFactory;
+import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
 import com.github.lucbui.magic.token.Tokenizer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommandProcessorBuilder {
-    public CommandBank commandBank;
-    public Tokenizer tokenizer;
+    private CommandBank commandBank;
+    private Tokenizer tokenizer;
     private List<BotCommandProcessor> botCommandProcessors = new ArrayList<>();
-    private List<ParameterExtractor<CommandUseContext>> parameterExtractors = new ArrayList<>();
-//    private BotCommandBehaviorPredicateCreator botCommandBehaviorPredicateCreator = new DefaultCommandBehaviorPredicateCreator();
-//    private BotCommandPredicateCreator botCommandPredicateCreator = new DefaultCommandPredicateCreator();
-//    private BotBehaviorMerger botBehaviorMerger = new DefaultBotBehaviorMerger();
+    private ExtractorFactory extractorFactory;
+    private InvokerFactory invokerFactory;
 
     public CommandProcessorBuilder(CommandBank commandBank, Tokenizer tokenizer) {
         this.commandBank = commandBank;
@@ -34,20 +34,32 @@ public class CommandProcessorBuilder {
     }
 
     public CommandProcessorBuilder withDefaultParameterExtractors() {
-        this.parameterExtractors.add(new MessageCreateEventParameterExtractor());
-        this.parameterExtractors.add(new MessageAnnotationParameterExtractor(tokenizer));
-        this.parameterExtractors.add(new ParamsAnnotationParameterExtractor(tokenizer));
-        this.parameterExtractors.add(new ParamAnnotationParameterExtractor(tokenizer));
-        this.parameterExtractors.add(new UserParameterExtractor());
+        extractorFactory = new DefaultExtractorFactory(tokenizer);
         return this;
     }
 
-    public CommandProcessorBuilder withParameterExtractor(ParameterExtractor<CommandUseContext> parameterExtractor) {
-        this.parameterExtractors.add(parameterExtractor);
+    public CommandProcessorBuilder withParameterExtractor(ExtractorFactory extractorFactory) {
+        this.extractorFactory = extractorFactory;
+        return this;
+    }
+
+    public CommandProcessorBuilder withDefaultMethodInvokers() {
+        invokerFactory = new DefaultInvokerFactory();
+        return this;
+    }
+
+    public CommandProcessorBuilder withMethodInvoker(InvokerFactory invokerFactory) {
+        this.invokerFactory = invokerFactory;
         return this;
     }
 
     public CommandAnnotationProcessor build() {
-        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, parameterExtractors));
+        if(extractorFactory == null) {
+            withDefaultParameterExtractors();
+        }
+        if(invokerFactory == null) {
+            withDefaultMethodInvokers();
+        }
+        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, extractorFactory, invokerFactory));
     }
 }
