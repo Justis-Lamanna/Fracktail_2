@@ -4,6 +4,7 @@ import com.github.lucbui.bot.services.channel.BasicBotChannelService;
 import com.github.lucbui.bot.services.channel.BotChannelService;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
+import com.github.lucbui.magic.annotation.Commands;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
@@ -13,9 +14,11 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.time.MonthDay;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Component
+@Commands
 public class SpeciesHolidayScheduler {
     private static final String SPECIES_HOLIDAY_PREFIX = "job.holiday";
     private static final List<Holiday> HOLIDAYS = Arrays.asList(
@@ -49,6 +52,7 @@ public class SpeciesHolidayScheduler {
 
     @PostConstruct
     private void assignHolidays() {
+        HOLIDAYS.sort(Comparator.comparing(Holiday::getMonthDay));
         HOLIDAYS.forEach(holiday ->
                 taskScheduler.schedule(createRunnableForHoliday(holiday), createTriggerForHoliday(holiday)));
     }
@@ -56,18 +60,18 @@ public class SpeciesHolidayScheduler {
     private Runnable createRunnableForHoliday(Holiday holiday) {
         return () -> botChannelService.getAnnouncementChannelFor(BasicBotChannelService.LUCBUILAND_GUILD_ID)
                 .flatMap(channel -> channel.createMessage(translateService.getFormattedString(
-                        SPECIES_HOLIDAY_PREFIX + "." + holiday.getHolidayName(),
-                        TranslateHelper.toDate(holiday.getHolidayDay()),
+                        SPECIES_HOLIDAY_PREFIX + "." + holiday.getName(),
+                        TranslateHelper.toDate(holiday.getMonthDay()),
                         holiday.getSpecies().getMention())))
                 .block();
     }
 
     private Trigger createTriggerForHoliday(Holiday holiday) {
-        String cron = String.format("30 0 0 %d %d *", holiday.getHolidayDay().getDayOfMonth(), holiday.getHolidayDay().getMonthValue());
+        String cron = String.format("30 0 0 %d %d *", holiday.getMonthDay().getDayOfMonth(), holiday.getMonthDay().getMonthValue());
         return new CronTrigger(cron);
     }
 
-    private static class Holiday {
+    private static class Holiday implements Event {
         private final Species species;
         private final String holidayName;
         private final MonthDay holidayDay;
@@ -86,11 +90,13 @@ public class SpeciesHolidayScheduler {
             return species;
         }
 
-        public String getHolidayName() {
+        @Override
+        public String getName() {
             return holidayName;
         }
 
-        public MonthDay getHolidayDay() {
+        @Override
+        public MonthDay getMonthDay() {
             return holidayDay;
         }
     }

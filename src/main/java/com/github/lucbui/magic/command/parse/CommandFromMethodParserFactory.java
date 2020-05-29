@@ -82,7 +82,7 @@ public class CommandFromMethodParserFactory {
         }
 
         protected CommandPredicate createCommandPredicate(Method method) {
-            CommandPredicate commandPredicate = CommandPredicate.identity();
+            CommandPredicate commandPredicate = CommandPredicate.trueIdentity();
             if(method.isAnnotationPresent(CommandParams.class)) {
                 CommandParams a = method.getAnnotation(CommandParams.class);
                 commandPredicate = commandPredicate.and(new ParameterCountCommandPredicate(a.value(), a.comparison()));
