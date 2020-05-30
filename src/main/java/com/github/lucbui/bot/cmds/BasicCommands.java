@@ -1,5 +1,6 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.annotation.Translate;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
@@ -23,25 +24,24 @@ public class BasicCommands {
 
     @Command
     @Timeout(value = 1, unit = ChronoUnit.MINUTES)
-    public String math() {
-        return translateService.getString("math.text");
-    }
+    @Translate("math.text")
+    public void math() {}
 
     @Command
     @Timeout(value = 1, unit = ChronoUnit.MINUTES)
-    public String weather() {
-        return translateService.getString("weather.text");
+    @Translate("weather.text")
+    public void weather() {
     }
 
     @Command
-    public String invite() {
-        return translateService.getString("invite.text");
+    @Translate("invite.text")
+    public void invite() {
     }
 
     @Command
     @Permissions("owner")
-    public String admin() {
-        return translateService.getString("admin.text");
+    @Translate("admin.text")
+    public void admin(){
     }
 
     @Command
@@ -70,7 +70,6 @@ public class BasicCommands {
     @Command
     @Timeout(value = 30)
     @CommandParams(value = 1, comparison = ParamsComparison.OR_LESS)
-    @Discord
     public Mono<String> timestampify(CommandUseContext ctx, @Param(0) String snowflake) {
         return Mono.justOrEmpty(snowflake)
                 .defaultIfEmpty(ctx.getUserId())
@@ -80,7 +79,7 @@ public class BasicCommands {
     }
 
     @Command
-    public String updog() {
-        return translateService.getString("updog.text");
+    @Translate("updog.text")
+    public void updog() {
     }
 }

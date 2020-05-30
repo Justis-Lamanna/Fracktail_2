@@ -5,7 +5,9 @@ import com.github.lucbui.magic.command.execution.CommandHandler;
 import com.github.lucbui.magic.command.execution.DefaultCommandBank;
 import com.github.lucbui.magic.command.execution.DefaultDiscordCommandHandler;
 import com.github.lucbui.magic.command.func.BotCommandProcessor;
+import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
 import com.github.lucbui.magic.command.func.invoke.CommandFallback;
+import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
 import com.github.lucbui.magic.command.parse.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.parse.CommandProcessorBuilder;
 import com.github.lucbui.magic.token.PrefixTokenizer;
@@ -16,6 +18,7 @@ import discord4j.core.object.presence.Presence;
 import discord4j.core.object.presence.Status;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -67,10 +70,16 @@ public class AutoConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public CommandAnnotationProcessor commandAnnotationProcessor(Tokenizer tokenizer, CommandBank commandBank, List<BotCommandProcessor> processors) {
+    public CommandAnnotationProcessor commandAnnotationProcessor(
+            Tokenizer tokenizer,
+            CommandBank commandBank,
+            List<BotCommandProcessor> processors,
+            @Autowired(required = false) ExtractorFactory extractorFactory,
+            @Autowired(required = false) InvokerFactory invokerFactory) {
         return new CommandProcessorBuilder(commandBank, tokenizer)
-                .withDefaultParameterExtractors()
                 .withBotCommandPostProcessors(processors)
+                .withParameterExtractor(extractorFactory)
+                .withMethodInvoker(invokerFactory)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package com.github.lucbui.bot.cmds;
 
+import com.github.lucbui.bot.annotation.Translate;
 import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.*;
@@ -66,21 +67,22 @@ public class BotUseCommands {
 
     @Command
     @CommandParams(0)
-    public Mono<String> commands(CommandUseContext ctx) {
+    @Translate("commands.text")
+    public Mono<Object[]> commands(CommandUseContext ctx) {
         return commandBank.getAllCommands(ctx)
                 .map(BotCommand::getName)
                 .distinct()
                 .sort()
                 .map(cmd -> "!" + cmd)
                 .collect(Collectors.joining(", "))
-                .map(text -> translateService.getFormattedString("commands.text", text));
+                .map(TranslateHelper::args);
     }
 
     @Command
     @CommandParams(0)
-    public String uptime() {
-        Duration uptime = Duration.between(startTime, Instant.now());
-        return translateService.getFormattedString("uptime.text", uptime.getSeconds());
+    @Translate("uptime.text")
+    public Object[] uptime() {
+        return TranslateHelper.args(Duration.between(startTime, Instant.now()).getSeconds());
     }
 
     @Command

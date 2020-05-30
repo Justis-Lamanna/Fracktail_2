@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 public class DefaultInvokerFactory implements InvokerFactory {
     @Override
     public Invoker getInvokerFor(Object beanToInvoke, Method method) {
-        if (method.getReturnType() == null) {
+        if (method.getReturnType().equals(Void.TYPE)) {
             return new NoReturnInvoker(beanToInvoke, method);
         } else if (method.getReturnType().equals(String.class)) {
             return new StringReturnInvoker(beanToInvoke, method);

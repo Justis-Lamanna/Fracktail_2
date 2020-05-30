@@ -42,4 +42,8 @@ public class TranslateHelper {
     public static Date toDate(Instant instant) {
         return Date.from(instant);
     }
+
+    public static Object[] args(Object... objects) {
+        return objects;
+    }
 }
