@@ -6,6 +6,10 @@ import com.github.lucbui.magic.command.func.extract.DefaultExtractorFactory;
 import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
 import com.github.lucbui.magic.command.func.invoke.DefaultInvokerFactory;
 import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
+import com.github.lucbui.magic.command.parse.predicate.creator.ChainCommandPredicateFactory;
+import com.github.lucbui.magic.command.parse.predicate.creator.CommandParamsPredicateLink;
+import com.github.lucbui.magic.command.parse.predicate.creator.CommandPredicateFactory;
+import com.github.lucbui.magic.command.parse.predicate.creator.PermissionsPredicateLink;
 import com.github.lucbui.magic.token.Tokenizer;
 
 import java.util.ArrayList;
@@ -17,6 +21,7 @@ public class CommandProcessorBuilder {
     private List<BotCommandProcessor> botCommandProcessors = new ArrayList<>();
     private ExtractorFactory extractorFactory;
     private InvokerFactory invokerFactory;
+    private CommandPredicateFactory commandPredicateFactory;
 
     public CommandProcessorBuilder(CommandBank commandBank, Tokenizer tokenizer) {
         this.commandBank = commandBank;
@@ -33,7 +38,7 @@ public class CommandProcessorBuilder {
         return this;
     }
 
-    public CommandProcessorBuilder withDefaultParameterExtractors() {
+    public CommandProcessorBuilder withDefaultParameterExtractor() {
         extractorFactory = new DefaultExtractorFactory(tokenizer);
         return this;
     }
@@ -43,7 +48,7 @@ public class CommandProcessorBuilder {
         return this;
     }
 
-    public CommandProcessorBuilder withDefaultMethodInvokers() {
+    public CommandProcessorBuilder withDefaultMethodInvoker() {
         invokerFactory = new DefaultInvokerFactory();
         return this;
     }
@@ -53,13 +58,28 @@ public class CommandProcessorBuilder {
         return this;
     }
 
+    public CommandProcessorBuilder withDefaultCommandPredicateFactory() {
+        commandPredicateFactory = new ChainCommandPredicateFactory(
+                new CommandParamsPredicateLink(),
+                new PermissionsPredicateLink());
+        return this;
+    }
+
+    public CommandProcessorBuilder withCommandPredicateFactory(CommandPredicateFactory commandPredicateFactory) {
+        this.commandPredicateFactory = commandPredicateFactory;
+        return this;
+    }
+
     public CommandAnnotationProcessor build() {
         if(extractorFactory == null) {
-            withDefaultParameterExtractors();
+            withDefaultParameterExtractor();
         }
         if(invokerFactory == null) {
-            withDefaultMethodInvokers();
+            withDefaultMethodInvoker();
         }
-        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, extractorFactory, invokerFactory));
+        if(commandPredicateFactory == null) {
+            withDefaultCommandPredicateFactory();
+        }
+        return new CommandAnnotationProcessor(new CommandFromMethodParserFactory(commandBank, botCommandProcessors, extractorFactory, invokerFactory, commandPredicateFactory));
     }
 }

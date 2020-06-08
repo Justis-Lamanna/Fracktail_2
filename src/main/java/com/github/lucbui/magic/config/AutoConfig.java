@@ -10,6 +10,7 @@ import com.github.lucbui.magic.command.func.invoke.CommandFallback;
 import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
 import com.github.lucbui.magic.command.parse.CommandAnnotationProcessor;
 import com.github.lucbui.magic.command.parse.CommandProcessorBuilder;
+import com.github.lucbui.magic.command.parse.predicate.creator.CommandPredicateFactory;
 import com.github.lucbui.magic.token.PrefixTokenizer;
 import com.github.lucbui.magic.token.Tokenizer;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -75,11 +76,13 @@ public class AutoConfig {
             CommandBank commandBank,
             List<BotCommandProcessor> processors,
             @Autowired(required = false) ExtractorFactory extractorFactory,
-            @Autowired(required = false) InvokerFactory invokerFactory) {
+            @Autowired(required = false) InvokerFactory invokerFactory,
+            @Autowired(required = false) CommandPredicateFactory commandPredicateFactory) {
         return new CommandProcessorBuilder(commandBank, tokenizer)
                 .withBotCommandPostProcessors(processors)
                 .withParameterExtractor(extractorFactory)
                 .withMethodInvoker(invokerFactory)
+                .withCommandPredicateFactory(commandPredicateFactory)
                 .build();
     }
 

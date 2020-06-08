@@ -1,9 +1,6 @@
 package com.github.lucbui.magic.command.parse;
 
 import com.github.lucbui.magic.annotation.Command;
-import com.github.lucbui.magic.annotation.CommandParams;
-import com.github.lucbui.magic.annotation.Permissions;
-import com.github.lucbui.magic.annotation.PermissionsGroup;
 import com.github.lucbui.magic.command.execution.BotCommand;
 import com.github.lucbui.magic.command.execution.CommandBank;
 import com.github.lucbui.magic.command.execution.ComplexBotMessageBehavior;
@@ -14,8 +11,7 @@ import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
 import com.github.lucbui.magic.command.func.invoke.Invoker;
 import com.github.lucbui.magic.command.func.invoke.InvokerFactory;
 import com.github.lucbui.magic.command.parse.predicate.CommandPredicate;
-import com.github.lucbui.magic.command.parse.predicate.OwnerCommandPredicate;
-import com.github.lucbui.magic.command.parse.predicate.ParameterCountCommandPredicate;
+import com.github.lucbui.magic.command.parse.predicate.creator.CommandPredicateFactory;
 import com.github.lucbui.magic.exception.BotException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,12 +32,19 @@ public class CommandFromMethodParserFactory {
     private final List<BotCommandProcessor> botCommandProcessors;
     private final ExtractorFactory extractorFactory;
     private final InvokerFactory invokerFactory;
+    private final CommandPredicateFactory commandPredicateFactory;
 
-    public CommandFromMethodParserFactory(CommandBank commandBank, List<BotCommandProcessor> botCommandProcessors, ExtractorFactory extractorFactory, InvokerFactory invokerFactory) {
+    public CommandFromMethodParserFactory(
+            CommandBank commandBank,
+            List<BotCommandProcessor> botCommandProcessors,
+            ExtractorFactory extractorFactory,
+            InvokerFactory invokerFactory,
+            CommandPredicateFactory commandPredicateFactory) {
         this.commandBank = commandBank;
         this.botCommandProcessors = botCommandProcessors;
         this.extractorFactory = extractorFactory;
         this.invokerFactory = invokerFactory;
+        this.commandPredicateFactory = commandPredicateFactory;
     }
 
     public CommandFromMethodParser get(Object bean) {
@@ -66,7 +69,7 @@ public class CommandFromMethodParserFactory {
             LOGGER.debug("+- Command names: {}, aliases: {}", name, aliases);
             BotMessageBehavior behavior = getBehavior(method);
             Optional<BotCommand> oldCommandOpt = commandBank.getCommandById(name);
-            CommandPredicate predicate = createCommandPredicate(method);
+            CommandPredicate predicate = commandPredicateFactory.createCommandPredicate(method);
             if(oldCommandOpt.isPresent()) {
                 LOGGER.debug("\\- Updating command: " + name);
                 BotMessageBehavior combined = mergeBehavior(oldCommandOpt.get(), behavior, predicate);
@@ -77,21 +80,6 @@ public class CommandFromMethodParserFactory {
                 BotCommand newCommand = new BotCommand(name, aliases, new ComplexBotMessageBehavior(predicate, behavior));
                 commandBank.addCommand(newCommand);
             }
-        }
-
-        protected CommandPredicate createCommandPredicate(Method method) {
-            CommandPredicate commandPredicate = CommandPredicate.trueIdentity();
-            if(method.isAnnotationPresent(CommandParams.class)) {
-                CommandParams a = method.getAnnotation(CommandParams.class);
-                commandPredicate = commandPredicate.and(new ParameterCountCommandPredicate(a.value(), a.comparison()));
-            }
-
-            if(method.isAnnotationPresent(PermissionsGroup.class) || method.isAnnotationPresent(Permissions.class)) {
-                LOGGER.debug("+- Marking command as owner-only");
-                commandPredicate = commandPredicate.and(new OwnerCommandPredicate());
-            }
-
-            return commandPredicate;
         }
 
         protected BotMessageBehavior mergeBehavior(BotCommand botCommand, BotMessageBehavior behavior, CommandPredicate predicate) {
