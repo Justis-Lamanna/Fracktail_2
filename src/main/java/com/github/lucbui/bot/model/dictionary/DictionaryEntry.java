@@ -4,9 +4,9 @@ import java.util.List;
 
 public class DictionaryEntry {
     private String word;
-    private List<String> definitions;
+    private List<Definition> definitions;
 
-    public DictionaryEntry(String word, List<String> definitions) {
+    public DictionaryEntry(String word, List<Definition> definitions) {
         this.word = word;
         this.definitions = definitions;
     }
@@ -15,7 +15,25 @@ public class DictionaryEntry {
         return word;
     }
 
-    public List<String> getDefinitions() {
+    public List<Definition> getDefinitions() {
         return definitions;
+    }
+
+    public static class Definition {
+        private String partOfSpeech;
+        private String definition;
+
+        public Definition(String partOfSpeech, String definition) {
+            this.partOfSpeech = partOfSpeech;
+            this.definition = definition;
+        }
+
+        public String getPartOfSpeech() {
+            return partOfSpeech;
+        }
+
+        public String getDefinition() {
+            return definition;
+        }
     }
 }

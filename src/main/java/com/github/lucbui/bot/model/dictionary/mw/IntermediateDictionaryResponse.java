@@ -10,10 +10,7 @@ public class IntermediateDictionaryResponse {
     private EntryMetadata meta;
     private HeadwordInfo headwordInfo;
     private String functionalLabel;
-    private List<Definition> definitions;
-
     private List<String> shortDef;
-    private String json;
 
     public IntermediateDictionaryResponse() {
     }
@@ -44,16 +41,6 @@ public class IntermediateDictionaryResponse {
     @JsonProperty("fl")
     public void setFunctionalLabel(String functionalLabel) {
         this.functionalLabel = functionalLabel;
-    }
-
-    @JsonProperty("dt")
-    public List<Definition> getDefinitions() {
-        return definitions;
-    }
-
-    @JsonProperty("dt")
-    public void setDefinitions(List<Definition> definitions) {
-        this.definitions = definitions;
     }
 
     @JsonProperty("shortdef")
