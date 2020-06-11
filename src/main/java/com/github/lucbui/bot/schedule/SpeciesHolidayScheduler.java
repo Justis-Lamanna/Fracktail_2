@@ -6,6 +6,7 @@ import com.github.lucbui.bot.services.translate.TranslateHelper;
 import com.github.lucbui.bot.services.translate.TranslateService;
 import com.github.lucbui.magic.annotation.Commands;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.support.CronTrigger;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Component
 @Commands
+@Profile("prod")
 public class SpeciesHolidayScheduler {
     private static final String SPECIES_HOLIDAY_PREFIX = "job.holiday";
     private static final List<Holiday> HOLIDAYS = Arrays.asList(

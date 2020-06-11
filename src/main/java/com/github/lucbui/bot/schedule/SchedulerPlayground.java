@@ -11,15 +11,16 @@ import discord4j.core.object.entity.User;
 import discord4j.core.object.util.Permission;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
 
 @Component
+@Profile("prod")
 public class SchedulerPlayground {
     private static final Snowflake LUCBUI_ID = Snowflake.of("248612704019808258");
     public static final Snowflake BOT_CHANNEL_ID = Snowflake.of("424562931489964032");
