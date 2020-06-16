@@ -9,6 +9,8 @@ import java.util.List;
 public class IntermediateDictionaryResponse {
     private EntryMetadata meta;
     private HeadwordInfo headwordInfo;
+    private List<HeadwordInfo> alternateHeadwords;
+    private List<Variant> variants;
     private String functionalLabel;
     //private List<SenseSequence> definitions;
     private List<String> shortDef;
@@ -32,6 +34,26 @@ public class IntermediateDictionaryResponse {
     @JsonProperty("hwi")
     public void setHeadwordInfo(HeadwordInfo headwordInfo) {
         this.headwordInfo = headwordInfo;
+    }
+
+    @JsonProperty("ahws")
+    public List<HeadwordInfo> getAlternateHeadwords() {
+        return alternateHeadwords;
+    }
+
+    @JsonProperty("ahws")
+    public void setAlternateHeadwords(List<HeadwordInfo> alternateHeadwords) {
+        this.alternateHeadwords = alternateHeadwords;
+    }
+
+    @JsonProperty("vrs")
+    public List<Variant> getVariants() {
+        return variants;
+    }
+
+    @JsonProperty("vrs")
+    public void setVariants(List<Variant> variants) {
+        this.variants = variants;
     }
 
     @JsonProperty("fl")
