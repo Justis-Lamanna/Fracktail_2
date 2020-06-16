@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.github.lucbui.bot.model.dictionary.mw.DefiningContent;
-import com.github.lucbui.bot.model.dictionary.mw.DefiningText;
-import com.github.lucbui.bot.model.dictionary.mw.VerbalIllustration;
-import com.github.lucbui.bot.model.dictionary.mw.VerbalIllustrationList;
+import com.github.lucbui.bot.model.dictionary.mw.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +34,10 @@ public class DefiningTextDeserializer extends StdDeserializer<DefiningText> {
                 definingText.getEntries().add(getDefiningContent(jsonParser));
             } else if(type.equals("vis")){
                 definingText.getEntries().add(getVerbalIllustrationList(jsonParser));
+            } else if(type.equals("bnw")){
+                definingText.getEntries().add(getBiographicalName(jsonParser));
+            } else if(type.equals("ca")) {
+                definingText.getEntries().add(getCalledAlso(jsonParser));
             } else {
                 throw new DefiningTextJsonProcessingException(EXCEPTION_STR);
             }
@@ -54,11 +55,19 @@ public class DefiningTextDeserializer extends StdDeserializer<DefiningText> {
         return new DefiningContent(jsonParser.getValueAsString());
     }
 
-    private VerbalIllustrationList getVerbalIllustrationList(JsonParser jsonParser) throws IOException {
+    private BiographicalName getBiographicalName(JsonParser jsonParser) throws IOException {
+        return jsonParser.readValueAs(BiographicalName.class);
+    }
+
+    private CalledAlso getCalledAlso(JsonParser jsonParser) throws IOException {
+        return jsonParser.readValueAs(CalledAlso.class);
+    }
+
+    private VerbalIllustration.Sequence getVerbalIllustrationList(JsonParser jsonParser) throws IOException {
         if(jsonParser.nextToken() != JsonToken.START_ARRAY) {
             throw new DefiningTextJsonProcessingException(EXCEPTION_STR);
         }
-        return new VerbalIllustrationList(Arrays.asList(jsonParser.readValueAs(VerbalIllustration[].class)));
+        return new VerbalIllustration.Sequence(Arrays.asList(jsonParser.readValueAs(VerbalIllustration[].class)));
     }
 
     private static class DefiningTextJsonProcessingException extends JsonProcessingException {

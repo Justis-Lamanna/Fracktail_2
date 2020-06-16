@@ -10,7 +10,7 @@ public class IntermediateDictionaryResponse {
     private EntryMetadata meta;
     private HeadwordInfo headwordInfo;
     private String functionalLabel;
-    private List<SenseSequence> definitions;
+    //private List<SenseSequence> definitions;
     private List<String> shortDef;
 
     public IntermediateDictionaryResponse() {
@@ -44,15 +44,15 @@ public class IntermediateDictionaryResponse {
         this.functionalLabel = functionalLabel;
     }
 
-    @JsonProperty("def")
-    public List<SenseSequence> getDefinitions() {
-        return definitions;
-    }
-
-    @JsonProperty("def")
-    public void setDefinitions(List<SenseSequence> definitions) {
-        this.definitions = definitions;
-    }
+//    @JsonProperty("def")
+//    public List<SenseSequence> getDefinitions() {
+//        return definitions;
+//    }
+//
+//    @JsonProperty("def")
+//    public void setDefinitions(List<SenseSequence> definitions) {
+//        this.definitions = definitions;
+//    }
 
     @JsonProperty("shortdef")
     public List<String> getShortDef() {
