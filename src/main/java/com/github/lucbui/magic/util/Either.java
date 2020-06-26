@@ -407,7 +407,9 @@ public final class Either<A, B> {
      */
     public void invokeLeft(Consumer<? super A> func) {
         Objects.requireNonNull(func);
-        func.accept(a);
+        if(isLeft()) {
+            func.accept(a);
+        }
     }
 
     /**
@@ -416,7 +418,9 @@ public final class Either<A, B> {
      */
     public void invokeRight(Consumer<? super B> func) {
         Objects.requireNonNull(func);
-        func.accept(b);
+        if(isRight()) {
+            func.accept(b);
+        }
     }
 
     /**

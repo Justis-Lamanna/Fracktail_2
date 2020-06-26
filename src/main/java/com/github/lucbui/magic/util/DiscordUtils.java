@@ -49,6 +49,10 @@ public class DiscordUtils {
         }
     }
 
+    public static boolean isMention(String mention) {
+        return MENTION_PATTERN.matcher(mention).matches();
+    }
+
     /**
      * Get mention text from an ID
      * @param id The ID to use

@@ -104,9 +104,9 @@ public class CommandFromMethodParserFactory {
         protected String getName(Method method) {
             Command cmdAnnotation = method.getAnnotation(Command.class);
             if (StringUtils.isEmpty(cmdAnnotation.value())) {
-                return method.getName();
+                return method.getName().toLowerCase();
             } else {
-                return cmdAnnotation.value();
+                return cmdAnnotation.value().toLowerCase();
             }
         }
 

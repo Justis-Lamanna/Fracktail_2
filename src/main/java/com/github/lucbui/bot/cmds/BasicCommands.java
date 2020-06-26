@@ -8,11 +8,13 @@ import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.util.Snowflake;
+import org.apache.commons.collections4.SetUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Set;
 
 @Commands
 public class BasicCommands {
@@ -81,5 +83,45 @@ public class BasicCommands {
     @Command
     @Translate("updog.text")
     public void updog() {
+    }
+
+    private static final Set<String> YES_DOG_FOOD = SetUtils.hashSet("dog food", "homework");
+    private static final Set<String> YES_CAT_FOOD = SetUtils.hashSet("fish", "fishy");
+    private static final Set<String> WHAT_FOOD = SetUtils.hashSet("lucbui", "fracktail", "me");
+
+    @Command
+    @CommandParams(1)
+    @Translate
+    public String canDogsEat(@Param(0) String food) {
+        if(YES_DOG_FOOD.contains(food.toLowerCase())) {
+            return "candogseat.yes";
+        }
+        if(WHAT_FOOD.contains(food.toLowerCase()) || DiscordUtils.isMention(food)) {
+            return "candogseat.what";
+        }
+        return "candogseat.maybe";
+    }
+
+    @Command
+    @CommandParams(1)
+    @Translate
+    public String canCatsEat(@Param(0) String food) {
+        if(YES_CAT_FOOD.contains(food.toLowerCase())) {
+            return "cancatseat.no";
+        }
+        if(WHAT_FOOD.contains(food.toLowerCase()) || DiscordUtils.isMention(food)) {
+            return "cancatseat.what";
+        }
+        return "cancatseat.maybe";
+    }
+
+    @Command(aliases = "candergseat")
+    @CommandParams(1)
+    @Translate
+    public String canDragonsEat(@Param(0) String food) {
+        if(WHAT_FOOD.contains(food.toLowerCase()) || DiscordUtils.isMention(food)) {
+            return "candragonseat.reallyyes";
+        }
+        return "candragonseat.yes";
     }
 }
