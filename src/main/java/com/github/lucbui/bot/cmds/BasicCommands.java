@@ -90,9 +90,9 @@ public class BasicCommands {
     private static final Set<String> WHAT_FOOD = SetUtils.hashSet("lucbui", "fracktail", "me");
 
     @Command
-    @CommandParams(1)
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_MORE)
     @Translate
-    public String canDogsEat(@Param(0) String food) {
+    public String canDogsEat(@Params String food) {
         if(YES_DOG_FOOD.contains(food.toLowerCase())) {
             return "candogseat.yes";
         }
@@ -103,9 +103,9 @@ public class BasicCommands {
     }
 
     @Command
-    @CommandParams(1)
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_MORE)
     @Translate
-    public String canCatsEat(@Param(0) String food) {
+    public String canCatsEat(@Params String food) {
         if(YES_CAT_FOOD.contains(food.toLowerCase())) {
             return "cancatseat.no";
         }
@@ -116,9 +116,9 @@ public class BasicCommands {
     }
 
     @Command(aliases = "candergseat")
-    @CommandParams(1)
+    @CommandParams(value = 1, comparison = ParamsComparison.OR_MORE)
     @Translate
-    public String canDragonsEat(@Param(0) String food) {
+    public String canDragonsEat(@Params String food) {
         if(WHAT_FOOD.contains(food.toLowerCase()) || DiscordUtils.isMention(food)) {
             return "candragonseat.reallyyes";
         }

@@ -17,6 +17,7 @@ import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -55,10 +56,12 @@ public class CalendarCommands {
             return translateService.getFormattedStringMono(TranslateHelper.HIGH, NEXT_BDAY_RANGE.getMaximum());
         }
         return calendarService.getNextNBirthdays(n)
+                .flatMap(bday -> bot.getUserById(Snowflake.of(bday.getMemberId()))
+                            .map(usr -> Tuples.of(bday, usr)))
                 .collectList()
                 .map(birthdays -> {
                         String birthdayList = birthdays.stream()
-                                .map(this::getOwnerDateDurationText)
+                                .map(tuple -> getOwnerDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
                                 .collect(Collectors.joining("\n"));
                         return translateService.getFormattedString("nextbirthday.list", birthdays.size(), birthdayList);
                 });
@@ -71,10 +74,12 @@ public class CalendarCommands {
                 .map(this::validateAndConvertToLocalDate)
                 .switchIfEmpty(Mono.fromSupplier(LocalDate::now))
                 .flatMapMany(calendarService::getDaysBirthday)
+                .flatMap(bday -> bot.getUserById(Snowflake.of(bday.getMemberId()))
+                        .map(usr -> Tuples.of(bday, usr)))
                 .collectList()
                 .map(birthdays -> {
                     String birthdayList = birthdays.stream()
-                            .map(this::getOwnersText)
+                            .map(tuple -> getOwnersText(tuple.getT2().getUsername()))
                             .collect(Collectors.joining("\n"));
                     LocalDate birthdayDay = validateAndConvertToLocalDate(dayMonthStr);
                     LocalDate now = LocalDate.now();
@@ -94,10 +99,12 @@ public class CalendarCommands {
             .map(this::validateAndConvertToYearMonth)
             .switchIfEmpty(Mono.fromSupplier(YearMonth::now))
             .flatMapMany(calendarService::getMonthsBirthday)
+            .flatMap(bday -> bot.getUserById(Snowflake.of(bday.getMemberId()))
+                    .map(usr -> Tuples.of(bday, usr)))
             .collectList()
             .map(birthdays -> {
                 String birthdayText = birthdays.stream()
-                        .map(this::getOwnerDateDurationText)
+                        .map(tuple -> getOwnerDateDurationText(tuple.getT1(), tuple.getT2().getUsername()))
                         .collect(Collectors.joining("\n"));
                 YearMonth birthdayMonth = validateAndConvertToYearMonth(monthStr);
                 Month thisMonth = YearMonth.now().getMonth();
@@ -232,12 +239,12 @@ public class CalendarCommands {
                 .map(birthday -> translateService.getFormattedString("setbirthday.success", birthday.getName()));
     }
 
-    private String getOwnerDateDurationText(Birthday nextBirthday) {
+    private String getOwnerDateDurationText(Birthday nextBirthday, String name) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
-                nextBirthday.getName(),
+                name,
                 TranslateHelper.toDate(normalizedDate),
                 duration.toDays() + 1);
     }
@@ -252,9 +259,8 @@ public class CalendarCommands {
                 duration.toDays() + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
     }
 
-    private String getOwnersText(Birthday nextBirthday) {
-        return translateService.getFormattedString("birthday.owner",
-                nextBirthday.getName());
+    private String getOwnersText(String name) {
+        return translateService.getFormattedString("birthday.owner", name);
     }
 
     //Dates before now need to be advanced to the next year (we only ever deal with future + present dates).
