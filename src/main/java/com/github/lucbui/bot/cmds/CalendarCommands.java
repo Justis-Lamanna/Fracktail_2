@@ -243,20 +243,22 @@ public class CalendarCommands {
         LocalDateTime now = LocalDateTime.now();
         LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
+        long daysUntil = duration.toDays();
         return translateService.getFormattedString("birthday.ownerWithBirthdayAndDuration",
                 name,
                 TranslateHelper.toDate(normalizedDate),
-                duration.toDays() + 1);
+                daysUntil <= 0 ? 0 : daysUntil + 1);
     }
 
     private String getOwnersBirthdayDateDurationText(Birthday nextBirthday, String name) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
+        long daysUntil = duration.toDays();
         return translateService.getFormattedString("birthday.success",
                 name,
                 TranslateHelper.toDate(normalizedDate),
-                duration.toDays() + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
+                daysUntil <= 0 ? 0 : daysUntil + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
     }
 
     private String getOwnersText(String name) {
