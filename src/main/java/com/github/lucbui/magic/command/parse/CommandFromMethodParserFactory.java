@@ -3,9 +3,9 @@ package com.github.lucbui.magic.command.parse;
 import com.github.lucbui.magic.annotation.Command;
 import com.github.lucbui.magic.command.execution.BotCommand;
 import com.github.lucbui.magic.command.execution.CommandBank;
-import com.github.lucbui.magic.command.execution.ComplexBotMessageBehavior;
 import com.github.lucbui.magic.command.func.BotCommandProcessor;
 import com.github.lucbui.magic.command.func.BotMessageBehavior;
+import com.github.lucbui.magic.command.func.behaviors.ComplexBotMessageBehavior;
 import com.github.lucbui.magic.command.func.extract.Extractor;
 import com.github.lucbui.magic.command.func.extract.ExtractorFactory;
 import com.github.lucbui.magic.command.func.invoke.Invoker;
@@ -45,6 +45,26 @@ public class CommandFromMethodParserFactory {
         this.extractorFactory = extractorFactory;
         this.invokerFactory = invokerFactory;
         this.commandPredicateFactory = commandPredicateFactory;
+    }
+
+    public CommandBank getCommandBank() {
+        return commandBank;
+    }
+
+    public List<BotCommandProcessor> getBotCommandProcessors() {
+        return botCommandProcessors;
+    }
+
+    public ExtractorFactory getExtractorFactory() {
+        return extractorFactory;
+    }
+
+    public InvokerFactory getInvokerFactory() {
+        return invokerFactory;
+    }
+
+    public CommandPredicateFactory getCommandPredicateFactory() {
+        return commandPredicateFactory;
     }
 
     public CommandFromMethodParser get(Object bean) {

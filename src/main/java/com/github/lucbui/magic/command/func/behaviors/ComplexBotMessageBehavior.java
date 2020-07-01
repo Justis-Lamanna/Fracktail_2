@@ -1,4 +1,4 @@
-package com.github.lucbui.magic.command.execution;
+package com.github.lucbui.magic.command.func.behaviors;
 
 import com.github.lucbui.magic.command.context.CommandUseContext;
 import com.github.lucbui.magic.command.func.BotMessageBehavior;

@@ -1,6 +1,5 @@
 package com.github.lucbui.bot.schedule;
 
-import com.github.lucbui.bot.model.Birthday;
 import com.github.lucbui.bot.services.calendar.CalendarService;
 import com.github.lucbui.bot.services.channel.BotChannelService;
 import com.github.lucbui.bot.services.translate.TranslateService;
@@ -63,7 +62,8 @@ public class SchedulerPlayground {
                         .filter(b -> b.getMemberId() != null)
                         .filterWhen(b -> tc.getEffectivePermissions(Snowflake.of(b.getMemberId()))
                                 .map(p -> p.contains(Permission.READ_MESSAGE_HISTORY)))
-                        .map(Birthday::getName)
+                        .flatMap(bday -> bot.getUserById(Snowflake.of(bday.getMemberId())))
+                        .map(User::getUsername)
                         .collect(Collectors.joining(", "))
                         .flatMap(msg -> msg.length() == 0 ?
                                 Mono.empty() :

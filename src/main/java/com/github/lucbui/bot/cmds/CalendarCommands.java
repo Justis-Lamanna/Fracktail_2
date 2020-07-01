@@ -254,11 +254,10 @@ public class CalendarCommands {
         LocalDateTime now = LocalDateTime.now();
         LocalDate normalizedDate = normalize(nextBirthday.getDate(), now.toLocalDate());
         Duration duration = Duration.between(LocalDateTime.now(), normalizedDate.atStartOfDay());
-        long daysUntil = duration.toDays();
         return translateService.getFormattedString("birthday.success",
                 name,
                 TranslateHelper.toDate(normalizedDate),
-                daysUntil <= 0 ? 0 : daysUntil + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
+                normalizedDate.equals(LocalDate.now()) ? 0 : duration.toDays() + 1); //toDays rounds down, so we add an extra day to compensate for off-by-one.
     }
 
     private String getOwnersText(String name) {
