@@ -50,7 +50,7 @@ public class GoogleCalendarService implements CalendarService {
     @Override
     public Flux<Birthday> getDaysBirthday(LocalDate date){
         DateTime beginningOfToday = from(date.atStartOfDay().minus(1, ChronoUnit.MILLIS));
-        DateTime endOfToday = from(date.atStartOfDay().plus(1, ChronoUnit.DAYS));
+        DateTime endOfToday = from(date.atStartOfDay().plus(12, ChronoUnit.HOURS));
         return Mono.fromCallable(() ->
                 calendar.events().list(calendarId)
                         .setMaxResults(25)
