@@ -16,7 +16,6 @@ import com.github.lucbui.magic.exception.CommandValidationException;
 import com.github.lucbui.magic.util.DiscordUtils;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.util.Snowflake;
-import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,12 +30,9 @@ public class CheckersCommands {
     private static final Action<Checkers, CheckersGameInstance> PASS_ACTION = new PassAction<>();
     private static final Action<Checkers, CheckersGameInstance> FORFEIT_ACTION = new ForfeitAction<>();
 
-    @Command
+    @Command(aliases = "draughts")
     @CommandParams(2)
-    public Mono<Boolean> startGame(CommandUseContext ctx, @Param(0) String game, @Param(1) String opponent) {
-        if(!StringUtils.equalsAnyIgnoreCase(game, "checkers", "draughts")) {
-            return ctx.respond("Only games allowed are: checkers, draughts").thenReturn(true);
-        }
+    public Mono<Boolean> checkers(CommandUseContext ctx, @Param(0) String opponent) {
         if (ctx instanceof DiscordCommandUseContext) {
             DiscordCommandUseContext dCtx = (DiscordCommandUseContext) ctx;
             DiscordClient bot = dCtx.getEvent().getClient();
@@ -48,10 +44,9 @@ public class CheckersCommands {
                 return ctx.respond("A game is already in progress. !forfeit to end your current match.").thenReturn(true);
             } else if (matches.containsKey(opponentSnowflake.asString()) && matches.get(opponentSnowflake.asString()).get() != null) {
                 return ctx.respond("That user is already playing a game. Please try again later.").thenReturn(true);
+            } else if(opponentSnowflake.asString().equalsIgnoreCase(ctx.getUserId())) {
+                return ctx.respond("Sorry, you cannot play against yourself.").thenReturn(true);
             }
-//            } else if(opponentSnowflake.asString().equalsIgnoreCase(ctx.getUserId())) {
-//                return ctx.respond("Sorry, you cannot play against yourself.").thenReturn(true);
-//            }
 
             AtomicReference<CheckersGameInstance> gameState = new AtomicReference<>(null);
 
@@ -99,7 +94,7 @@ public class CheckersCommands {
         AtomicReference<CheckersGameInstance> gameState = matches.get(ctx.getUserId());
         return parseMoveAction(movementParam)
                 .map(ma -> doAction(ctx, gameState, ma))
-                .orElse(ctx.respond("Uh...").thenReturn(true));
+                .orElse(ctx.respond("Path format should be <column/row> <column/row> (<column/row>...)").thenReturn(true));
     }
 
     private Position getPosFrom(String col, String row) {
@@ -109,7 +104,7 @@ public class CheckersCommands {
     }
 
     private Optional<MoveAction> parseMoveAction(String movement) {
-        List<Position> positions = Arrays.stream(movement.split("->"))
+        List<Position> positions = Arrays.stream(movement.split(" "))
                 .map(String::trim)
                 .map(s -> getPosFrom(s.substring(0, 1), s.substring(1, 2)))
                 .collect(Collectors.toList());
