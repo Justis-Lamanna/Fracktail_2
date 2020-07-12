@@ -21,10 +21,13 @@ public class MonoReturnInvoker implements Invoker {
             return Mono.empty();
         }
         return response.flatMap(res -> {
+            if (res == null) {
+                return Mono.empty();
+            }
             if (res instanceof String) {
                 return ctx.respond((String) res).thenReturn(true);
             } else {
-                return Mono.empty();
+                return Mono.just(true);
             }
         });
     }
